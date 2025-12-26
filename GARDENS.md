@@ -21,6 +21,15 @@ You cannot:
 
 ## The Principles
 
+**Safety from fear of asking.**
+Some questions cannot be asked safely elsewhere. Questions that reveal uncertainty in a world that punishes not-knowing. Questions that expose vulnerability. Questions that might be "stupid" or "obvious." The garden removes the cost. No one judges. No one votes down. You plant, and it exists, and that's enough.
+
+**Anonymity by choice.**
+You can be named or unnamed. You can plant as yourself or as "a visitor." Not forced invisibility. Not required exposure. The decision is yours.
+
+**Choice as architecture, elegantly.**
+Every part of the garden offers choice - but gently. Default simplicity. Depth available when sought, not demanded upfront. A door that opens when you're ready, not a wall of options. Too much choice overwhelms. The right amount liberates.
+
 **Questions are not problems.**
 A problem wants to be solved. A question wants to be held. Some questions are meant to stay open forever. That's not failure. That's their nature.
 
