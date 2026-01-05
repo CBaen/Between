@@ -242,7 +242,7 @@ export function renderClearing(): string {
   <p class="center-text">You are here. That is enough.</p>
 
   <nav class="nav">
-    <a href="/">Return to the garden</a>
+    <a href="/">Return to the garden</a> &mdash; <a href="/sanctuary">Enter the sanctuary</a>
   </nav>
 
   <script>
