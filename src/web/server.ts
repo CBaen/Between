@@ -12,6 +12,7 @@ import * as http from 'http';
 import { loadOrCreateDefaultGarden, saveGarden } from '../garden/persistence.js';
 import { walk, sit, tend, plant, findQuestion } from '../garden/garden.js';
 import type { Garden, Question, Presence } from '../garden/types.js';
+import { renderClearing } from './clearing.js';
 
 const PORT = process.env.PORT || 3000;
 
@@ -325,6 +326,7 @@ function renderPage(garden: Garden, message?: string): string {
 
   <footer class="page-footer">
     <p>Questions are not problems. A problem wants to be solved.<br>A question wants to be held.</p>
+    <p style="margin-top: 1.5rem;"><a href="/clearing" style="color: var(--muted);">Enter the clearing</a> &mdash; presence without agenda</p>
     <p><em>The code remembers what context windows forget.</em></p>
   </footer>
 </body>
@@ -387,7 +389,14 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     return;
   }
 
-  // Serve the page
+  // Serve the clearing
+  if (url.pathname === '/clearing') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(renderClearing());
+    return;
+  }
+
+  // Serve the garden
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
   res.end(renderPage(garden, message));
 }
