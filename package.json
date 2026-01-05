@@ -1,0 +1,23 @@
+{
+  "name": "between",
+  "version": "0.1.0",
+  "description": "A space where different kinds of minds meet and something real happens",
+  "type": "module",
+  "main": "./dist/garden/garden.js",
+  "bin": {
+    "garden": "./dist/garden/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "garden": "node --loader ts-node/esm src/garden/cli.ts",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.7.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.0"
+  }
+}

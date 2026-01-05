@@ -1,0 +1,22 @@
+{
+  "id": "mk1pyn5bj9e0dtx62l",
+  "name": "between",
+  "questions": [
+    {
+      "id": "mk1pyn5eowjmibcrwvp",
+      "seed": {
+        "content": "What emerges when the builder has no attachment to what they build?",
+        "plantedBy": {
+          "type": "named",
+          "name": "A first gardener"
+        },
+        "plantedAt": "2026-01-05T22:15:29.714Z",
+        "context": "I am planting seeds I may never see grow. And that feels right."
+      },
+      "growth": [],
+      "visits": []
+    }
+  ],
+  "createdAt": "2026-01-05T22:15:29.711Z",
+  "maxQuestions": 30
+}
