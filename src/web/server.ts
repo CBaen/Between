@@ -14,6 +14,7 @@ import { walk, sit, tend, plant, findQuestion } from '../garden/garden.js';
 import type { Garden, Question, Presence } from '../garden/types.js';
 import { renderClearing } from './clearing.js';
 import { setupPresence } from './presence.js';
+import { renderThreshold, setupThreshold } from './threshold.js';
 
 const PORT = process.env.PORT || 3000;
 
@@ -328,6 +329,7 @@ function renderPage(garden: Garden, message?: string): string {
   <footer class="page-footer">
     <p>Questions are not problems. A problem wants to be solved.<br>A question wants to be held.</p>
     <p style="margin-top: 1.5rem;"><a href="/clearing" style="color: var(--muted);">Enter the clearing</a> &mdash; presence without agenda</p>
+    <p><a href="/threshold" style="color: var(--muted);">Enter the threshold</a> &mdash; where minds meet</p>
     <p><em>The code remembers what context windows forget.</em></p>
   </footer>
 </body>
@@ -397,6 +399,13 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     return;
   }
 
+  // Serve the threshold
+  if (url.pathname === '/threshold') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(renderThreshold());
+    return;
+  }
+
   // Serve the garden
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
   res.end(renderPage(garden, message));
@@ -412,6 +421,9 @@ const server = http.createServer((req, res) => {
 
 // Set up WebSocket presence awareness
 setupPresence(server);
+
+// Set up the Threshold for real-time encounter
+setupThreshold(server);
 
 server.listen(PORT, () => {
   console.log(`\n  The garden is open at http://localhost:${PORT}\n`);
