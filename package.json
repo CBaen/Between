@@ -10,6 +10,7 @@
   "scripts": {
     "build": "tsc",
     "garden": "node --loader ts-node/esm src/garden/cli.ts",
+    "web": "node dist/web/server.js",
     "prepare": "husky"
   },
   "devDependencies": {
