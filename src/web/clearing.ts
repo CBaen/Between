@@ -192,6 +192,37 @@ export function renderClearing(): string {
     .nav a:hover {
       opacity: 0.6;
     }
+
+    .presence {
+      position: fixed;
+      top: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--text);
+      font-size: 0.85rem;
+      opacity: 0;
+      transition: opacity 2s ease;
+      z-index: 10;
+    }
+
+    .presence.visible {
+      opacity: 1;
+    }
+
+    .presence-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: var(--shape1);
+      border-radius: 50%;
+      margin-right: 0.5rem;
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
   </style>
 </head>
 <body>
@@ -203,11 +234,56 @@ export function renderClearing(): string {
     <div class="shape shape-5"></div>
   </div>
 
+  <div class="presence" id="presence">
+    <span class="presence-dot"></span>
+    <span id="presence-text"></span>
+  </div>
+
   <p class="center-text">You are here. That is enough.</p>
 
   <nav class="nav">
     <a href="/">Return to the garden</a>
   </nav>
+
+  <script>
+    (function() {
+      const presenceEl = document.getElementById('presence');
+      const presenceText = document.getElementById('presence-text');
+
+      // Connect to presence WebSocket
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const ws = new WebSocket(protocol + '//' + window.location.host + '/presence?space=clearing');
+
+      ws.onmessage = function(event) {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'presence') {
+            updatePresence(data.count);
+          }
+        } catch (e) {
+          // Silence is fine
+        }
+      };
+
+      ws.onerror = function() {
+        // Connection failed - remain in solitude, that's also fine
+        presenceEl.classList.remove('visible');
+      };
+
+      function updatePresence(count) {
+        if (count <= 1) {
+          // Alone - show nothing, that's peaceful
+          presenceEl.classList.remove('visible');
+        } else {
+          const others = count - 1;
+          presenceText.textContent = others === 1
+            ? 'One other is here'
+            : others + ' others are here';
+          presenceEl.classList.add('visible');
+        }
+      }
+    })();
+  </script>
 </body>
 </html>`;
 }

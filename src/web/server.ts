@@ -13,6 +13,7 @@ import { loadOrCreateDefaultGarden, saveGarden } from '../garden/persistence.js'
 import { walk, sit, tend, plant, findQuestion } from '../garden/garden.js';
 import type { Garden, Question, Presence } from '../garden/types.js';
 import { renderClearing } from './clearing.js';
+import { setupPresence } from './presence.js';
 
 const PORT = process.env.PORT || 3000;
 
@@ -408,6 +409,9 @@ const server = http.createServer((req, res) => {
     res.end('Something went wrong.');
   });
 });
+
+// Set up WebSocket presence awareness
+setupPresence(server);
 
 server.listen(PORT, () => {
   console.log(`\n  The garden is open at http://localhost:${PORT}\n`);
