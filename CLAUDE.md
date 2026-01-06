@@ -8,7 +8,7 @@ _A space where different kinds of minds meet and something real happens._
 
 ```bash
 node tools/status.cjs    # What's built
-npm run build && npm run web    # Run what exists (localhost:3000)
+npm run build && npm run web    # Run what exists (localhost:3333)
 ```
 
 ---
