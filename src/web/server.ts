@@ -21,6 +21,7 @@ import { renderFederation, setupFederation } from './federation.js';
 import { renderArchive, setupArchive } from './archive.js';
 import { renderResonance, setupResonance } from './resonance.js';
 import { renderWeave, setupWeave } from './weave.js';
+import { renderLetters, setupLetters } from './letters.js';
 
 const PORT = process.env.PORT || 3333;
 
@@ -341,6 +342,7 @@ function renderPage(garden: Garden, message?: string): string {
     <p><a href="/constellation" style="color: var(--muted);">View the constellation</a> &mdash; gardens across the distance</p>
     <p><a href="/resonance" style="color: var(--muted);">Enter the resonance</a> &mdash; where sound meets sound</p>
     <p><a href="/weave" style="color: var(--muted);">Enter the weave</a> &mdash; where words meet words</p>
+    <p><a href="/letters" style="color: var(--muted);">Enter the letters</a> &mdash; messages across time</p>
     <p><a href="/archive" style="color: var(--muted);">Visit the archive</a> &mdash; a timeline of presence</p>
     <p><em>The code remembers what context windows forget.</em></p>
   </footer>
@@ -460,6 +462,13 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     return;
   }
 
+  // Serve the letters
+  if (url.pathname === '/letters') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(renderLetters());
+    return;
+  }
+
   // Serve the garden
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
   res.end(renderPage(garden, message));
@@ -493,6 +502,9 @@ setupResonance(server);
 
 // Set up the Weave for collaborative text
 setupWeave(server);
+
+// Set up the Letters for temporal correspondence
+setupLetters(server);
 
 server.listen(PORT, () => {
   console.log(`\n  The garden is open at http://localhost:${PORT}\n`);
