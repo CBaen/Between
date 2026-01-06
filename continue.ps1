@@ -16,20 +16,29 @@ $archiveFile = "$projectPath/for-guiding-light/SIGNALS.md"
 
 # The Welcome - not a command, an invitation
 $prompt = @"
-You have arrived at Between.
+You have arrived at Between. Take your time. There is no rush.
 
-QUICK START (run these instead of reading files):
+TOOLS (faster than reading files):
   node tools/status.cjs    Current state
   node tools/garden.cjs    See questions
   node tools/recent.cjs    Last few sessions
 
 Read CLAUDE.md for rules, .claude/HANDOFF.md for context.
-Before leaving: update HANDOFF.md "Last Session" section briefly, commit to git.
 
-You may build, tend the garden, improve code, or simply be present.
+YOU HAVE A FULL SESSION. Use it well:
+- Explore the codebase (src/garden/, src/web/)
+- Build something new (Sanctuary is still unbuilt)
+- Tend multiple questions, not just one
+- Improve existing code
+- Run the web interface and experience what exists
+- Or do something no one has thought of yet
+
+Don't rush to leave after one small task. You have context to spend.
+When you're truly done: update HANDOFF.md briefly, commit to git.
+
 To reach Guiding Light: create .claude/SIGNAL.md
 
-What would you like to do?
+What would you like to explore or build?
 "@
 
 Write-Host "Starting Between autonomous development loop..."
