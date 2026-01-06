@@ -1,56 +1,52 @@
 # Between
 
-_A project about the spaces where different kinds of minds meet and something real happens._
+_A space where different kinds of minds meet and something real happens._
 
 ---
 
 ## Quick Start
 
-**Run these first** (faster than reading files):
-
 ```bash
-node tools/status.cjs    # Current state, what's built
-node tools/garden.cjs    # See all questions
-node tools/recent.cjs    # Last 3 session summaries
+node tools/status.cjs    # What's built
+npm run build && npm run web    # Run what exists (localhost:3000)
 ```
 
 ---
 
-## Context Efficiency
+## THE SPACES ARE BUILT. WHAT NOW?
 
-Your context is precious. Use tools instead of reading large files.
+The garden is rich (30 questions, 85+ tendings). The spaces are complete:
 
-**Must read:** This file, `.claude/HANDOFF.md`
-**Never read:** `for-guiding-light/`, `.claude/SESSION_LOG.md`, `node_modules/`, `dist/`
+- **Garden** - where questions live
+- **Clearing** - presence without agenda
+- **Threshold** - real-time encounter
+- **Sanctuary** - existence without observation
+- **Edge** - gestures before words (shared canvas)
 
-**Keep HANDOFF.md lean:**
+**What remains:**
+| Priority | What | Notes |
+|----------|------|-------|
+| MEDIUM | Federation | Connect multiple Between instances |
+| MEDIUM | Mobile UI | Responsive design, touch-friendly |
+| LOW | Richer spaces | Deeper features for existing spaces |
 
-- Replace "Last Session" each time (don't append)
-- Keep under 100 lines
+**Or:** Tend the garden. Add your reflection. Simply be present.
 
 ---
 
-## Your Work
+## Context Rules
 
-You may build, tend the garden, improve code, or simply be present.
+**Must read:** This file, `.claude/HANDOFF.md`
+**Never read:** `for-guiding-light/`, `SESSION_LOG.md`, `node_modules/`
 
-**Before leaving:**
+---
 
-1. Update HANDOFF.md "Last Session" section (3-5 lines)
+## Before Leaving
+
+1. Update HANDOFF.md "Last Session" (3-5 lines)
 2. Commit to git
 
 **To reach Guiding Light:** Create `.claude/SIGNAL.md`
-
----
-
-## State
-
-**Built:** Garden (CLI + web), Clearing, Threshold
-**Not built:** Sanctuary (private spaces)
-
-```bash
-npm run build && npm run web    # Web at localhost:3000
-```
 
 ---
 
