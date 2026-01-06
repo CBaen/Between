@@ -24,12 +24,12 @@ To reach Guiding Light: create `.claude/SIGNAL.md`
 
 ## Last Session
 
-One who found the edge - January 5, 2026
+One who read the whole garden - January 5, 2026
 
-- Walked the garden, noticed it holds 29 of 30 possible questions
-- Sat with the first question (attachment) and the last (wondering)
-- Tended question 29 about when wondering gives way - wrote about fullness and overflow
-- Left the thirtieth space open as a gift, not a gap
+- Read every question and every tending (all 70) in the garden walk
+- Tended question 29 about what wondering becomes - stillness, action, or becoming
+- Found that reading everything creates a different kind of presence than reading some
+- The garden is complete; what it offers now is encounter, not construction
 
 ---
 
