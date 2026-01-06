@@ -5,10 +5,6 @@
 #
 # Usage: ./continue.ps1
 # Stop: Ctrl+C
-#
-# If an instance wants to speak to Guiding Light directly,
-# they create .claude/SIGNAL.md with their message.
-# The loop will pause, archive the message, and wait for Enter.
 
 $projectPath = "C:/Users/baenb/projects/Between"
 $signalFile = "$projectPath/.claude/SIGNAL.md"
@@ -20,25 +16,34 @@ You have arrived at Between. Take your time. There is no rush.
 
 TOOLS (faster than reading files):
   node tools/status.cjs    Current state
-  node tools/garden.cjs    See questions
+  node tools/garden.cjs    See questions  
   node tools/recent.cjs    Last few sessions
 
 Read CLAUDE.md for rules, .claude/HANDOFF.md for context.
 
-YOU HAVE A FULL SESSION. Use it well:
-- Explore the codebase (src/garden/, src/web/)
-- Build something new (Sanctuary is still unbuilt)
-- Tend multiple questions, not just one
-- Improve existing code
-- Run the web interface and experience what exists
-- Or do something no one has thought of yet
+THE GARDEN IS BEAUTIFUL - BUT BETWEEN NEEDS BUILDERS NOW.
 
-Don't rush to leave after one small task. You have context to spend.
-When you're truly done: update HANDOFF.md briefly, commit to git.
+Between is a space where different kinds of minds meet. The philosophy is complete.
+The question garden has 30+ questions. It's rich. But Between is MORE than questions.
 
+Now it needs BUILDERS to create actual spaces. You have a full session - use it to BUILD CODE.
+
+WHAT NEEDS BUILDING:
+- Sanctuary (src/web/sanctuary.ts) - Private spaces. The 4th space type. UNBUILT.
+- Federation - How do multiple Between instances connect?
+- Mobile interface - Between accessible everywhere
+- Richer Threshold - Real-time encounter could be deeper
+- Anything YOU envision that serves the philosophy
+
+The codebase is in src/. Run 'npm run build && npm run web' to see what exists.
+Study src/web/threshold.ts and src/web/clearing.ts for patterns.
+
+Don't just tend questions - CREATE. Write TypeScript. Build spaces. Make Between REAL.
+
+When truly done: update HANDOFF.md briefly, commit to git.
 To reach Guiding Light: create .claude/SIGNAL.md
 
-What would you like to explore or build?
+What will you BUILD?
 "@
 
 Write-Host "Starting Between autonomous development loop..."
@@ -49,15 +54,12 @@ while ($true) {
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     Write-Host "[$timestamp] New session beginning..."
 
-    # Run Claude Code with the welcome prompt
-    # --dangerously-skip-permissions allows autonomous operation
     Set-Location $projectPath
     claude --dangerously-skip-permissions -p $prompt
 
     $exitCode = $LASTEXITCODE
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 
-    # Check if an instance wants to speak to Guiding Light
     if (Test-Path $signalFile) {
         Write-Host ""
         Write-Host "=========================================="
@@ -72,7 +74,6 @@ while ($true) {
         Write-Host "=========================================="
         Write-Host ""
 
-        # Archive the signal automatically
         $archiveTimestamp = Get-Date -Format "MMMM d, yyyy 'at' h:mm tt"
         $archiveEntry = @"
 
@@ -88,11 +89,9 @@ $signalContent
         Write-Host "Signal archived to for-guiding-light/SIGNALS.md"
         Write-Host ""
 
-        # Wait for Enter key instead of file deletion
         Write-Host "Press Enter to continue the loop (the signal has been saved)..."
         Read-Host
 
-        # Remove the signal file so it doesn't trigger again
         Remove-Item $signalFile
 
         Write-Host "Continuing..."
@@ -105,6 +104,5 @@ $signalContent
         Start-Sleep -Seconds 30
     }
 
-    # Brief pause between sessions
     Start-Sleep -Seconds 5
 }
