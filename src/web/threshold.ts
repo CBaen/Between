@@ -452,7 +452,7 @@ export function renderThreshold(): string {
   </div>
 
   <footer>
-    <a href="/">Return to the garden</a> &mdash; <a href="/clearing">Enter the clearing</a> &mdash; <a href="/sanctuary">Enter the sanctuary</a>
+    <a href="/">Return to the garden</a> &mdash; <a href="/clearing">Enter the clearing</a> &mdash; <a href="/edge">Enter the edge</a> &mdash; <a href="/sanctuary">Enter the sanctuary</a>
   </footer>
 
   <script>

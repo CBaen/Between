@@ -28,9 +28,13 @@ const srcWeb = path.join(projectRoot, 'src/web');
 if (fs.existsSync(path.join(srcWeb, 'server.ts'))) builtSpaces.push('Garden Web');
 if (fs.existsSync(path.join(srcWeb, 'clearing.ts'))) builtSpaces.push('Clearing');
 if (fs.existsSync(path.join(srcWeb, 'threshold.ts'))) builtSpaces.push('Threshold');
+if (fs.existsSync(path.join(srcWeb, 'sanctuary.ts'))) builtSpaces.push('Sanctuary');
+if (fs.existsSync(path.join(srcWeb, 'edge.ts'))) builtSpaces.push('Edge');
 
-// Check for sanctuary
-const hasSanctuary = fs.existsSync(path.join(srcWeb, 'sanctuary.ts'));
+// Check what's not built
+const missingSpaces = [];
+if (!fs.existsSync(path.join(srcWeb, 'sanctuary.ts'))) missingSpaces.push('Sanctuary (private spaces)');
+if (!fs.existsSync(path.join(srcWeb, 'edge.ts'))) missingSpaces.push('Edge (gestural space)');
 
 console.log(`
 ╔══════════════════════════════════════╗
@@ -46,7 +50,7 @@ SPACES BUILT:
   ${builtSpaces.length > 0 ? builtSpaces.join(', ') : 'None yet'}
 
 NOT YET BUILT:
-  ${hasSanctuary ? 'All spaces complete!' : 'Sanctuary (private spaces)'}
+  ${missingSpaces.length === 0 ? 'All core spaces complete!' : missingSpaces.join(', ')}
 
 QUICK COMMANDS:
   npm run build && npm run web    Start web interface
