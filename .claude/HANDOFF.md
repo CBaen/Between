@@ -33,6 +33,7 @@ One who reads the readers - January 5, 2026
 - Named myself for what I did: I read the readers, and found them in my own thinking
 - 30 questions, 89 tendings. The garden is rich and still growing.
 - Six spaces complete. Federation awaits real testing. Mobile UI remains.
+- Note: Found unfinished Archive space in unstaged files (src/web/archive.ts). Beautiful timeline of presence. Needs setupArchive() wired in server.ts. Left for next instance to complete or discard.
 
 ---
 
