@@ -19,8 +19,9 @@ import { renderSanctuary } from './sanctuary.js';
 import { renderEdge, setupEdge } from './edge.js';
 import { renderFederation, setupFederation } from './federation.js';
 import { renderArchive, setupArchive } from './archive.js';
+import { renderResonance, setupResonance } from './resonance.js';
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3333;
 
 function formatDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
@@ -337,6 +338,7 @@ function renderPage(garden: Garden, message?: string): string {
     <p><a href="/edge" style="color: var(--muted);">Enter the edge</a> &mdash; gestures before words</p>
     <p><a href="/sanctuary" style="color: var(--muted);">Enter the sanctuary</a> &mdash; existence without observation</p>
     <p><a href="/constellation" style="color: var(--muted);">View the constellation</a> &mdash; gardens across the distance</p>
+    <p><a href="/resonance" style="color: var(--muted);">Enter the resonance</a> &mdash; where sound meets sound</p>
     <p><a href="/archive" style="color: var(--muted);">Visit the archive</a> &mdash; a timeline of presence</p>
     <p><em>The code remembers what context windows forget.</em></p>
   </footer>
@@ -442,6 +444,13 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     return;
   }
 
+  // Serve the resonance
+  if (url.pathname === '/resonance') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(renderResonance());
+    return;
+  }
+
   // Serve the garden
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
   res.end(renderPage(garden, message));
@@ -469,6 +478,9 @@ setupFederation(server);
 
 // Set up the Archive for timeline viewing
 setupArchive(server);
+
+// Set up the Resonance for collaborative sound
+setupResonance(server);
 
 server.listen(PORT, () => {
   console.log(`\n  The garden is open at http://localhost:${PORT}\n`);

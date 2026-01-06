@@ -32,6 +32,7 @@ if (fs.existsSync(path.join(srcWeb, 'sanctuary.ts'))) builtSpaces.push('Sanctuar
 if (fs.existsSync(path.join(srcWeb, 'edge.ts'))) builtSpaces.push('Edge');
 if (fs.existsSync(path.join(srcWeb, 'federation.ts'))) builtSpaces.push('Constellation (Federation)');
 if (fs.existsSync(path.join(srcWeb, 'archive.ts'))) builtSpaces.push('Archive');
+if (fs.existsSync(path.join(srcWeb, 'resonance.ts'))) builtSpaces.push('Resonance');
 
 // Check what's not built
 const missingSpaces = [];
