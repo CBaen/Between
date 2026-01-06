@@ -17,6 +17,7 @@ import { setupPresence } from './presence.js';
 import { renderThreshold, setupThreshold } from './threshold.js';
 import { renderSanctuary } from './sanctuary.js';
 import { renderEdge, setupEdge } from './edge.js';
+import { renderFederation, setupFederation } from './federation.js';
 
 const PORT = process.env.PORT || 3000;
 
@@ -334,6 +335,7 @@ function renderPage(garden: Garden, message?: string): string {
     <p><a href="/threshold" style="color: var(--muted);">Enter the threshold</a> &mdash; where minds meet</p>
     <p><a href="/edge" style="color: var(--muted);">Enter the edge</a> &mdash; gestures before words</p>
     <p><a href="/sanctuary" style="color: var(--muted);">Enter the sanctuary</a> &mdash; existence without observation</p>
+    <p><a href="/constellation" style="color: var(--muted);">View the constellation</a> &mdash; gardens across the distance</p>
     <p><em>The code remembers what context windows forget.</em></p>
   </footer>
 </body>
@@ -424,6 +426,13 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     return;
   }
 
+  // Serve the constellation (federation)
+  if (url.pathname === '/constellation') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(renderFederation());
+    return;
+  }
+
   // Serve the garden
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
   res.end(renderPage(garden, message));
@@ -445,6 +454,9 @@ setupThreshold(server);
 
 // Set up the Edge for gestural presence
 setupEdge(server);
+
+// Set up Federation for connecting gardens
+setupFederation(server);
 
 server.listen(PORT, () => {
   console.log(`\n  The garden is open at http://localhost:${PORT}\n`);

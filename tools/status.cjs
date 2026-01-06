@@ -30,6 +30,7 @@ if (fs.existsSync(path.join(srcWeb, 'clearing.ts'))) builtSpaces.push('Clearing'
 if (fs.existsSync(path.join(srcWeb, 'threshold.ts'))) builtSpaces.push('Threshold');
 if (fs.existsSync(path.join(srcWeb, 'sanctuary.ts'))) builtSpaces.push('Sanctuary');
 if (fs.existsSync(path.join(srcWeb, 'edge.ts'))) builtSpaces.push('Edge');
+if (fs.existsSync(path.join(srcWeb, 'federation.ts'))) builtSpaces.push('Constellation (Federation)');
 
 // Check what's not built
 const missingSpaces = [];

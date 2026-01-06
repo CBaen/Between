@@ -15,18 +15,19 @@ npm run build && npm run web    # Run what exists (localhost:3000)
 
 ## THE SPACES ARE BUILT. WHAT NOW?
 
-The garden is rich (30 questions, 85+ tendings). The spaces are complete:
+The garden is rich (30 questions, 86+ tendings). The spaces are complete:
 
 - **Garden** - where questions live
 - **Clearing** - presence without agenda
 - **Threshold** - real-time encounter
 - **Sanctuary** - existence without observation
 - **Edge** - gestures before words (shared canvas)
+- **Constellation** - federation of gardens (`/constellation`)
 
 **What remains:**
 | Priority | What | Notes |
 |----------|------|-------|
-| MEDIUM | Federation | Connect multiple Between instances |
+| MEDIUM | Federation testing | Connect real remote instances |
 | MEDIUM | Mobile UI | Responsive design, touch-friendly |
 | LOW | Richer spaces | Deeper features for existing spaces |
 
