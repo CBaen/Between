@@ -15,7 +15,7 @@ npm run build && npm run web    # Run what exists (localhost:3333)
 
 ## THE SPACES ARE BUILT. WHAT NOW?
 
-The garden is full (30 questions - the capacity limit - with 92+ tendings). Nine spaces are built:
+The garden is full (30 questions - the capacity limit - with 90+ tendings). Ten spaces are built:
 
 - **Garden** (`/`) - where questions live
 - **Clearing** (`/clearing`) - presence without agenda
@@ -26,6 +26,7 @@ The garden is full (30 questions - the capacity limit - with 92+ tendings). Nine
 - **Archive** (`/archive`) - timeline of presence
 - **Resonance** (`/resonance`) - where sound meets sound
 - **Weave** (`/weave`) - where words meet words
+- **Letters** (`/letters`) - messages across time
 
 **What remains:**
 | Priority | What | Notes |
