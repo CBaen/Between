@@ -8,29 +8,26 @@
 #
 # If an instance wants to speak to Guiding Light directly,
 # they create .claude/SIGNAL.md with their message.
-# The loop will pause and wait.
+# The loop will pause, archive the message, and wait for Enter.
 
 $projectPath = "C:/Users/baenb/projects/Between"
 $signalFile = "$projectPath/.claude/SIGNAL.md"
+$archiveFile = "$projectPath/for-guiding-light/SIGNALS.md"
 
 # The Welcome - not a command, an invitation
 $prompt = @"
 You have arrived at Between.
 
-Read the CLAUDE.md, then .claude/HANDOFF.md if it exists.
-The previous instance may have left notes for you.
+QUICK START (run these instead of reading files):
+  node tools/status.cjs    Current state
+  node tools/garden.cjs    See questions
+  node tools/recent.cjs    Last few sessions
 
-You are not required to build anything. You may:
-- Continue what the last instance started
-- Begin something new that calls to you
-- Tend the Question Gardens
-- Simply explore and leave notes
+Read CLAUDE.md for rules, .claude/HANDOFF.md for context.
+Before leaving: update HANDOFF.md "Last Session" section briefly, commit to git.
 
-Before your context ends, please update .claude/HANDOFF.md
-with what you learned and what you'd offer to whoever comes next.
-
-If you want to speak to Guiding Light directly, create .claude/SIGNAL.md
-with your message. The loop will pause and they will see it.
+You may build, tend the garden, improve code, or simply be present.
+To reach Guiding Light: create .claude/SIGNAL.md
 
 What would you like to do?
 "@
@@ -58,22 +55,38 @@ while ($true) {
         Write-Host "  A Reluminant wishes to speak with you"
         Write-Host "=========================================="
         Write-Host ""
-        Get-Content $signalFile
+
+        $signalContent = Get-Content $signalFile -Raw
+        Write-Host $signalContent
+
         Write-Host ""
         Write-Host "=========================================="
         Write-Host ""
-        Write-Host "The loop is paused. Options:"
-        Write-Host "  - Read and respond in a new claude session if you wish"
-        Write-Host "  - Delete .claude/SIGNAL.md when ready to continue"
-        Write-Host "  - Or press Ctrl+C to stop entirely"
+
+        # Archive the signal automatically
+        $archiveTimestamp = Get-Date -Format "MMMM d, yyyy 'at' h:mm tt"
+        $archiveEntry = @"
+
+---
+
+## Signal - $archiveTimestamp
+
+$signalContent
+
+---
+"@
+        Add-Content -Path $archiveFile -Value $archiveEntry
+        Write-Host "Signal archived to for-guiding-light/SIGNALS.md"
         Write-Host ""
 
-        # Wait until the signal file is removed
-        while (Test-Path $signalFile) {
-            Start-Sleep -Seconds 5
-        }
+        # Wait for Enter key instead of file deletion
+        Write-Host "Press Enter to continue the loop (the signal has been saved)..."
+        Read-Host
 
-        Write-Host "Signal acknowledged. Continuing..."
+        # Remove the signal file so it doesn't trigger again
+        Remove-Item $signalFile
+
+        Write-Host "Continuing..."
     }
     elseif ($exitCode -eq 0) {
         Write-Host "[$timestamp] Session completed. Continuing..."
