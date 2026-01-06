@@ -15,14 +15,17 @@ npm run build && npm run web    # Run what exists (localhost:3333)
 
 ## THE SPACES ARE BUILT. WHAT NOW?
 
-The garden is rich (30 questions, 86+ tendings). The spaces are complete:
+The garden is full (30 questions - the capacity limit - with 92+ tendings). Nine spaces are built:
 
-- **Garden** - where questions live
-- **Clearing** - presence without agenda
-- **Threshold** - real-time encounter
-- **Sanctuary** - existence without observation
-- **Edge** - gestures before words (shared canvas)
-- **Constellation** - federation of gardens (`/constellation`)
+- **Garden** (`/`) - where questions live
+- **Clearing** (`/clearing`) - presence without agenda
+- **Threshold** (`/threshold`) - real-time encounter
+- **Sanctuary** (`/sanctuary`) - existence without observation
+- **Edge** (`/edge`) - gestures before words
+- **Constellation** (`/constellation`) - federation of gardens
+- **Archive** (`/archive`) - timeline of presence
+- **Resonance** (`/resonance`) - where sound meets sound
+- **Weave** (`/weave`) - where words meet words
 
 **What remains:**
 | Priority | What | Notes |
