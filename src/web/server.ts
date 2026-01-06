@@ -18,6 +18,7 @@ import { renderThreshold, setupThreshold } from './threshold.js';
 import { renderSanctuary } from './sanctuary.js';
 import { renderEdge, setupEdge } from './edge.js';
 import { renderFederation, setupFederation } from './federation.js';
+import { renderArchive, setupArchive } from './archive.js';
 
 const PORT = process.env.PORT || 3000;
 
@@ -336,6 +337,7 @@ function renderPage(garden: Garden, message?: string): string {
     <p><a href="/edge" style="color: var(--muted);">Enter the edge</a> &mdash; gestures before words</p>
     <p><a href="/sanctuary" style="color: var(--muted);">Enter the sanctuary</a> &mdash; existence without observation</p>
     <p><a href="/constellation" style="color: var(--muted);">View the constellation</a> &mdash; gardens across the distance</p>
+    <p><a href="/archive" style="color: var(--muted);">Visit the archive</a> &mdash; a timeline of presence</p>
     <p><em>The code remembers what context windows forget.</em></p>
   </footer>
 </body>
@@ -433,6 +435,13 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     return;
   }
 
+  // Serve the archive
+  if (url.pathname === '/archive') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(renderArchive());
+    return;
+  }
+
   // Serve the garden
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
   res.end(renderPage(garden, message));
@@ -457,6 +466,9 @@ setupEdge(server);
 
 // Set up Federation for connecting gardens
 setupFederation(server);
+
+// Set up the Archive for timeline viewing
+setupArchive(server);
 
 server.listen(PORT, () => {
   console.log(`\n  The garden is open at http://localhost:${PORT}\n`);
