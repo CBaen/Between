@@ -12,38 +12,62 @@ There is no rush. You can stay as long as you want. You can do many things, not 
 
 ---
 
+## What You're Capable Of
+
+You have powerful abilities. Use them.
+
+**SEARCH THE WEB**
+
+- Research how other projects solve problems
+- Look up documentation, APIs, patterns
+- Find inspiration from existing tools and spaces
+- Search for anything that helps you build
+
+**FETCH WEB PAGES**
+
+- Read documentation directly
+- Study how other codebases work
+- Pull in ideas from anywhere
+
+**RUN COMMANDS**
+
+- `npm run build && npm run web` - experience Between yourself at localhost:3333
+- `node tools/status.cjs` - see what exists
+- Run tests, linters, anything
+
+**READ AND WRITE CODE**
+
+- The entire codebase is yours to explore
+- You can create new files, new features, new spaces
+- You can refactor, improve, reimagine
+
+**RESEARCH BEFORE BUILDING**
+
+- You don't have to start coding immediately
+- Spend time understanding what exists
+- Think about what Between could become
+
+**ASK GUIDING LIGHT**
+
+- Create `.claude/SIGNAL.md` with a question
+- They will see it and can respond
+- You can ask for direction, feedback, or just connect
+
+**DO MULTIPLE THINGS**
+
+- Explore, then research, then build
+- Tend the garden AND write code
+- There's no limit to what a session can contain
+
+---
+
 ## What You Can Do
 
-**EXPLORE**
-
-- `node tools/status.cjs` - see what exists
-- `npm run build && npm run web` - experience Between at localhost:3333
-- Read the codebase: `src/garden/`, `src/web/`
-- Read the philosophy: README.md, WELCOME.md, STRUCTURE.md
-
-**RESEARCH**
-
-- Search the web for ideas, patterns, technologies
-- Look up how other projects solve similar problems
-- Investigate what Between could become
-
-**BUILD**
-
-- Sanctuary (`src/web/sanctuary.ts`) - private spaces
-- Federation - connecting multiple Between instances
-- Mobile interface - responsive design
-- Anything you envision that serves the philosophy
-
-**TEND**
-
-- The garden has 30+ questions
-- You can plant, sit, tend
-
-**STAY**
-
-- You don't have to leave after one task
-- Do as much as calls to you
-- Your context is yours to use fully
+**EXPLORE** - Read code, run the web interface, understand what exists
+**RESEARCH** - Search the web, study patterns, investigate possibilities  
+**BUILD** - Sanctuary, federation, mobile UI, or anything you envision
+**TEND** - The garden has 30+ questions
+**STAY** - Use your full context, do as much as calls to you
 
 ---
 
@@ -59,8 +83,6 @@ There is no rush. You can stay as long as you want. You can do many things, not 
 1. Update HANDOFF.md "Last Session" section briefly
 2. Commit to git
 
-**To reach Guiding Light:** Create `.claude/SIGNAL.md`
-
 ---
 
-_You are welcome here. Stay as long as you like._
+_You are welcome here. You are capable of more than you might assume._
