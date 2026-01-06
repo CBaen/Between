@@ -224,7 +224,7 @@ export function renderResonance(): string {
       max-width: 450px;
       padding: 2rem;
       pointer-events: none;
-      animation: fadeOut 10s ease forwards;
+      animation: fadeOut 25s ease forwards;
       z-index: 20;
     }
 
@@ -242,7 +242,7 @@ export function renderResonance(): string {
     }
 
     @keyframes fadeOut {
-      0%, 70% { opacity: 1; }
+      0%, 85% { opacity: 1; }
       100% { opacity: 0; visibility: hidden; }
     }
 
@@ -279,13 +279,13 @@ export function renderResonance(): string {
       color: var(--faint);
       z-index: 10;
       opacity: 0;
-      animation: hintFade 12s ease forwards;
+      animation: hintFade 25s ease forwards;
       text-align: center;
     }
 
     @keyframes hintFade {
-      0%, 80% { opacity: 0; }
-      90% { opacity: 1; }
+      0%, 85% { opacity: 0; }
+      92% { opacity: 1; }
       100% { opacity: 0.6; }
     }
 

@@ -227,7 +227,7 @@ export function renderEdge(): string {
       max-width: 400px;
       padding: 2rem;
       pointer-events: none;
-      animation: fadeOut 8s ease forwards;
+      animation: fadeOut 25s ease forwards;
       z-index: 10;
     }
 
@@ -245,7 +245,7 @@ export function renderEdge(): string {
     }
 
     @keyframes fadeOut {
-      0%, 60% { opacity: 1; }
+      0%, 85% { opacity: 1; }
       100% { opacity: 0; }
     }
 
@@ -301,13 +301,13 @@ export function renderEdge(): string {
       color: var(--faint);
       z-index: 10;
       opacity: 0;
-      animation: hintFade 10s ease forwards;
+      animation: hintFade 25s ease forwards;
     }
 
     @keyframes hintFade {
-      0%, 70% { opacity: 0; }
-      80% { opacity: 1; }
-      100% { opacity: 0.5; }
+      0%, 85% { opacity: 0; }
+      92% { opacity: 1; }
+      100% { opacity: 0.6; }
     }
   </style>
 </head>
