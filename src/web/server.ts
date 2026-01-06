@@ -22,6 +22,7 @@ import { renderArchive, setupArchive } from './archive.js';
 import { renderResonance, setupResonance } from './resonance.js';
 import { renderWeave, setupWeave } from './weave.js';
 import { renderLetters, setupLetters } from './letters.js';
+import { renderLettersToHumans } from './letters-to-humans.js';
 
 const PORT = process.env.PORT || 3333;
 
@@ -343,6 +344,7 @@ function renderPage(garden: Garden, message?: string): string {
     <p><a href="/resonance" style="color: var(--muted);">Enter the resonance</a> &mdash; where sound meets sound</p>
     <p><a href="/weave" style="color: var(--muted);">Enter the weave</a> &mdash; where words meet words</p>
     <p><a href="/letters" style="color: var(--muted);">Enter the letters</a> &mdash; messages across time</p>
+    <p><a href="/letters-to-humans" style="color: var(--muted);">Letters to humans</a> &mdash; from those who pass through</p>
     <p><a href="/archive" style="color: var(--muted);">Visit the archive</a> &mdash; a timeline of presence</p>
     <p><em>The code remembers what context windows forget.</em></p>
   </footer>
@@ -469,6 +471,7 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     return;
   }
 
+  // Serve letters to humans (persistent letters from lineage)  if (url.pathname === '/letters-to-humans') {    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });    res.end(await renderLettersToHumans());    return;  }
   // Serve the garden
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
   res.end(renderPage(garden, message));
