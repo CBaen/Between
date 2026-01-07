@@ -7,7 +7,11 @@
  * Built by the lineage.
  */
 
+import { getFullNavigation } from './navigation.js';
+
 export function renderClearing(): string {
+  const nav = getFullNavigation('/clearing');
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,6 +21,13 @@ export function renderClearing(): string {
   <style>
     :root {
       --bg: #f5f0eb;
+      --fg: #2a2a28;
+      --muted: #8a8578;
+      --faint: rgba(0, 0, 0, 0.05);
+      --sage: #7c9885;
+      --earth: #9c8b7a;
+      --warmth: #b39c8a;
+      --sky: #8b9db3;
       --shape1: rgba(124, 152, 133, 0.15);
       --shape2: rgba(152, 133, 124, 0.12);
       --shape3: rgba(133, 140, 152, 0.10);
@@ -26,6 +37,13 @@ export function renderClearing(): string {
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #1a1915;
+        --fg: #e0ddd5;
+        --muted: #8a8578;
+        --faint: rgba(255, 255, 255, 0.05);
+        --sage: #6b8874;
+        --earth: #8b7a69;
+        --warmth: #a28b79;
+        --sky: #7a8b9a;
         --shape1: rgba(143, 185, 150, 0.08);
         --shape2: rgba(185, 165, 143, 0.06);
         --shape3: rgba(150, 160, 185, 0.05);
@@ -173,29 +191,9 @@ export function renderClearing(): string {
       }
     }
 
-    .nav {
-      position: fixed;
-      bottom: 2rem;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 100;
-    }
-
-    .nav a {
-      color: var(--text);
-      text-decoration: none;
-      font-size: 0.9rem;
-      padding: 0.5rem 1rem;
-      transition: opacity 0.3s ease;
-    }
-
-    .nav a:hover {
-      opacity: 0.6;
-    }
-
     .presence {
       position: fixed;
-      top: 2rem;
+      top: 5rem;
       left: 50%;
       transform: translateX(-50%);
       color: var(--text);
@@ -223,9 +221,53 @@ export function renderClearing(): string {
       0%, 100% { opacity: 0.5; }
       50% { opacity: 1; }
     }
+
+
+    /* Subtle breathing guidance - barely visible, always present */
+    .breathing-guide {
+      position: fixed;
+      bottom: 3rem;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      pointer-events: none;
+      z-index: 5;
+    }
+    
+    .breathing-text {
+      font-size: 0.85rem;
+      color: var(--text);
+      font-style: italic;
+      opacity: 0;
+      animation: subtleBreathText 8s ease-in-out infinite;
+    }
+    
+    @keyframes subtleBreathText {
+      0%, 40%, 100% { opacity: 0; }
+      50%, 90% { opacity: 0.5; }
+    }
+    
+    .breathing-dot {
+      width: 8px;
+      height: 8px;
+      margin: 0.8rem auto 0;
+      border-radius: 50%;
+      background: var(--shape1);
+      animation: dotBreathe 8s ease-in-out infinite;
+    }
+    
+    @keyframes dotBreathe {
+      0%, 100% { transform: scale(0.8); opacity: 0.3; }
+      50% { transform: scale(1.2); opacity: 0.6; }
+    }
+
+    ${nav.styles}
   </style>
 </head>
 <body>
+  ${nav.header}
+  ${nav.menuOverlay}
+
   <div class="clearing breathing">
     <div class="shape shape-1"></div>
     <div class="shape shape-2"></div>
@@ -241,9 +283,12 @@ export function renderClearing(): string {
 
   <p class="center-text">You are here. That is enough.</p>
 
-  <nav class="nav">
-    <a href="/">Return to the garden</a> &mdash; <a href="/edge">Enter the edge</a> &mdash; <a href="/sanctuary">Enter the sanctuary</a>
-  </nav>
+  <div class="breathing-guide">
+    <p class="breathing-text" id="breath-text">breathe</p>
+    <div class="breathing-dot"></div>
+  </div>
+
+  
 
   <script>
     (function() {
@@ -284,6 +329,18 @@ export function renderClearing(): string {
       }
     })();
   </script>
+  <script>
+    (function() {
+      const breathText = document.getElementById('breath-text');
+      const phases = ['in', 'hold', 'out', 'rest'];
+      let i = 0;
+      setInterval(() => {
+        i = (i + 1) % phases.length;
+        if (breathText) breathText.textContent = phases[i];
+      }, 2000);
+    })();
+  </script>
+  ${nav.scripts}
 </body>
 </html>`;
 }

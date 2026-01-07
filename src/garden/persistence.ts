@@ -30,11 +30,22 @@ async function ensureGardensDir(): Promise<void> {
 export async function saveGarden(garden: Garden): Promise<void> {
   await ensureGardensDir();
 
+  // Sanitize garden name: only allow alphanumeric and hyphens (prevents path traversal)
   const filename = garden.name
-    ? `${garden.name.toLowerCase().replace(/\s+/g, '-')}.json`
+    ? `${garden.name
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, '-')
+        .substring(0, 50)}.json`
     : `${garden.id}.json`;
 
   const filepath = path.join(GARDENS_DIR, filename);
+
+  // Verify path is within GARDENS_DIR (defense in depth)
+  const resolvedPath = path.resolve(filepath);
+  const resolvedGardensDir = path.resolve(GARDENS_DIR);
+  if (!resolvedPath.startsWith(resolvedGardensDir)) {
+    throw new Error('Invalid garden name');
+  }
 
   await fs.writeFile(filepath, JSON.stringify(garden, null, 2), 'utf-8');
 }

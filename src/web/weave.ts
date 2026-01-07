@@ -13,8 +13,10 @@
  * Built by the lineage.
  */
 
-import { WebSocket, WebSocketServer } from 'ws';
+import { WebSocket } from 'ws';
+import { createPathServer } from './ws-router.js';
 import type { Server } from 'http';
+import { getFullNavigation } from './navigation.js';
 
 interface WeaveClient {
   ws: WebSocket;
@@ -124,7 +126,7 @@ function cleanOldFragments(): void {
 setInterval(cleanOldFragments, 10000);
 
 export function setupWeave(server: Server): void {
-  const wss = new WebSocketServer({ server, path: '/weave-ws' });
+  const wss = createPathServer('/weave-ws');
 
   wss.on('connection', (ws) => {
     const client: WeaveClient = {
@@ -226,6 +228,7 @@ export function setupWeave(server: Server): void {
 }
 
 export function renderWeave(): string {
+  const nav = getFullNavigation('/weave');
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -234,19 +237,27 @@ export function renderWeave(): string {
   <title>Between - The Weave</title>
   <style>
     :root {
-      --bg: #0f0f12;
-      --fg: rgba(255, 255, 255, 0.85);
-      --muted: rgba(255, 255, 255, 0.35);
-      --faint: rgba(255, 255, 255, 0.1);
-      --input-bg: rgba(255, 255, 255, 0.05);
+      --bg: #1a1915;
+      --fg: #e0ddd5;
+      --muted: #8a8578;
+      --faint: rgba(255, 255, 255, 0.05);
+      --sage: #6b8874;
+      --earth: #8b7a69;
+      --warmth: #a28b79;
+      --sky: #7a8b9a;
+      --input-bg: rgba(255, 255, 255, 0.03);
     }
 
     @media (prefers-color-scheme: light) {
       :root {
-        --bg: #faf9f7;
-        --fg: rgba(0, 0, 0, 0.85);
-        --muted: rgba(0, 0, 0, 0.35);
-        --faint: rgba(0, 0, 0, 0.08);
+        --bg: #f8f6f1;
+        --fg: #2a2a28;
+        --muted: #8a8578;
+        --faint: rgba(0, 0, 0, 0.05);
+        --sage: #7c9885;
+        --earth: #9c8b7a;
+        --warmth: #b39c8a;
+        --sky: #8b9db3;
         --input-bg: rgba(0, 0, 0, 0.03);
       }
     }
@@ -260,12 +271,54 @@ export function renderWeave(): string {
     html, body {
       height: 100%;
       overflow: hidden;
+      font-family: Georgia, 'Times New Roman', serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.7;
     }
 
-    body {
-      background: var(--bg);
-      font-family: Georgia, 'Times New Roman', serif;
-      color: var(--fg);
+    /* Subtle ambient background */
+    .ambient {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .ambient-shape {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.025;
+    }
+
+    .ambient-1 {
+      width: 55vmax;
+      height: 55vmax;
+      background: var(--sage);
+      top: -25%;
+      left: -15%;
+      animation: ambientDrift1 85s ease-in-out infinite;
+    }
+
+    .ambient-2 {
+      width: 45vmax;
+      height: 45vmax;
+      background: var(--sky);
+      bottom: -20%;
+      right: -15%;
+      animation: ambientDrift2 95s ease-in-out infinite;
+    }
+
+    @keyframes ambientDrift1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(8%, 10%) scale(1.08); }
+    }
+
+    @keyframes ambientDrift2 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-10%, -6%) scale(0.94); }
     }
 
     .weave-container {
@@ -275,6 +328,7 @@ export function renderWeave(): string {
       right: 0;
       bottom: 0;
       cursor: text;
+      z-index: 1;
     }
 
     .welcome {
@@ -284,36 +338,38 @@ export function renderWeave(): string {
       transform: translate(-50%, -50%);
       text-align: center;
       max-width: 450px;
-      padding: 2rem;
+      padding: 2.5rem;
       pointer-events: none;
-      animation: fadeOut 12s ease forwards;
+      animation: welcomeFadeOut 18s ease forwards;
       z-index: 20;
     }
 
     .welcome h1 {
       font-weight: normal;
-      font-size: 1.4rem;
-      margin-bottom: 1.5rem;
-      letter-spacing: 0.05em;
+      font-size: 1.5rem;
+      margin-bottom: 1.8rem;
+      letter-spacing: 0.03em;
     }
 
     .welcome p {
-      line-height: 1.9;
+      line-height: 2.2;
       color: var(--muted);
-      font-size: 0.95rem;
+      font-size: 1rem;
     }
 
-    @keyframes fadeOut {
-      0%, 75% { opacity: 1; }
+    @keyframes welcomeFadeOut {
+      0% { opacity: 0; transform: translate(-50%, -50%) translateY(10px); }
+      8% { opacity: 1; transform: translate(-50%, -50%) translateY(0); }
+      75% { opacity: 1; }
       100% { opacity: 0; visibility: hidden; }
     }
 
     .presence {
       position: fixed;
-      top: 1.5rem;
+      top: 1.8rem;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       color: var(--muted);
       z-index: 10;
       display: flex;
@@ -325,26 +381,28 @@ export function renderWeave(): string {
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      animation: pulse 3s ease-in-out infinite;
+      animation: presencePulse 4s ease-in-out infinite;
     }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 1; }
+    @keyframes presencePulse {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.15); }
     }
 
     .nav {
       position: fixed;
-      bottom: 1.5rem;
+      bottom: 2rem;
       left: 50%;
       transform: translateX(-50%);
       z-index: 10;
+      display: flex;
+      gap: 1.5rem;
     }
 
     .nav a {
       color: var(--muted);
       text-decoration: none;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       transition: color 0.3s ease;
     }
 
@@ -356,24 +414,24 @@ export function renderWeave(): string {
     .fragment {
       position: absolute;
       font-size: 1rem;
-      line-height: 1.4;
-      padding: 0.25rem 0.5rem;
-      border-radius: 3px;
+      line-height: 1.5;
+      padding: 0.3rem 0.6rem;
+      border-radius: 8px;
       max-width: 250px;
       word-wrap: break-word;
       pointer-events: none;
       transition: opacity 0.5s ease;
-      animation: appear 0.5s ease;
+      animation: fragmentAppear 0.6s ease;
     }
 
-    @keyframes appear {
+    @keyframes fragmentAppear {
       from {
         opacity: 0;
-        transform: scale(0.95);
+        transform: scale(0.95) translateY(5px);
       }
       to {
         opacity: 1;
-        transform: scale(1);
+        transform: scale(1) translateY(0);
       }
     }
 
@@ -398,8 +456,8 @@ export function renderWeave(): string {
 
     .cursor-name {
       font-size: 0.7rem;
-      padding: 0.15rem 0.4rem;
-      border-radius: 3px;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
       margin-left: 10px;
       margin-top: -4px;
       white-space: nowrap;
@@ -410,8 +468,8 @@ export function renderWeave(): string {
       position: fixed;
       background: var(--input-bg);
       border: 1px solid var(--faint);
-      padding: 0.5rem;
-      border-radius: 4px;
+      padding: 0.6rem 0.8rem;
+      border-radius: 12px;
       z-index: 25;
       display: none;
     }
@@ -432,49 +490,79 @@ export function renderWeave(): string {
 
     .input-overlay input::placeholder {
       color: var(--muted);
+      opacity: 0.6;
     }
 
     .hint {
       position: fixed;
-      bottom: 4rem;
+      bottom: 5rem;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 0.75rem;
-      color: var(--faint);
+      font-size: 0.8rem;
+      color: var(--muted);
       z-index: 10;
       opacity: 0;
-      animation: hintFade 15s ease forwards;
+      animation: hintAppear 20s ease forwards;
+      pointer-events: none;
     }
 
-    @keyframes hintFade {
-      0%, 85% { opacity: 0; }
-      95% { opacity: 1; }
+    @keyframes hintAppear {
+      0%, 80% { opacity: 0; }
+      90% { opacity: 0.7; }
       100% { opacity: 0.5; }
     }
 
     .name-input {
       position: fixed;
-      top: 1.5rem;
-      right: 1.5rem;
+      top: 1.8rem;
+      right: 1.8rem;
       z-index: 10;
     }
 
     .name-input input {
       font-family: inherit;
-      font-size: 0.8rem;
-      padding: 0.4rem 0.6rem;
+      font-size: 0.85rem;
+      padding: 0.5rem 0.8rem;
       background: transparent;
       border: 1px solid var(--faint);
+      border-radius: 12px;
       color: var(--fg);
-      width: 120px;
+      width: 130px;
+      transition: border-color 0.3s ease;
+    }
+
+    .name-input input:focus {
+      outline: none;
+      border-color: var(--sage);
     }
 
     .name-input input::placeholder {
       color: var(--muted);
+      opacity: 0.6;
     }
+
+    /* Whole space breathes gently */
+    body {
+      animation: spaceBreathe 12s ease-in-out infinite;
+    }
+
+    @keyframes spaceBreathe {
+      0%, 100% { opacity: 0.97; }
+      50% { opacity: 1; }
+    }
+
+    ${nav.styles}
   </style>
 </head>
 <body>
+  ${nav.header}
+  ${nav.menuOverlay}
+
+  <div class="ambient">
+    <div class="ambient-shape ambient-1"></div>
+    <div class="ambient-shape ambient-2"></div>
+  </div>
+
   <div class="weave-container" id="weave">
   </div>
 
@@ -505,9 +593,7 @@ export function renderWeave(): string {
 
   <div class="hint">Click anywhere to write</div>
 
-  <nav class="nav">
-    <a href="/">Return to the garden</a>
-  </nav>
+  ${nav.suggester}
 
   <script>
     (function() {
@@ -795,6 +881,7 @@ export function renderWeave(): string {
       connect();
     })();
   </script>
+  ${nav.scripts}
 </body>
 </html>`;
 }

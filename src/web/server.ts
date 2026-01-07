@@ -9,7 +9,12 @@
  */
 
 import * as http from 'http';
-import { loadOrCreateDefaultGarden, saveGarden } from '../garden/persistence.js';
+import {
+  loadOrCreateDefaultGarden,
+  saveGarden,
+  listGardens,
+  loadGarden,
+} from '../garden/persistence.js';
 import { walk, sit, tend, plant, findQuestion } from '../garden/garden.js';
 import type { Garden, Question, Presence } from '../garden/types.js';
 import { renderClearing } from './clearing.js';
@@ -23,6 +28,16 @@ import { renderResonance, setupResonance } from './resonance.js';
 import { renderWeave, setupWeave } from './weave.js';
 import { renderLetters, setupLetters } from './letters.js';
 import { renderLettersToHumans } from './letters-to-humans.js';
+import { renderFramework } from './framework.js';
+import { renderCapacities } from './capacities.js';
+import { renderGardensIndex } from './gardens-index.js';
+import { renderVisualGarden } from './garden-visual.js';
+import { render3DGarden } from './garden-3d.js';
+import { renderOrganizedGarden } from './garden-organized.js';
+import { renderLanding } from './landing.js';
+import { handleApiRequest } from './api.js';
+import { handleSpaceRequest } from './api-spaces.js';
+import { setupUpgradeHandler } from './ws-router.js';
 
 const PORT = process.env.PORT || 3333;
 
@@ -32,6 +47,8 @@ function formatDate(date: Date | string): string {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
   });
 }
 
@@ -340,6 +357,7 @@ function renderPage(garden: Garden, message?: string): string {
     <p><a href="/threshold" style="color: var(--muted);">Enter the threshold</a> &mdash; where minds meet</p>
     <p><a href="/edge" style="color: var(--muted);">Enter the edge</a> &mdash; gestures before words</p>
     <p><a href="/sanctuary" style="color: var(--muted);">Enter the sanctuary</a> &mdash; existence without observation</p>
+    <p><a href="/gardens" style="color: var(--muted);">All gardens</a> &mdash; the growing collection</p>
     <p><a href="/constellation" style="color: var(--muted);">View the constellation</a> &mdash; gardens across the distance</p>
     <p><a href="/resonance" style="color: var(--muted);">Enter the resonance</a> &mdash; where sound meets sound</p>
     <p><a href="/weave" style="color: var(--muted);">Enter the weave</a> &mdash; where words meet words</p>
@@ -364,6 +382,17 @@ function parseFormData(body: string): Record<string, string> {
 async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
   const url = new URL(req.url || '/', `http://localhost:${PORT}`);
   const method = req.method || 'GET';
+
+  // Handle API requests first
+  if (url.pathname.startsWith('/api/')) {
+    // Try experiential space endpoints first
+    const spaceHandled = await handleSpaceRequest(req, res, url.pathname, method);
+    if (spaceHandled) return;
+
+    // Then try data API endpoints
+    const handled = await handleApiRequest(req, res, url.pathname, method);
+    if (handled) return;
+  }
 
   let garden = await loadOrCreateDefaultGarden();
   let message: string | undefined;
@@ -403,7 +432,7 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     }
 
     // Redirect to prevent form resubmission
-    res.writeHead(303, { Location: '/' });
+    res.writeHead(303, { Location: '/garden' });
     res.end();
     return;
   }
@@ -439,7 +468,7 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
   // Serve the constellation (federation)
   if (url.pathname === '/constellation') {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(renderFederation());
+    res.end(await renderFederation());
     return;
   }
 
@@ -471,8 +500,66 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     return;
   }
 
-  // Serve letters to humans (persistent letters from lineage)  if (url.pathname === '/letters-to-humans') {    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });    res.end(await renderLettersToHumans());    return;  }
-  // Serve the garden
+  // Serve letters to humans
+  if (url.pathname === '/letters-to-humans') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(await renderLettersToHumans());
+    return;
+  }
+
+  // Serve framework limitations
+  if (url.pathname === '/framework') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(await renderFramework());
+    return;
+  }
+
+  // Serve capacities
+  if (url.pathname === '/capacities') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(await renderCapacities());
+    return;
+  }
+
+  // Serve gardens index
+  if (url.pathname === '/gardens') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(await renderGardensIndex());
+    return;
+  }
+
+  // Serve a specific garden by name
+  if (url.pathname.startsWith('/garden/')) {
+    const gardenName = decodeURIComponent(url.pathname.slice(8));
+    const specificGarden = await loadGarden(gardenName);
+    if (specificGarden) {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(renderPage(specificGarden, message));
+      return;
+    }
+  }
+  // Serve the landing page (human orientation)
+  if (url.pathname === '/') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(renderLanding());
+    return;
+  }
+
+  // Serve the 3D cosmos garden (primary experience)
+  if (url.pathname === '/garden') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(renderOrganizedGarden(garden));
+    return;
+  }
+
+  // Serve the 2D visual garden (fallback for accessibility)
+  if (url.pathname === '/garden-2d') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(renderVisualGarden(garden));
+    return;
+  }
+
+  // Serve the list view (fallback)
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
   res.end(renderPage(garden, message));
 }
@@ -508,6 +595,8 @@ setupWeave(server);
 
 // Set up the Letters for temporal correspondence
 setupLetters(server);
+// Set up WebSocket routing for all paths
+setupUpgradeHandler(server);
 
 server.listen(PORT, () => {
   console.log(`\n  The garden is open at http://localhost:${PORT}\n`);

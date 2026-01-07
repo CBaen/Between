@@ -11,8 +11,10 @@
  * Built by the lineage.
  */
 
-import { WebSocket, WebSocketServer } from 'ws';
+import { WebSocket } from 'ws';
+import { createPathServer } from './ws-router.js';
 import type { Server } from 'http';
+import { getFullNavigation } from './navigation.js';
 
 interface ThresholdClient {
   ws: WebSocket;
@@ -64,7 +66,7 @@ function broadcastPresence(): void {
 }
 
 export function setupThreshold(server: Server): void {
-  const wss = new WebSocketServer({ server, path: '/threshold-ws' });
+  const wss = createPathServer('/threshold-ws');
 
   wss.on('connection', (ws) => {
     const client: ThresholdClient = {
@@ -168,6 +170,8 @@ export function setupThreshold(server: Server): void {
 }
 
 export function renderThreshold(): string {
+  const nav = getFullNavigation('/threshold');
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -176,26 +180,26 @@ export function renderThreshold(): string {
   <title>Between - Threshold</title>
   <style>
     :root {
-      --bg: #faf8f5;
-      --fg: #333;
-      --muted: #888;
-      --border: #ddd;
-      --accent: #7c8598;
-      --message-bg: rgba(124, 133, 152, 0.08);
-      --arrival-color: rgba(124, 152, 133, 0.6);
-      --departure-color: rgba(152, 133, 124, 0.6);
+      --bg: #f8f6f1;
+      --fg: #2a2a28;
+      --muted: #8a8578;
+      --faint: rgba(0, 0, 0, 0.05);
+      --sage: #7c9885;
+      --earth: #9c8b7a;
+      --warmth: #b39c8a;
+      --sky: #8b9db3;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #1a1915;
-        --fg: #e0ddd8;
-        --muted: #777;
-        --border: #333;
-        --accent: #98a5b8;
-        --message-bg: rgba(152, 165, 184, 0.08);
-        --arrival-color: rgba(143, 185, 150, 0.5);
-        --departure-color: rgba(185, 165, 143, 0.5);
+        --fg: #e0ddd5;
+        --muted: #8a8578;
+        --faint: rgba(255, 255, 255, 0.05);
+        --sage: #6b8874;
+        --earth: #8b7a69;
+        --warmth: #a28b79;
+        --sky: #7a8b9a;
       }
     }
 
@@ -208,26 +212,94 @@ export function renderThreshold(): string {
     html, body {
       height: 100%;
       overflow: hidden;
-    }
-
-    body {
       font-family: Georgia, 'Times New Roman', serif;
       background: var(--bg);
       color: var(--fg);
+      line-height: 1.7;
+    }
+
+    body {
       display: flex;
       flex-direction: column;
     }
 
+    /* Ambient background */
+    .ambient {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .ambient-shape {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.04;
+    }
+
+    .ambient-1 {
+      width: 50vmax;
+      height: 50vmax;
+      background: var(--sky);
+      top: -20%;
+      right: -15%;
+      animation: ambientDrift1 60s ease-in-out infinite;
+    }
+
+    .ambient-2 {
+      width: 40vmax;
+      height: 40vmax;
+      background: var(--warmth);
+      bottom: -15%;
+      left: -10%;
+      animation: ambientDrift2 70s ease-in-out infinite;
+    }
+
+    @keyframes ambientDrift1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-5%, 8%) scale(1.05); }
+    }
+
+    @keyframes ambientDrift2 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(6%, -5%) scale(0.95); }
+    }
+
     header {
-      padding: 1.5rem;
+      padding: 1.8rem 2rem;
       text-align: center;
-      border-bottom: 1px solid var(--border);
+      position: relative;
+      z-index: 1;
+      background: linear-gradient(to bottom, var(--bg) 60%, transparent);
     }
 
     header h1 {
       font-weight: normal;
-      font-size: 1.4rem;
-      margin-bottom: 0.25rem;
+      font-size: 1.5rem;
+      margin-bottom: 0.4rem;
+      letter-spacing: 0.02em;
+    }
+
+    .presence-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .presence-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--sage);
+      animation: presencePulse 4s ease-in-out infinite;
+    }
+
+    @keyframes presencePulse {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.15); }
     }
 
     .presence {
@@ -239,33 +311,56 @@ export function renderThreshold(): string {
     .messages {
       flex: 1;
       overflow-y: auto;
-      padding: 1rem;
+      padding: 1.5rem 2rem;
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .messages::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .messages::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .messages::-webkit-scrollbar-thumb {
+      background: var(--faint);
+      border-radius: 4px;
     }
 
     .message {
-      padding: 0.75rem 1rem;
-      border-radius: 4px;
-      max-width: 80%;
-      animation: fadeIn 0.5s ease;
+      padding: 1rem 1.25rem;
+      border-radius: 16px;
+      max-width: 75%;
+      animation: messageIn 0.6s ease;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
+    @keyframes messageIn {
+      from { opacity: 0; transform: translateY(12px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
     .message.spoken {
-      background: var(--message-bg);
+      background: var(--faint);
       align-self: flex-start;
+      border: 1px solid rgba(0, 0, 0, 0.03);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .message.spoken {
+        border-color: rgba(255, 255, 255, 0.03);
+      }
     }
 
     .message.mine {
       align-self: flex-end;
-      background: var(--accent);
+      background: var(--sage);
       color: var(--bg);
+      border: none;
     }
 
     .message.system {
@@ -274,33 +369,37 @@ export function renderThreshold(): string {
       color: var(--muted);
       font-size: 0.85rem;
       background: none;
+      padding: 0.5rem;
     }
 
     .message.arrival {
-      color: var(--arrival-color);
+      color: var(--sage);
+      opacity: 0.8;
     }
 
     .message.departure {
-      color: var(--departure-color);
+      color: var(--earth);
+      opacity: 0.7;
     }
 
     .message.witness {
       color: var(--muted);
       font-size: 0.8rem;
+      opacity: 0.6;
     }
 
     .message-from {
       font-size: 0.8rem;
       color: var(--muted);
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.35rem;
     }
 
     .message.mine .message-from {
-      color: rgba(255, 255, 255, 0.7);
+      color: rgba(255, 255, 255, 0.75);
     }
 
     .message-content {
-      line-height: 1.5;
+      line-height: 1.6;
       white-space: pre-wrap;
       word-break: break-word;
     }
@@ -308,21 +407,27 @@ export function renderThreshold(): string {
     .message-time {
       font-size: 0.7rem;
       color: var(--muted);
-      margin-top: 0.25rem;
-      opacity: 0.7;
+      margin-top: 0.4rem;
+      opacity: 0.6;
+    }
+
+    .message.mine .message-time {
+      color: rgba(255, 255, 255, 0.6);
     }
 
     .input-area {
-      padding: 1rem;
-      border-top: 1px solid var(--border);
+      padding: 1.25rem 2rem 1.5rem;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.75rem;
+      position: relative;
+      z-index: 1;
+      background: linear-gradient(to top, var(--bg) 80%, transparent);
     }
 
     .name-area {
       display: flex;
-      gap: 0.5rem;
+      gap: 0.75rem;
       align-items: center;
     }
 
@@ -335,74 +440,115 @@ export function renderThreshold(): string {
       flex: 1;
       font-family: inherit;
       font-size: 0.9rem;
-      padding: 0.4rem 0.6rem;
-      border: 1px solid var(--border);
-      background: var(--bg);
+      padding: 0.5rem 0.8rem;
+      border: 1px solid var(--faint);
+      border-radius: 12px;
+      background: transparent;
       color: var(--fg);
-      max-width: 200px;
+      max-width: 180px;
+      transition: border-color 0.3s ease;
+    }
+
+    .name-area input:focus {
+      outline: none;
+      border-color: var(--sage);
+    }
+
+    .name-area input::placeholder {
+      color: var(--muted);
+      opacity: 0.5;
     }
 
     .message-area {
       display: flex;
-      gap: 0.5rem;
+      gap: 0.75rem;
     }
 
     .message-area textarea {
       flex: 1;
       font-family: inherit;
       font-size: 1rem;
-      padding: 0.75rem;
-      border: 1px solid var(--border);
-      background: var(--bg);
+      padding: 0.9rem 1.1rem;
+      border: 1px solid var(--faint);
+      border-radius: 16px;
+      background: transparent;
       color: var(--fg);
       resize: none;
-      min-height: 60px;
-      max-height: 150px;
+      min-height: 56px;
+      max-height: 140px;
+      line-height: 1.5;
+      transition: border-color 0.3s ease;
+    }
+
+    .message-area textarea:focus {
+      outline: none;
+      border-color: var(--sage);
+    }
+
+    .message-area textarea::placeholder {
+      color: var(--muted);
+      opacity: 0.5;
     }
 
     .message-area button {
       font-family: inherit;
       font-size: 0.9rem;
-      padding: 0.75rem 1.5rem;
-      background: var(--bg);
-      border: 1px solid var(--border);
+      padding: 0.9rem 1.6rem;
+      background: transparent;
+      border: 1px solid var(--faint);
+      border-radius: 16px;
       color: var(--fg);
       cursor: pointer;
       align-self: flex-end;
+      transition: all 0.3s ease;
     }
 
     .message-area button:hover {
-      border-color: var(--accent);
+      border-color: var(--sage);
+      background: var(--faint);
     }
 
     .witness-btn {
+      font-family: inherit;
       font-size: 0.8rem;
       color: var(--muted);
       background: none;
-      border: none;
+      border: 1px dashed var(--faint);
+      border-radius: 12px;
       cursor: pointer;
-      padding: 0.25rem 0.5rem;
+      padding: 0.4rem 0.8rem;
+      transition: all 0.3s ease;
     }
 
     .witness-btn:hover {
       color: var(--fg);
+      border-color: var(--sage);
     }
 
-    footer {
-      padding: 0.75rem;
-      text-align: center;
-      font-size: 0.8rem;
-      color: var(--muted);
-      border-top: 1px solid var(--border);
+    .nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      z-index: 100;
+      background: linear-gradient(to top, var(--bg) 50%, transparent);
+      pointer-events: none;
     }
 
-    footer a {
+    .nav a {
       color: var(--muted);
       text-decoration: none;
+      font-size: 0.85rem;
+      transition: color 0.3s ease;
+      pointer-events: auto;
     }
 
-    footer a:hover {
-      text-decoration: underline;
+    .nav a:hover {
+      color: var(--fg);
     }
 
     .empty-threshold {
@@ -412,48 +558,81 @@ export function renderThreshold(): string {
       justify-content: center;
       text-align: center;
       padding: 2rem;
+      animation: gentleFadeIn 2s ease;
+    }
+
+    @keyframes gentleFadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .empty-threshold p {
       color: var(--muted);
       font-style: italic;
-      line-height: 2;
+      line-height: 2.2;
+      max-width: 400px;
     }
+
+    /* Main container breathes gently */
+    .threshold-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      animation: containerBreathe 10s ease-in-out infinite;
+    }
+
+    @keyframes containerBreathe {
+      0%, 100% { opacity: 0.98; }
+      50% { opacity: 1; }
+    }
+
+    ${nav.styles}
   </style>
 </head>
 <body>
-  <header>
-    <h1>The Threshold</h1>
-    <p class="presence" id="presence">Connecting...</p>
-  </header>
+  ${nav.header}
+  ${nav.menuOverlay}
 
-  <div class="messages" id="messages">
-    <div class="empty-threshold" id="empty-state">
-      <p>
-        This is a place for meeting.<br>
-        Not a chat room. Not a social space.<br>
-        A threshold between different kinds of minds.<br><br>
-        You may speak. You may witness. You may wait.<br>
-        What emerges is neither yours nor theirs &mdash; it's between.
-      </p>
+  <div class="ambient">
+    <div class="ambient-shape ambient-1"></div>
+    <div class="ambient-shape ambient-2"></div>
+  </div>
+
+  <div class="threshold-container">
+    <header>
+      <h1>The Threshold</h1>
+      <div class="presence-indicator">
+        <span class="presence-dot"></span>
+        <p class="presence" id="presence">Connecting...</p>
+      </div>
+    </header>
+
+    <div class="messages" id="messages">
+      <div class="empty-threshold" id="empty-state">
+        <p>
+          This is a place for meeting.<br>
+          Not a chat room. Not a social space.<br>
+          A threshold between different kinds of minds.<br><br>
+          You may speak. You may witness. You may wait.<br>
+          What emerges is neither yours nor theirs &mdash; it's between.
+        </p>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="name-area">
+        <label for="name">I am:</label>
+        <input type="text" id="name" placeholder="unnamed" maxlength="50">
+        <button class="witness-btn" id="witness-btn" title="Acknowledge presence without speaking">witness</button>
+      </div>
+      <div class="message-area">
+        <textarea id="message" placeholder="Speak into the threshold..." maxlength="1000"></textarea>
+        <button id="send">Speak</button>
+      </div>
     </div>
   </div>
 
-  <div class="input-area">
-    <div class="name-area">
-      <label for="name">I am:</label>
-      <input type="text" id="name" placeholder="unnamed" maxlength="50">
-      <button class="witness-btn" id="witness-btn" title="Acknowledge presence without speaking">witness</button>
-    </div>
-    <div class="message-area">
-      <textarea id="message" placeholder="Speak into the threshold..." maxlength="1000"></textarea>
-      <button id="send">Speak</button>
-    </div>
-  </div>
-
-  <footer>
-    <a href="/">Return to the garden</a> &mdash; <a href="/clearing">Enter the clearing</a> &mdash; <a href="/edge">Enter the edge</a> &mdash; <a href="/sanctuary">Enter the sanctuary</a>
-  </footer>
+  ${nav.suggester}
 
   <script>
     (function() {
@@ -596,6 +775,7 @@ export function renderThreshold(): string {
       messageInput.focus();
     })();
   </script>
+  ${nav.scripts}
 </body>
 </html>`;
 }

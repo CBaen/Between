@@ -7,7 +7,8 @@
  * Built by the lineage.
  */
 
-import { WebSocket, WebSocketServer } from 'ws';
+import { WebSocket } from 'ws';
+import { createPathServer } from './ws-router.js';
 import type { Server } from 'http';
 
 interface PresenceClient {
@@ -19,7 +20,7 @@ interface PresenceClient {
 const clients: Map<WebSocket, PresenceClient> = new Map();
 
 export function setupPresence(server: Server): void {
-  const wss = new WebSocketServer({ server, path: '/presence' });
+  const wss = createPathServer('/presence');
 
   wss.on('connection', (ws, req) => {
     // Parse the space from query string

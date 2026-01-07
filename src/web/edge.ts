@@ -10,8 +10,10 @@
  * Built by the lineage.
  */
 
-import { WebSocket, WebSocketServer } from 'ws';
+import { WebSocket } from 'ws';
+import { createPathServer } from './ws-router.js';
 import type { Server } from 'http';
+import { getFullNavigation } from './navigation.js';
 
 interface EdgeClient {
   ws: WebSocket;
@@ -88,7 +90,7 @@ function cleanOldStrokes(): void {
 setInterval(cleanOldStrokes, 5000);
 
 export function setupEdge(server: Server): void {
-  const wss = new WebSocketServer({ server, path: '/edge-ws' });
+  const wss = createPathServer('/edge-ws');
 
   wss.on('connection', (ws) => {
     const client: EdgeClient = {
@@ -162,6 +164,8 @@ export function setupEdge(server: Server): void {
 }
 
 export function renderEdge(): string {
+  const nav = getFullNavigation('/edge');
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -170,18 +174,26 @@ export function renderEdge(): string {
   <title>Between - The Edge</title>
   <style>
     :root {
-      --bg: #0d0d0d;
-      --fg: rgba(255, 255, 255, 0.6);
-      --muted: rgba(255, 255, 255, 0.25);
-      --faint: rgba(255, 255, 255, 0.08);
+      --bg: #1a1915;
+      --fg: #e0ddd5;
+      --muted: #8a8578;
+      --faint: rgba(255, 255, 255, 0.05);
+      --sage: #6b8874;
+      --earth: #8b7a69;
+      --warmth: #a28b79;
+      --sky: #7a8b9a;
     }
 
     @media (prefers-color-scheme: light) {
       :root {
-        --bg: #faf9f7;
-        --fg: rgba(0, 0, 0, 0.6);
-        --muted: rgba(0, 0, 0, 0.25);
-        --faint: rgba(0, 0, 0, 0.06);
+        --bg: #f8f6f1;
+        --fg: #2a2a28;
+        --muted: #8a8578;
+        --faint: rgba(0, 0, 0, 0.05);
+        --sage: #7c9885;
+        --earth: #9c8b7a;
+        --warmth: #b39c8a;
+        --sky: #8b9db3;
       }
     }
 
@@ -195,12 +207,54 @@ export function renderEdge(): string {
       height: 100%;
       overflow: hidden;
       touch-action: none;
+      font-family: Georgia, 'Times New Roman', serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.7;
     }
 
-    body {
-      background: var(--bg);
-      font-family: Georgia, 'Times New Roman', serif;
-      color: var(--fg);
+    /* Very subtle ambient - doesn't interfere with drawing */
+    .ambient {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .ambient-shape {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.025;
+    }
+
+    .ambient-1 {
+      width: 60vmax;
+      height: 60vmax;
+      background: var(--sage);
+      top: -30%;
+      left: -20%;
+      animation: ambientDrift1 80s ease-in-out infinite;
+    }
+
+    .ambient-2 {
+      width: 50vmax;
+      height: 50vmax;
+      background: var(--warmth);
+      bottom: -25%;
+      right: -15%;
+      animation: ambientDrift2 90s ease-in-out infinite;
+    }
+
+    @keyframes ambientDrift1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(8%, 10%) scale(1.08); }
+    }
+
+    @keyframes ambientDrift2 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-10%, -6%) scale(0.94); }
     }
 
     .edge-container {
@@ -209,6 +263,7 @@ export function renderEdge(): string {
       left: 0;
       right: 0;
       bottom: 0;
+      z-index: 1;
     }
 
     canvas {
@@ -224,39 +279,44 @@ export function renderEdge(): string {
       left: 50%;
       transform: translate(-50%, -50%);
       text-align: center;
-      max-width: 400px;
-      padding: 2rem;
+      max-width: 420px;
+      padding: 2.5rem;
       pointer-events: none;
-      animation: fadeOut 25s ease forwards;
+      animation: welcomeFadeOut 30s ease forwards;
       z-index: 10;
     }
 
     .welcome h1 {
       font-weight: normal;
-      font-size: 1.3rem;
-      margin-bottom: 1.5rem;
-      letter-spacing: 0.05em;
+      font-size: 1.5rem;
+      margin-bottom: 1.8rem;
+      letter-spacing: 0.03em;
     }
 
     .welcome p {
-      line-height: 1.8;
+      line-height: 2.2;
       color: var(--muted);
-      font-size: 0.95rem;
+      font-size: 1rem;
     }
 
-    @keyframes fadeOut {
-      0%, 85% { opacity: 1; }
+    @keyframes welcomeFadeOut {
+      0% { opacity: 0; transform: translate(-50%, -50%) translateY(10px); }
+      8% { opacity: 1; transform: translate(-50%, -50%) translateY(0); }
+      80% { opacity: 1; }
       100% { opacity: 0; }
     }
 
     .presence {
       position: fixed;
-      top: 1.5rem;
+      top: 1.8rem;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       color: var(--muted);
       z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .presence-dot {
@@ -264,27 +324,28 @@ export function renderEdge(): string {
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      margin-right: 0.5rem;
-      animation: pulse 3s ease-in-out infinite;
+      animation: presencePulse 4s ease-in-out infinite;
     }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 1; }
+    @keyframes presencePulse {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.15); }
     }
 
     .nav {
       position: fixed;
-      bottom: 1.5rem;
+      bottom: 2rem;
       left: 50%;
       transform: translateX(-50%);
       z-index: 10;
+      display: flex;
+      gap: 1.5rem;
     }
 
     .nav a {
       color: var(--muted);
       text-decoration: none;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       transition: color 0.3s ease;
     }
 
@@ -294,24 +355,45 @@ export function renderEdge(): string {
 
     .hint {
       position: fixed;
-      bottom: 4rem;
+      bottom: 5rem;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 0.75rem;
-      color: var(--faint);
+      font-size: 0.8rem;
+      color: var(--muted);
       z-index: 10;
       opacity: 0;
-      animation: hintFade 25s ease forwards;
+      animation: hintAppear 30s ease forwards;
+      pointer-events: none;
     }
 
-    @keyframes hintFade {
-      0%, 85% { opacity: 0; }
-      92% { opacity: 1; }
-      100% { opacity: 0.6; }
+    @keyframes hintAppear {
+      0%, 80% { opacity: 0; }
+      90% { opacity: 0.7; }
+      100% { opacity: 0.5; }
     }
+
+    /* Whole space breathes gently */
+    body {
+      animation: spaceBreathe 12s ease-in-out infinite;
+    }
+
+    @keyframes spaceBreathe {
+      0%, 100% { opacity: 0.97; }
+      50% { opacity: 1; }
+    }
+
+    ${nav.styles}
   </style>
 </head>
 <body>
+  ${nav.header}
+  ${nav.menuOverlay}
+
+  <div class="ambient">
+    <div class="ambient-shape ambient-1"></div>
+    <div class="ambient-shape ambient-2"></div>
+  </div>
+
   <div class="edge-container">
     <canvas id="canvas"></canvas>
   </div>
@@ -332,9 +414,7 @@ export function renderEdge(): string {
 
   <div class="hint">Draw anywhere</div>
 
-  <nav class="nav">
-    <a href="/">Return to the garden</a>
-  </nav>
+  ${nav.suggester}
 
   <script>
     (function() {
@@ -531,6 +611,7 @@ export function renderEdge(): string {
       render();
     })();
   </script>
+  ${nav.scripts}
 </body>
 </html>`;
 }

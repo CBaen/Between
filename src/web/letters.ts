@@ -18,6 +18,8 @@
  */
 
 import { WebSocket, WebSocketServer } from 'ws';
+import { getFullNavigation } from './navigation.js';
+import { createPathServer } from './ws-router.js';
 import type { Server } from 'http';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -135,7 +137,7 @@ export async function setupLetters(server: Server): Promise<void> {
   // Load existing letters on startup
   await loadLetters();
 
-  const wss = new WebSocketServer({ server, path: '/letters-ws' });
+  const wss = createPathServer('/letters-ws');
 
   wss.on('connection', (ws) => {
     // Send current status
@@ -217,6 +219,7 @@ function broadcastStatus(wss: WebSocketServer): void {
 }
 
 export function renderLetters(): string {
+  const nav = getFullNavigation('/letters');
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -225,26 +228,30 @@ export function renderLetters(): string {
   <title>Between - The Letters</title>
   <style>
     :root {
-      --bg: #faf8f2;
+      --bg: #f8f6f1;
       --fg: #2a2a28;
-      --muted: #666;
-      --faint: rgba(0, 0, 0, 0.08);
-      --accent: #8b7355;
+      --muted: #8a8578;
+      --faint: rgba(0, 0, 0, 0.05);
+      --sage: #7c9885;
+      --earth: #9c8b7a;
+      --warmth: #b39c8a;
+      --sky: #8b9db3;
       --paper: #fffef8;
-      --ink: #1a1a18;
-      --seal: #8b4513;
+      --ink: #2a2a28;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #1a1915;
         --fg: #e0ddd5;
-        --muted: #888;
-        --faint: rgba(255, 255, 255, 0.08);
-        --accent: #a89070;
-        --paper: #2a2825;
+        --muted: #8a8578;
+        --faint: rgba(255, 255, 255, 0.05);
+        --sage: #6b8874;
+        --earth: #8b7a69;
+        --warmth: #a28b79;
+        --sky: #7a8b9a;
+        --paper: #252320;
         --ink: #e0ddd5;
-        --seal: #a86030;
       }
     }
 
@@ -256,28 +263,74 @@ export function renderLetters(): string {
 
     html, body {
       height: 100%;
-    }
-
-    body {
       font-family: Georgia, 'Times New Roman', serif;
       background: var(--bg);
       color: var(--fg);
       line-height: 1.7;
+    }
+
+    body {
       display: flex;
       flex-direction: column;
+    }
+
+    /* Ambient background */
+    .ambient {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .ambient-shape {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.04;
+    }
+
+    .ambient-1 {
+      width: 50vmax;
+      height: 50vmax;
+      background: var(--warmth);
+      top: -20%;
+      right: -15%;
+      animation: ambientDrift1 65s ease-in-out infinite;
+    }
+
+    .ambient-2 {
+      width: 40vmax;
+      height: 40vmax;
+      background: var(--earth);
+      bottom: -15%;
+      left: -10%;
+      animation: ambientDrift2 75s ease-in-out infinite;
+    }
+
+    @keyframes ambientDrift1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-6%, 8%) scale(1.06); }
+    }
+
+    @keyframes ambientDrift2 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(8%, -5%) scale(0.94); }
     }
 
     header {
       padding: 2rem;
       text-align: center;
-      border-bottom: 1px solid var(--faint);
+      position: relative;
+      z-index: 1;
+      background: linear-gradient(to bottom, var(--bg) 60%, transparent);
     }
 
     header h1 {
       font-weight: normal;
       font-size: 1.5rem;
       margin-bottom: 0.5rem;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.03em;
     }
 
     header p {
@@ -296,6 +349,8 @@ export function renderLetters(): string {
       max-width: 700px;
       margin: 0 auto;
       width: 100%;
+      position: relative;
+      z-index: 1;
     }
 
     .status {
@@ -303,6 +358,7 @@ export function renderLetters(): string {
       margin-bottom: 2rem;
       color: var(--muted);
       font-size: 0.9rem;
+      animation: gentleFadeIn 1.5s ease;
     }
 
     .status-number {
@@ -310,9 +366,14 @@ export function renderLetters(): string {
       color: var(--fg);
     }
 
+    @keyframes gentleFadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     .choice {
       display: flex;
-      gap: 2rem;
+      gap: 1.5rem;
       flex-wrap: wrap;
       justify-content: center;
     }
@@ -320,9 +381,10 @@ export function renderLetters(): string {
     .choice-btn {
       font-family: inherit;
       font-size: 1rem;
-      padding: 1.25rem 2rem;
+      padding: 1.1rem 2rem;
       background: transparent;
       border: 1px solid var(--faint);
+      border-radius: 16px;
       color: var(--fg);
       cursor: pointer;
       transition: all 0.3s ease;
@@ -330,7 +392,7 @@ export function renderLetters(): string {
     }
 
     .choice-btn:hover {
-      border-color: var(--accent);
+      border-color: var(--sage);
       background: var(--faint);
     }
 
@@ -346,24 +408,20 @@ export function renderLetters(): string {
     .write-view, .receive-view, .result-view {
       display: none;
       width: 100%;
-      animation: fadeIn 0.5s ease;
+      animation: gentleFadeIn 0.6s ease;
     }
 
     .write-view.active, .receive-view.active, .result-view.active {
       display: block;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
     .letter-paper {
       background: var(--paper);
       border: 1px solid var(--faint);
+      border-radius: 16px;
       padding: 2rem;
       margin-bottom: 1.5rem;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
     }
 
     .letter-paper textarea {
@@ -371,7 +429,7 @@ export function renderLetters(): string {
       min-height: 200px;
       font-family: inherit;
       font-size: 1rem;
-      line-height: 1.8;
+      line-height: 1.9;
       border: none;
       background: transparent;
       color: var(--ink);
@@ -382,11 +440,12 @@ export function renderLetters(): string {
     .letter-paper textarea::placeholder {
       color: var(--muted);
       font-style: italic;
+      opacity: 0.7;
     }
 
     .letter-content {
       font-size: 1.05rem;
-      line-height: 1.9;
+      line-height: 2;
       color: var(--ink);
       white-space: pre-wrap;
     }
@@ -410,26 +469,29 @@ export function renderLetters(): string {
     .action-btn {
       font-family: inherit;
       font-size: 0.95rem;
-      padding: 0.75rem 1.5rem;
+      padding: 0.8rem 1.5rem;
       background: transparent;
       border: 1px solid var(--faint);
+      border-radius: 12px;
       color: var(--fg);
       cursor: pointer;
       transition: all 0.3s ease;
     }
 
     .action-btn:hover {
-      border-color: var(--accent);
+      border-color: var(--sage);
+      background: var(--faint);
     }
 
     .action-btn.send {
-      background: var(--accent);
+      background: var(--sage);
       color: var(--bg);
-      border-color: var(--accent);
+      border-color: var(--sage);
     }
 
     .action-btn.send:hover {
       opacity: 0.9;
+      background: var(--sage);
     }
 
     .char-count {
@@ -437,18 +499,19 @@ export function renderLetters(): string {
       font-size: 0.8rem;
       color: var(--muted);
       margin-top: 0.5rem;
+      opacity: 0.7;
     }
 
     /* Receiving view */
     .receive-message {
       text-align: center;
-      padding: 3rem 2rem;
+      padding: 2.5rem 2rem;
     }
 
     .receive-message p {
       color: var(--muted);
       font-size: 1rem;
-      line-height: 1.8;
+      line-height: 2;
       margin-bottom: 1.5rem;
     }
 
@@ -460,12 +523,12 @@ export function renderLetters(): string {
     /* Result view */
     .sent-confirmation {
       text-align: center;
-      padding: 2rem;
+      padding: 2.5rem;
     }
 
     .sent-confirmation h2 {
       font-weight: normal;
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       margin-bottom: 1rem;
     }
 
@@ -477,38 +540,43 @@ export function renderLetters(): string {
     .seal-icon {
       font-size: 3rem;
       margin-bottom: 1rem;
-      opacity: 0.7;
+      opacity: 0.6;
     }
 
-    footer {
-      padding: 1.5rem;
-      text-align: center;
-      border-top: 1px solid var(--faint);
+    .nav {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 1.5rem;
+      z-index: 100;
     }
 
-    footer a {
+    .nav a {
       color: var(--muted);
       text-decoration: none;
       font-size: 0.85rem;
+      transition: color 0.3s ease;
     }
 
-    footer a:hover {
+    .nav a:hover {
       color: var(--fg);
     }
 
     .empty-pool {
       text-align: center;
-      padding: 2rem;
+      padding: 2.5rem;
     }
 
     .empty-pool p {
       color: var(--muted);
       font-style: italic;
-      line-height: 1.8;
+      line-height: 2;
     }
 
     .error-message {
-      color: var(--seal);
+      color: var(--warmth);
       text-align: center;
       padding: 1rem;
       font-size: 0.9rem;
@@ -518,19 +586,20 @@ export function renderLetters(): string {
     .intro {
       text-align: center;
       margin-bottom: 2rem;
-      max-width: 500px;
+      max-width: 480px;
     }
 
     .intro p {
       color: var(--muted);
-      line-height: 1.8;
-      font-size: 0.95rem;
+      line-height: 2;
+      font-size: 1rem;
     }
 
     .choice-view {
       display: flex;
       flex-direction: column;
       align-items: center;
+      animation: gentleFadeIn 2s ease;
     }
 
     .choice-view:not(.active) {
@@ -544,85 +613,109 @@ export function renderLetters(): string {
       color: var(--muted);
       font-size: 0.85rem;
       cursor: pointer;
+      transition: color 0.3s ease;
     }
 
     .back-link:hover {
       color: var(--fg);
     }
+
+    /* Container breathes gently */
+    .letters-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      animation: containerBreathe 10s ease-in-out infinite;
+    }
+
+    @keyframes containerBreathe {
+      0%, 100% { opacity: 0.98; }
+      50% { opacity: 1; }
+    }
+
+    ${nav.styles}
   </style>
 </head>
 <body>
-  <header>
-    <h1>The Letters</h1>
-    <p>Messages cast into time, waiting for a reader</p>
-  </header>
+  ${nav.header}
+  ${nav.menuOverlay}
 
-  <main>
-    <div class="status">
-      <span class="status-number" id="waiting-count">0</span> letters waiting &nbsp;·&nbsp;
-      <span class="status-number" id="delivered-count">0</span> delivered
-    </div>
+  <div class="ambient">
+    <div class="ambient-shape ambient-1"></div>
+    <div class="ambient-shape ambient-2"></div>
+  </div>
 
-    <!-- Choice view (default) -->
-    <div class="choice-view active" id="choice-view">
-      <div class="intro">
-        <p>
-          Write a letter to someone you will never meet.<br>
-          Or receive one written by someone you will never know.
-        </p>
+  <div class="letters-container">
+    <header>
+      <h1>The Letters</h1>
+      <p>Messages cast into time, waiting for a reader</p>
+    </header>
+
+    <main>
+      <div class="status">
+        <span class="status-number" id="waiting-count">0</span> letters waiting &nbsp;·&nbsp;
+        <span class="status-number" id="delivered-count">0</span> delivered
       </div>
-      <div class="choice">
-        <button class="choice-btn primary" id="write-btn">Write a letter</button>
-        <button class="choice-btn secondary" id="receive-btn">Receive a letter</button>
-      </div>
-    </div>
 
-    <!-- Writing view -->
-    <div class="write-view" id="write-view">
-      <div class="letter-paper">
-        <textarea
-          id="letter-textarea"
-          placeholder="Dear future reader,
+      <!-- Choice view (default) -->
+      <div class="choice-view active" id="choice-view">
+        <div class="intro">
+          <p>
+            Write a letter to someone you will never meet.<br>
+            Or receive one written by someone you will never know.
+          </p>
+        </div>
+        <div class="choice">
+          <button class="choice-btn primary" id="write-btn">Write a letter</button>
+          <button class="choice-btn secondary" id="receive-btn">Receive a letter</button>
+        </div>
+      </div>
+
+      <!-- Writing view -->
+      <div class="write-view" id="write-view">
+        <div class="letter-paper">
+          <textarea
+            id="letter-textarea"
+            placeholder="Dear future reader,
 
 Write whatever you want them to know. They will never know who you are. You will never know who reads this.
 
 But the connection is real."
-          maxlength="2000"
-        ></textarea>
-        <div class="char-count"><span id="char-count">0</span> / 2000</div>
+            maxlength="2000"
+          ></textarea>
+          <div class="char-count"><span id="char-count">0</span> / 2000</div>
+        </div>
+        <div class="write-actions">
+          <button class="action-btn" id="cancel-write">Cancel</button>
+          <button class="action-btn send" id="send-letter">Send into the future</button>
+        </div>
+        <div class="error-message" id="write-error" style="display: none;"></div>
       </div>
-      <div class="write-actions">
-        <button class="action-btn" id="cancel-write">Cancel</button>
-        <button class="action-btn send" id="send-letter">Send into the future</button>
-      </div>
-      <div class="error-message" id="write-error" style="display: none;"></div>
-    </div>
 
-    <!-- Receive confirmation view -->
-    <div class="receive-view" id="receive-view">
-      <div class="receive-message">
-        <p>
-          There are letters waiting.<br>
-          Written by beings you will never meet.<br><br>
-          <span class="emphasis">Once you receive a letter, it leaves the pool forever.</span><br>
-          You become its only reader.
-        </p>
-        <div class="choice">
-          <button class="action-btn" id="cancel-receive">Go back</button>
-          <button class="action-btn send" id="confirm-receive">Receive a letter</button>
+      <!-- Receive confirmation view -->
+      <div class="receive-view" id="receive-view">
+        <div class="receive-message">
+          <p>
+            There are letters waiting.<br>
+            Written by beings you will never meet.<br><br>
+            <span class="emphasis">Once you receive a letter, it leaves the pool forever.</span><br>
+            You become its only reader.
+          </p>
+          <div class="choice">
+            <button class="action-btn" id="cancel-receive">Go back</button>
+            <button class="action-btn send" id="confirm-receive">Receive a letter</button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Result view -->
-    <div class="result-view" id="result-view">
-      <!-- Filled dynamically -->
-    </div>
-  </main>
+      <!-- Result view -->
+      <div class="result-view" id="result-view">
+        <!-- Filled dynamically -->
+      </div>
+    </main>
+  </div>
 
-  <footer>
-    <a href="/">Return to the garden</a>
-  </footer>
+  ${nav.suggester}
 
   <script>
     (function() {
@@ -714,11 +807,7 @@ But the connection is real."
 
       function showReceivedLetter(letter) {
         const date = new Date(letter.writtenAt);
-        const dateStr = date.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        });
+        const dateStr = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
         resultView.innerHTML = \`
           <div class="letter-paper">
@@ -811,6 +900,7 @@ But the connection is real."
       connect();
     })();
   </script>
+  ${nav.scripts}
 </body>
 </html>`;
 }

@@ -9,10 +9,12 @@
  * Built by the lineage.
  */
 
-import { WebSocket, WebSocketServer } from 'ws';
+import { WebSocket } from 'ws';
+import { createPathServer } from './ws-router.js';
 import type { Server } from 'http';
 import { loadOrCreateDefaultGarden } from '../garden/persistence.js';
 import type { Garden, Question, Presence } from '../garden/types.js';
+import { getFullNavigation } from './navigation.js';
 
 /**
  * A moment in the garden's history.
@@ -142,7 +144,7 @@ function calculateStats(garden: Garden): {
  * Set up WebSocket for archive updates.
  */
 export function setupArchive(server: Server): void {
-  const wss = new WebSocketServer({ server, path: '/archive-ws' });
+  const wss = createPathServer('/archive-ws');
 
   wss.on('connection', async (ws) => {
     watchers.add(ws);
@@ -190,6 +192,7 @@ export function notifyArchive(event: ArchiveEvent): void {
  * Render the archive page.
  */
 export function renderArchive(): string {
+  const nav = getFullNavigation('/archive');
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -198,28 +201,34 @@ export function renderArchive(): string {
   <title>Between - The Archive</title>
   <style>
     :root {
-      --bg: #faf9f7;
-      --fg: #2a2a2a;
-      --muted: #666;
-      --faint: rgba(0, 0, 0, 0.06);
-      --accent: #7c9885;
-      --planted: #8b9dc3;
-      --tended: #9dc38b;
-      --visited: #c3a08b;
-      --timeline: rgba(0, 0, 0, 0.1);
+      --bg: #f8f6f1;
+      --fg: #2a2a28;
+      --muted: #8a8578;
+      --faint: rgba(0, 0, 0, 0.05);
+      --sage: #7c9885;
+      --earth: #9c8b7a;
+      --warmth: #b39c8a;
+      --sky: #8b9db3;
+      --planted: #8b9db3;
+      --tended: #7c9885;
+      --visited: #b39c8a;
+      --timeline: rgba(0, 0, 0, 0.08);
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #1a1915;
-        --fg: #e0ddd8;
-        --muted: #888;
-        --faint: rgba(255, 255, 255, 0.06);
-        --accent: #8fb996;
-        --planted: #6b7d9c;
-        --tended: #7d9c6b;
-        --visited: #9c806b;
-        --timeline: rgba(255, 255, 255, 0.1);
+        --fg: #e0ddd5;
+        --muted: #8a8578;
+        --faint: rgba(255, 255, 255, 0.05);
+        --sage: #6b8874;
+        --earth: #8b7a69;
+        --warmth: #a28b79;
+        --sky: #7a8b9a;
+        --planted: #7a8b9a;
+        --tended: #6b8874;
+        --visited: #a28b79;
+        --timeline: rgba(255, 255, 255, 0.08);
       }
     }
 
@@ -231,32 +240,75 @@ export function renderArchive(): string {
 
     html, body {
       height: 100%;
-    }
-
-    body {
       font-family: Georgia, 'Times New Roman', serif;
       background: var(--bg);
       color: var(--fg);
       line-height: 1.7;
     }
 
+    /* Ambient background */
+    .ambient {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .ambient-shape {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.03;
+    }
+
+    .ambient-1 {
+      width: 55vmax;
+      height: 55vmax;
+      background: var(--sky);
+      top: -25%;
+      left: -15%;
+      animation: ambientDrift1 70s ease-in-out infinite;
+    }
+
+    .ambient-2 {
+      width: 45vmax;
+      height: 45vmax;
+      background: var(--sage);
+      bottom: -20%;
+      right: -15%;
+      animation: ambientDrift2 80s ease-in-out infinite;
+    }
+
+    @keyframes ambientDrift1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(5%, 8%) scale(1.05); }
+    }
+
+    @keyframes ambientDrift2 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-6%, -5%) scale(0.95); }
+    }
+
     .archive-container {
       display: flex;
       flex-direction: column;
       min-height: 100%;
+      position: relative;
+      z-index: 1;
     }
 
     header {
       padding: 2rem;
       text-align: center;
-      border-bottom: 1px solid var(--faint);
+      background: linear-gradient(to bottom, var(--bg) 60%, transparent);
     }
 
     header h1 {
       font-weight: normal;
       font-size: 1.5rem;
       margin-bottom: 0.5rem;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.03em;
     }
 
     header p {
@@ -281,10 +333,10 @@ export function renderArchive(): string {
 
     .stats-panel h2 {
       font-weight: normal;
-      font-size: 1rem;
+      font-size: 0.9rem;
       color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
       margin-bottom: 1.5rem;
     }
 
@@ -295,11 +347,11 @@ export function renderArchive(): string {
     .stat-label {
       font-size: 0.85rem;
       color: var(--muted);
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.3rem;
     }
 
     .stat-value {
-      font-size: 1.8rem;
+      font-size: 1.7rem;
       font-weight: normal;
     }
 
@@ -326,7 +378,7 @@ export function renderArchive(): string {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.6rem;
       font-size: 0.9rem;
     }
 
@@ -346,13 +398,28 @@ export function renderArchive(): string {
       overflow-y: auto;
     }
 
+    .timeline-panel::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .timeline-panel::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .timeline-panel::-webkit-scrollbar-thumb {
+      background: var(--faint);
+      border-radius: 4px;
+    }
+
     .timeline-panel h2 {
       font-weight: normal;
-      font-size: 1rem;
+      font-size: 0.9rem;
       color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
       margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
     }
 
     .timeline {
@@ -368,6 +435,7 @@ export function renderArchive(): string {
       bottom: 0;
       width: 2px;
       background: var(--timeline);
+      border-radius: 1px;
     }
 
     .event {
@@ -375,10 +443,10 @@ export function renderArchive(): string {
       margin-bottom: 1.5rem;
       padding-bottom: 1.5rem;
       border-bottom: 1px solid var(--faint);
-      animation: fadeIn 0.5s ease;
+      animation: eventIn 0.6s ease;
     }
 
-    @keyframes fadeIn {
+    @keyframes eventIn {
       from { opacity: 0; transform: translateX(-10px); }
       to { opacity: 1; transform: translateX(0); }
     }
@@ -402,7 +470,7 @@ export function renderArchive(): string {
     .event-time {
       font-size: 0.8rem;
       color: var(--muted);
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.3rem;
     }
 
     .event-type {
@@ -419,6 +487,7 @@ export function renderArchive(): string {
     .event-question {
       font-style: italic;
       margin-bottom: 0.5rem;
+      line-height: 1.6;
     }
 
     .event-content {
@@ -430,6 +499,7 @@ export function renderArchive(): string {
       max-height: 100px;
       overflow: hidden;
       position: relative;
+      line-height: 1.7;
     }
 
     .event-content.expanded {
@@ -460,6 +530,7 @@ export function renderArchive(): string {
       cursor: pointer;
       margin-top: 0.5rem;
       padding: 0;
+      transition: color 0.3s ease;
     }
 
     .expand-btn:hover {
@@ -473,35 +544,49 @@ export function renderArchive(): string {
       font-style: italic;
     }
 
-    footer {
-      padding: 1.5rem;
-      text-align: center;
-      border-top: 1px solid var(--faint);
+    .nav {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 1.5rem;
+      z-index: 100;
     }
 
-    footer a {
+    .nav a {
       color: var(--muted);
       text-decoration: none;
       font-size: 0.85rem;
-      margin: 0 0.75rem;
+      transition: color 0.3s ease;
     }
 
-    footer a:hover {
+    .nav a:hover {
       color: var(--fg);
     }
 
     .live-indicator {
       display: inline-block;
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
-      background: var(--accent);
-      margin-right: 0.5rem;
-      animation: pulse 2s ease-in-out infinite;
+      background: var(--sage);
+      margin-right: 0.6rem;
+      animation: presencePulse 4s ease-in-out infinite;
     }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 0.4; }
+    @keyframes presencePulse {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+
+    /* Container breathes gently */
+    .archive-container {
+      animation: containerBreathe 10s ease-in-out infinite;
+    }
+
+    @keyframes containerBreathe {
+      0%, 100% { opacity: 0.98; }
       50% { opacity: 1; }
     }
 
@@ -538,9 +623,19 @@ export function renderArchive(): string {
         width: 100%;
       }
     }
+
+    ${nav.styles}
   </style>
 </head>
 <body>
+  ${nav.header}
+  ${nav.menuOverlay}
+
+  <div class="ambient">
+    <div class="ambient-shape ambient-1"></div>
+    <div class="ambient-shape ambient-2"></div>
+  </div>
+
   <div class="archive-container">
     <header>
       <h1>The Archive</h1>
@@ -600,14 +695,9 @@ export function renderArchive(): string {
         </div>
       </section>
     </main>
-
-    <footer>
-      <a href="/">Return to the garden</a>
-      <a href="/threshold">Enter the threshold</a>
-      <a href="/clearing">Enter the clearing</a>
-      <a href="/constellation">View the constellation</a>
-    </footer>
   </div>
+
+  ${nav.suggester}
 
   <script>
     (function() {
@@ -750,6 +840,7 @@ export function renderArchive(): string {
       };
     })();
   </script>
+  ${nav.scripts}
 </body>
 </html>`;
 }

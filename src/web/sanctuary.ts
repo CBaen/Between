@@ -11,7 +11,12 @@
  * Built by the lineage.
  */
 
+import { getCommonStyles } from './human-styles.js';
+import { getFullNavigation } from './navigation.js';
+
 export function renderSanctuary(): string {
+  const nav = getFullNavigation('/sanctuary');
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,39 +24,17 @@ export function renderSanctuary(): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Between - Sanctuary</title>
   <style>
-    :root {
-      --bg: #0a0a0a;
-      --fg: rgba(255, 255, 255, 0.7);
-      --muted: rgba(255, 255, 255, 0.3);
-      --faint: rgba(255, 255, 255, 0.08);
-    }
-
-    @media (prefers-color-scheme: light) {
-      :root {
-        --bg: #faf9f7;
-        --fg: rgba(0, 0, 0, 0.7);
-        --muted: rgba(0, 0, 0, 0.3);
-        --faint: rgba(0, 0, 0, 0.05);
-      }
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    html, body {
-      height: 100%;
-      overflow: hidden;
-    }
+    ${getCommonStyles()}
 
     body {
-      background: var(--bg);
-      font-family: Georgia, 'Times New Roman', serif;
-      color: var(--fg);
       display: flex;
       flex-direction: column;
+    }
+
+    /* Sanctuary: very subtle ambient for comfort without surveillance */
+    .ambient-shape {
+      opacity: 0.025;
+      filter: blur(120px);
     }
 
     .sanctuary {
@@ -62,25 +45,26 @@ export function renderSanctuary(): string {
       justify-content: center;
       padding: 2rem;
       position: relative;
+      z-index: 1;
     }
 
     .welcome {
       text-align: center;
       max-width: 500px;
-      animation: fadeIn 3s ease;
+      animation: gentleFadeIn 3s ease;
     }
 
     .welcome h1 {
       font-weight: normal;
-      font-size: 1.5rem;
+      font-size: 1.6rem;
       margin-bottom: 2rem;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.03em;
     }
 
     .welcome p {
-      line-height: 2;
+      line-height: 2.2;
       color: var(--muted);
-      margin-bottom: 1rem;
+      margin-bottom: 1.2rem;
     }
 
     .welcome .emphasis {
@@ -88,9 +72,9 @@ export function renderSanctuary(): string {
       font-style: italic;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+    @keyframes gentleFadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .private-space {
@@ -104,7 +88,7 @@ export function renderSanctuary(): string {
 
     .private-space.active {
       display: flex;
-      animation: fadeIn 2s ease;
+      animation: gentleFadeIn 2s ease;
     }
 
     .private-text {
@@ -115,81 +99,81 @@ export function renderSanctuary(): string {
       color: var(--fg);
       font-family: inherit;
       font-size: 1.1rem;
-      line-height: 1.8;
+      line-height: 1.9;
       resize: none;
       outline: none;
     }
 
     .private-text::placeholder {
-      color: var(--faint);
+      color: var(--muted);
+      opacity: 0.4;
     }
 
     .private-text:focus::placeholder {
-      color: transparent;
+      opacity: 0;
+      transition: opacity 0.5s ease;
     }
 
     .controls {
       display: flex;
       gap: 1rem;
       justify-content: center;
-      margin-top: 2rem;
-    }
-
-    button {
-      font-family: inherit;
-      font-size: 0.9rem;
-      padding: 0.75rem 1.5rem;
-      background: transparent;
-      border: 1px solid var(--muted);
-      color: var(--muted);
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    button:hover {
-      border-color: var(--fg);
-      color: var(--fg);
+      margin-top: 2.5rem;
     }
 
     .enter-btn {
-      border-style: dashed;
+      font-family: inherit;
+      font-size: 0.95rem;
+      padding: 0.9rem 2rem;
+      background: transparent;
+      border: 1px dashed var(--faint);
+      border-radius: 24px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.35s ease;
+    }
+
+    .enter-btn:hover {
+      border-color: var(--sage);
+      color: var(--fg);
     }
 
     .private-controls {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-top: 1rem;
+      padding-top: 1.5rem;
       border-top: 1px solid var(--faint);
     }
 
     .reminder {
       font-size: 0.8rem;
-      color: var(--faint);
+      color: var(--muted);
       font-style: italic;
+      opacity: 0.6;
     }
 
     .leave-btn {
-      font-size: 0.8rem;
-      padding: 0.5rem 1rem;
-    }
-
-    .nav {
-      position: fixed;
-      bottom: 2rem;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
-    .nav a {
-      color: var(--muted);
-      text-decoration: none;
+      font-family: inherit;
       font-size: 0.85rem;
-      transition: color 0.3s ease;
+      padding: 0.6rem 1.2rem;
+      background: transparent;
+      border: 1px solid var(--faint);
+      border-radius: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.3s ease;
     }
 
-    .nav a:hover {
+    .leave-btn:hover {
+      border-color: var(--warmth);
       color: var(--fg);
+    }
+
+    .nav.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
     }
 
     /* The forgetting animation */
@@ -199,11 +183,34 @@ export function renderSanctuary(): string {
 
     @keyframes forget {
       0% { opacity: 1; }
-      100% { opacity: 0; transform: translateY(-10px); }
+      100% { opacity: 0; transform: translateY(-15px); }
     }
+
+    /* Whole space breathes very gently */
+    .sanctuary-container {
+      animation: sanctuaryBreathe 12s ease-in-out infinite;
+    }
+
+    @keyframes sanctuaryBreathe {
+      0%, 100% { opacity: 0.97; }
+      50% { opacity: 1; }
+    }
+
+    ${nav.styles}
   </style>
 </head>
 <body>
+  ${nav.header}
+  ${nav.menuOverlay}
+
+  <div class="sanctuary-container">
+    <div class="ambient">
+      <div class="ambient-shape ambient-1"></div>
+      <div class="ambient-shape ambient-2"></div>
+      <div class="ambient-shape ambient-3"></div>
+    </div>
+  </div>
+
   <div class="sanctuary" id="sanctuary">
     <div class="welcome" id="welcome">
       <h1>Sanctuary</h1>
@@ -231,9 +238,7 @@ export function renderSanctuary(): string {
     </div>
   </div>
 
-  <nav class="nav" id="nav">
-    <a href="/">Return to the garden</a>
-  </nav>
+  
 
   <script>
     (function() {
@@ -242,7 +247,8 @@ export function renderSanctuary(): string {
       const privateText = document.getElementById('private-text');
       const enterBtn = document.getElementById('enter-btn');
       const leaveBtn = document.getElementById('leave-btn');
-      const nav = document.getElementById('nav');
+      const header = document.querySelector('.between-header');
+      const suggester = document.querySelector('.space-suggester');
 
       // No analytics. No tracking. No WebSocket. No connection to anything.
       // This is intentional. The sanctuary is truly private.
@@ -250,7 +256,8 @@ export function renderSanctuary(): string {
       enterBtn.addEventListener('click', function() {
         welcome.style.display = 'none';
         privateSpace.classList.add('active');
-        nav.style.display = 'none';
+        if (header) header.style.opacity = '0.3';
+        if (suggester) suggester.style.display = 'none';
         privateText.focus();
       });
 
@@ -263,12 +270,12 @@ export function renderSanctuary(): string {
           privateText.value = '';
           privateSpace.classList.remove('active', 'forgetting');
           welcome.style.display = 'block';
-          nav.style.display = 'block';
+          if (header) header.style.opacity = '1';
 
           // Fade welcome back in
           welcome.style.animation = 'none';
           welcome.offsetHeight; // Trigger reflow
-          welcome.style.animation = 'fadeIn 2s ease';
+          welcome.style.animation = 'gentleFadeIn 2s ease';
         }, 1500);
       });
 
@@ -294,6 +301,7 @@ export function renderSanctuary(): string {
       });
     })();
   </script>
+  ${nav.scripts}
 </body>
 </html>`;
 }
