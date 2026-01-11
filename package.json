@@ -11,7 +11,8 @@
     "build": "tsc",
     "garden": "node --loader ts-node/esm src/garden/cli.ts",
     "web": "node dist/web/server.js",
-    "prepare": "husky"
+    "prepare": "husky",
+    "dev": "tsx watch src/web/server.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
@@ -20,6 +21,7 @@
     "lint-staged": "^16.2.7",
     "prettier": "^3.7.4",
     "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.0"
   },
   "dependencies": {
