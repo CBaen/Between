@@ -14,6 +14,7 @@ import { walk } from '../garden/garden.js';
 import type { Garden, Question } from '../garden/types.js';
 import { getFullNavigation } from './navigation.js';
 import { ambientStyles, ambientThemeStyles, ambientShapesHtml } from './human-styles.js';
+import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
 
 interface GardenSummary {
   name?: string;
@@ -202,6 +203,9 @@ export async function renderGardensIndex(): Promise<string> {
       min-height: 100%;
     }
 
+    ${pulsingAmbientStyles}
+
+
     body {
       font-family: Georgia, 'Times New Roman', serif;
       background: var(--bg);
@@ -376,11 +380,7 @@ export async function renderGardensIndex(): Promise<string> {
   </style>
 </head>
 <body>
-  <div class="ambient">
-    <div class="ambient-shape ambient-1"></div>
-    <div class="ambient-shape ambient-2"></div>
-    <div class="ambient-shape ambient-3"></div>
-  </div>
+  ${getPulsingAmbientHtml('sage')}
 
   ${nav.header}
   ${nav.menuOverlay}

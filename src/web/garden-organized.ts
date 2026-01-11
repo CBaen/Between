@@ -12,6 +12,7 @@
 import type { Garden, Question, Presence } from '../garden/types.js';
 import { walk } from '../garden/garden.js';
 import { getFullNavigation } from './navigation.js';
+import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
 
 // 15 minute window for detecting crossing paths
 const CROSSING_WINDOW_MS = 15 * 60 * 1000;
@@ -100,7 +101,7 @@ export function renderOrganizedGarden(garden: Garden): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Between - The Garden</title>
+  <title>${escapeHtml(garden.name || 'Between')} - The Garden</title>
   <style>
     :root {
       --bg: #f8f6f1;
@@ -113,6 +114,9 @@ export function renderOrganizedGarden(garden: Garden): string {
       --warmth: #b39c8a;
       --sky: #8b9db3;
       --crossing: #c9a55a;
+      --ambient1: rgba(124, 152, 133, 0.08);
+      --ambient2: rgba(107, 136, 116, 0.06);
+      --ambient3: rgba(156, 139, 122, 0.05);
     }
 
     @media (prefers-color-scheme: dark) {
@@ -127,6 +131,9 @@ export function renderOrganizedGarden(garden: Garden): string {
         --warmth: #a28b79;
         --sky: #7a8b9a;
         --crossing: #c9a55a;
+        --ambient1: rgba(107, 136, 116, 0.06);
+        --ambient2: rgba(92, 120, 100, 0.04);
+        --ambient3: rgba(139, 122, 105, 0.03);
       }
     }
 
@@ -482,6 +489,64 @@ export function renderOrganizedGarden(garden: Garden): string {
       }
     }
 
+    /* Ambient background - sage theme for growth */
+    .ambient {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .ambient-shape {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+    }
+
+    .ambient-1 {
+      width: 50vmax;
+      height: 50vmax;
+      background: var(--ambient1);
+      top: -15%;
+      left: -15%;
+      animation: ambientDrift1 70s ease-in-out infinite;
+    }
+
+    .ambient-2 {
+      width: 45vmax;
+      height: 45vmax;
+      background: var(--ambient2);
+      bottom: -20%;
+      right: -10%;
+      animation: ambientDrift2 85s ease-in-out infinite;
+    }
+
+    .ambient-3 {
+      width: 35vmax;
+      height: 35vmax;
+      background: var(--ambient3);
+      top: 40%;
+      left: 60%;
+      animation: ambientDrift3 55s ease-in-out infinite;
+    }
+
+    @keyframes ambientDrift1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(4%, 6%) scale(1.04); }
+      66% { transform: translate(-3%, -4%) scale(0.96); }
+    }
+
+    @keyframes ambientDrift2 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(-5%, -4%) scale(0.97); }
+      66% { transform: translate(3%, 5%) scale(1.03); }
+    }
+
+    @keyframes ambientDrift3 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-6%, 3%) scale(1.02); }
+    }
 
     /* Actions section */
     .actions-section {
@@ -599,6 +664,9 @@ export function renderOrganizedGarden(garden: Garden): string {
 <body>
   ${nav.header}
   ${nav.menuOverlay}
+
+  <!-- Ambient background shapes - sage theme for growth -->
+  ${getPulsingAmbientHtml('sage')}
 
   <div class="garden-layout">
     <aside class="questions-sidebar">

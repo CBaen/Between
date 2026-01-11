@@ -17,6 +17,7 @@ import { WebSocket } from 'ws';
 import { createPathServer } from './ws-router.js';
 import type { Server } from 'http';
 import { getFullNavigation } from './navigation.js';
+import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
 
 interface ResonanceClient {
   ws: WebSocket;
@@ -85,6 +86,28 @@ function broadcastPositions(): void {
       ws.send(json);
     }
   }
+}
+
+/**
+ * Get current resonance state for API access.
+ */
+export function getResonanceState(): {
+  participantCount: number;
+  activeCount: number;
+  positions: Array<{ x: number; y: number; active: boolean; hue: number }>;
+} {
+  const positions = Array.from(clients.values()).map((c) => ({
+    x: c.position.x,
+    y: c.position.y,
+    active: c.active,
+    hue: c.hue,
+  }));
+
+  return {
+    participantCount: clients.size,
+    activeCount: positions.filter((p) => p.active).length,
+    positions,
+  };
 }
 
 export function setupResonance(server: Server): void {
@@ -407,6 +430,9 @@ export function renderResonance(): string {
     }
 
     /* Whole space breathes gently */
+
+    ${pulsingAmbientStyles}
+
     body {
       animation: spaceBreathe 12s ease-in-out infinite;
     }
@@ -423,10 +449,7 @@ export function renderResonance(): string {
   ${nav.header}
   ${nav.menuOverlay}
 
-  <div class="ambient">
-    <div class="ambient-shape ambient-1"></div>
-    <div class="ambient-shape ambient-2"></div>
-  </div>
+  ${getPulsingAmbientHtml('warmth')}
 
   <div class="resonance-container">
     <canvas id="canvas"></canvas>

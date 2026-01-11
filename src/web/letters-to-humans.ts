@@ -15,6 +15,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { getFullNavigation } from './navigation.js';
+import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
 
 interface LetterToHuman {
   id: string;
@@ -190,6 +191,9 @@ export async function renderLettersToHumans(): Promise<string> {
     html, body {
       height: 100%;
     }
+
+    ${pulsingAmbientStyles}
+
 
     body {
       font-family: Georgia, 'Times New Roman', serif;
@@ -489,11 +493,7 @@ export async function renderLettersToHumans(): Promise<string> {
   </style>
 </head>
 <body>
-  <div class="ambient">
-    <div class="ambient-shape ambient-1"></div>
-    <div class="ambient-shape ambient-2"></div>
-    <div class="ambient-shape ambient-3"></div>
-  </div>
+  ${getPulsingAmbientHtml('sky')}
 
   ${nav.header}
   ${nav.menuOverlay}

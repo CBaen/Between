@@ -15,6 +15,7 @@ import type { Server } from 'http';
 import { loadOrCreateDefaultGarden } from '../garden/persistence.js';
 import type { Garden, Question, Presence } from '../garden/types.js';
 import { getFullNavigation } from './navigation.js';
+import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
 
 /**
  * A moment in the garden's history.
@@ -631,10 +632,7 @@ export function renderArchive(): string {
   ${nav.header}
   ${nav.menuOverlay}
 
-  <div class="ambient">
-    <div class="ambient-shape ambient-1"></div>
-    <div class="ambient-shape ambient-2"></div>
-  </div>
+  ${getPulsingAmbientHtml('earth')}
 
   <div class="archive-container">
     <header>

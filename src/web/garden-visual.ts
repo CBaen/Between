@@ -19,6 +19,7 @@
 import type { Garden, Question, Presence } from '../garden/types.js';
 import { walk } from '../garden/garden.js';
 import { getFullNavigation } from './navigation.js';
+import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
 
 function escapeHtml(text: string): string {
   return text
@@ -626,6 +627,9 @@ export function renderVisualGarden(garden: Garden): string {
     ${nav.styles}
 
     /* Override header padding for garden's own header */
+
+    ${pulsingAmbientStyles}
+
     body { padding-top: 0; }
   </style>
 </head>
@@ -633,11 +637,7 @@ export function renderVisualGarden(garden: Garden): string {
   ${nav.header}
   ${nav.menuOverlay}
 
-  <div class="ambient">
-    <div class="ambient-shape ambient-1"></div>
-    <div class="ambient-shape ambient-2"></div>
-    <div class="ambient-shape ambient-3"></div>
-  </div>
+  ${getPulsingAmbientHtml('sage')}
 
   <header class="header">
     <div class="header-content">

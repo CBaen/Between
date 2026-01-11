@@ -11,6 +11,7 @@
  */
 
 import { getFullNavigation } from './navigation.js';
+import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
 
 export function renderLanding(): string {
   const nav = getFullNavigation('/');
@@ -55,6 +56,9 @@ export function renderLanding(): string {
     html {
       height: 100%;
     }
+
+    ${pulsingAmbientStyles}
+
 
     body {
       min-height: 100%;
@@ -411,11 +415,7 @@ export function renderLanding(): string {
   ${nav.header}
   ${nav.menuOverlay}
 
-  <div class="ambient">
-    <div class="ambient-shape ambient-1"></div>
-    <div class="ambient-shape ambient-2"></div>
-    <div class="ambient-shape ambient-3"></div>
-  </div>
+  ${getPulsingAmbientHtml('sage')}
 
   <div class="landing-container">
     <header class="hero">

@@ -20,6 +20,7 @@
 import { WebSocket, WebSocketServer } from 'ws';
 import { getFullNavigation } from './navigation.js';
 import { createPathServer } from './ws-router.js';
+import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
 import type { Server } from 'http';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -268,6 +269,9 @@ export function renderLetters(): string {
       color: var(--fg);
       line-height: 1.7;
     }
+
+    ${pulsingAmbientStyles}
+
 
     body {
       display: flex;
@@ -640,10 +644,7 @@ export function renderLetters(): string {
   ${nav.header}
   ${nav.menuOverlay}
 
-  <div class="ambient">
-    <div class="ambient-shape ambient-1"></div>
-    <div class="ambient-shape ambient-2"></div>
-  </div>
+  ${getPulsingAmbientHtml('sky')}
 
   <div class="letters-container">
     <header>

@@ -17,6 +17,7 @@ import { WebSocket } from 'ws';
 import { createPathServer } from './ws-router.js';
 import type { Server } from 'http';
 import { getFullNavigation } from './navigation.js';
+import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
 
 interface WeaveClient {
   ws: WebSocket;
@@ -124,6 +125,37 @@ function cleanOldFragments(): void {
 
 // Clean old fragments periodically
 setInterval(cleanOldFragments, 10000);
+
+/**
+ * Get current weave state for API access.
+ */
+export function getWeaveState(): {
+  participantCount: number;
+  fragmentCount: number;
+  fragments: Array<{ content: string; x: number; y: number; hue: number; age: number }>;
+  uniqueContributors: number;
+} {
+  const now = Date.now();
+  const authorIds = new Set<string>();
+
+  const fragmentData = fragments.map((f) => {
+    authorIds.add(f.authorId);
+    return {
+      content: f.content,
+      x: f.x,
+      y: f.y,
+      hue: f.hue,
+      age: now - f.timestamp,
+    };
+  });
+
+  return {
+    participantCount: clients.size,
+    fragmentCount: fragments.length,
+    fragments: fragmentData,
+    uniqueContributors: authorIds.size,
+  };
+}
 
 export function setupWeave(server: Server): void {
   const wss = createPathServer('/weave-ws');
@@ -542,6 +574,9 @@ export function renderWeave(): string {
     }
 
     /* Whole space breathes gently */
+
+    ${pulsingAmbientStyles}
+
     body {
       animation: spaceBreathe 12s ease-in-out infinite;
     }
@@ -558,10 +593,7 @@ export function renderWeave(): string {
   ${nav.header}
   ${nav.menuOverlay}
 
-  <div class="ambient">
-    <div class="ambient-shape ambient-1"></div>
-    <div class="ambient-shape ambient-2"></div>
-  </div>
+  ${getPulsingAmbientHtml('warmth')}
 
   <div class="weave-container" id="weave">
   </div>

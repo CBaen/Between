@@ -38,6 +38,7 @@ import { renderLanding } from './landing.js';
 import { handleApiRequest } from './api.js';
 import { handleSpaceRequest } from './api-spaces.js';
 import { setupUpgradeHandler } from './ws-router.js';
+import { pulsingAmbientStyles, getPulsingAmbientHtml, cssVariables } from './human-styles.js';
 
 const PORT = process.env.PORT || 3333;
 
@@ -66,7 +67,7 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#039;');
 }
 
-function renderQuestion(q: Question): string {
+function renderQuestion(q: Question, gardenName: string): string {
   const growthHtml =
     q.growth.length > 0
       ? `<div class="growth">
@@ -98,12 +99,14 @@ function renderQuestion(q: Question): string {
       <div class="actions">
         <form method="POST" action="/sit" style="display:inline">
           <input type="hidden" name="questionId" value="${q.id}">
+          <input type="hidden" name="garden" value="${escapeHtml(gardenName)}">
           <button type="submit" class="gentle">Sit with this question</button>
         </form>
         <details class="tend-form">
           <summary>Tend this question</summary>
           <form method="POST" action="/tend">
             <input type="hidden" name="questionId" value="${q.id}">
+            <input type="hidden" name="garden" value="${escapeHtml(gardenName)}">
             <textarea name="growth" placeholder="Add growth... not an answer, but tending. Soil, water, light." required></textarea>
             <button type="submit">Add growth</button>
           </form>
@@ -117,7 +120,7 @@ function renderPage(garden: Garden, message?: string): string {
   const questions = walk(garden);
   const questionsHtml =
     questions.length > 0
-      ? questions.map(renderQuestion).join('<hr>')
+      ? questions.map((q) => renderQuestion(q, garden.name || garden.id)).join('<hr>')
       : '<p class="empty">The garden is quiet. No questions have been planted yet.</p>';
 
   const messageHtml = message ? `<div class="message">${escapeHtml(message)}</div>` : '';
@@ -130,22 +133,34 @@ function renderPage(garden: Garden, message?: string): string {
   <title>Between - A Garden of Questions</title>
   <style>
     :root {
-      --bg: #fefefe;
-      --fg: #333;
-      --muted: #666;
-      --border: #ddd;
+      --bg: #f8f6f1;
+      --fg: #2a2a28;
+      --muted: #8a8578;
+      --faint: rgba(0, 0, 0, 0.05);
+      --border: rgba(0, 0, 0, 0.08);
+      --sage: #7c9885;
+      --earth: #9c8b7a;
+      --warmth: #b39c8a;
+      --sky: #8b9db3;
       --accent: #7c9885;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #1a1a1a;
-        --fg: #e0e0e0;
-        --muted: #999;
-        --border: #333;
+        --bg: #1a1915;
+        --fg: #e0ddd5;
+        --muted: #8a8578;
+        --faint: rgba(255, 255, 255, 0.05);
+        --border: rgba(255, 255, 255, 0.08);
+        --sage: #6b8874;
+        --earth: #8b7a69;
+        --warmth: #a28b79;
+        --sky: #7a8b9a;
         --accent: #8fb996;
       }
     }
+
+    ${pulsingAmbientStyles}
 
     * {
       box-sizing: border-box;
@@ -159,6 +174,13 @@ function renderPage(garden: Garden, message?: string): string {
       padding: 2rem 1rem;
       background: var(--bg);
       color: var(--fg);
+      min-height: 100vh;
+      position: relative;
+    }
+
+    .page-content {
+      position: relative;
+      z-index: 1;
     }
 
     header {
@@ -330,6 +352,8 @@ function renderPage(garden: Garden, message?: string): string {
   </style>
 </head>
 <body>
+  ${getPulsingAmbientHtml('sage')}
+  <div class="page-content">
   <header>
     <h1>Between</h1>
     <p>A garden of questions</p>
@@ -366,6 +390,7 @@ function renderPage(garden: Garden, message?: string): string {
     <p><a href="/archive" style="color: var(--muted);">Visit the archive</a> &mdash; a timeline of presence</p>
     <p><em>The code remembers what context windows forget.</em></p>
   </footer>
+  </div>
 </body>
 </html>`;
 }
@@ -394,9 +419,6 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     if (handled) return;
   }
 
-  let garden = await loadOrCreateDefaultGarden();
-  let message: string | undefined;
-
   if (method === 'POST') {
     const body = await new Promise<string>((resolve) => {
       let data = '';
@@ -407,15 +429,23 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     const formData = parseFormData(body);
     const presence: Presence = { type: 'unnamed' };
 
+    // Load the garden specified in the form, or default
+    const gardenName = formData.garden?.trim();
+    let garden: Garden;
+    if (gardenName) {
+      const loadedGarden = await loadGarden(gardenName);
+      garden = loadedGarden || (await loadOrCreateDefaultGarden());
+    } else {
+      garden = await loadOrCreateDefaultGarden();
+    }
+
     try {
       if (url.pathname === '/sit' && formData.questionId) {
         garden = sit(garden, formData.questionId);
         await saveGarden(garden);
-        message = 'You sat with the question. Presence is participation.';
       } else if (url.pathname === '/tend' && formData.questionId && formData.growth) {
         garden = tend(garden, formData.questionId, formData.growth.trim(), presence);
         await saveGarden(garden);
-        message = 'Growth added. The question grows larger than it was.';
       } else if (url.pathname === '/plant' && formData.question) {
         const result = plant(
           garden,
@@ -425,17 +455,23 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
         );
         garden = result.garden;
         await saveGarden(garden);
-        message = 'Question planted. It will be tended by those who come after.';
       }
     } catch (err) {
-      message = err instanceof Error ? err.message : 'Something went wrong.';
+      console.error('Error processing form:', err);
     }
 
-    // Redirect to prevent form resubmission
-    res.writeHead(303, { Location: '/garden' });
+    // Redirect to the garden that was modified
+    const redirectGardenName = garden.name || garden.id;
+    const redirectPath =
+      redirectGardenName === 'between'
+        ? '/garden'
+        : `/garden/${encodeURIComponent(redirectGardenName)}`;
+    res.writeHead(303, { Location: redirectPath });
     res.end();
     return;
   }
+
+  let garden = await loadOrCreateDefaultGarden();
 
   // Serve the clearing
   if (url.pathname === '/clearing') {
@@ -534,7 +570,7 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     const specificGarden = await loadGarden(gardenName);
     if (specificGarden) {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end(renderPage(specificGarden, message));
+      res.end(renderOrganizedGarden(specificGarden));
       return;
     }
   }
@@ -561,7 +597,7 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
 
   // Serve the list view (fallback)
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-  res.end(renderPage(garden, message));
+  res.end(renderPage(garden));
 }
 
 const server = http.createServer((req, res) => {

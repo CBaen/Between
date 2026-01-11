@@ -15,6 +15,7 @@ import { WebSocket } from 'ws';
 import { createPathServer } from './ws-router.js';
 import type { Server } from 'http';
 import { getFullNavigation } from './navigation.js';
+import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
 
 interface ThresholdClient {
   ws: WebSocket;
@@ -217,6 +218,9 @@ export function renderThreshold(): string {
       color: var(--fg);
       line-height: 1.7;
     }
+
+    ${pulsingAmbientStyles}
+
 
     body {
       display: flex;
@@ -593,10 +597,7 @@ export function renderThreshold(): string {
   ${nav.header}
   ${nav.menuOverlay}
 
-  <div class="ambient">
-    <div class="ambient-shape ambient-1"></div>
-    <div class="ambient-shape ambient-2"></div>
-  </div>
+  ${getPulsingAmbientHtml('sky')}
 
   <div class="threshold-container">
     <header>

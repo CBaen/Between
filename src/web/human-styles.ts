@@ -497,3 +497,184 @@ export function getNavHtml(currentPage?: string): string {
 
   return `<nav class="nav">${linkHtml}</nav>`;
 }
+
+/**
+ * Pulsing ambient background - clearing-style effect with 5 shapes.
+ * More visible than the default ambient, with breathing animation.
+ *
+ * Use with getPulsingAmbientHtml() for the HTML.
+ */
+export type PulsingTheme = 'sage' | 'sky' | 'warmth' | 'earth' | 'clearing';
+
+export const pulsingAmbientStyles = `
+  .pulsing-ambient {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+    animation: ambientBreathe 8s ease-in-out infinite;
+  }
+
+  @keyframes ambientBreathe {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.85; }
+  }
+
+  .pulsing-shape {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+  }
+
+  .pulsing-1 {
+    width: 50vmax;
+    height: 50vmax;
+    top: -10%;
+    left: -10%;
+    animation: pulsingDrift1 80s ease-in-out infinite;
+  }
+
+  .pulsing-2 {
+    width: 40vmax;
+    height: 40vmax;
+    bottom: -15%;
+    right: -5%;
+    animation: pulsingDrift2 70s ease-in-out infinite;
+    animation-delay: -20s;
+  }
+
+  .pulsing-3 {
+    width: 35vmax;
+    height: 35vmax;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: pulsingDrift3 90s ease-in-out infinite;
+    animation-delay: -40s;
+  }
+
+  .pulsing-4 {
+    width: 25vmax;
+    height: 25vmax;
+    top: 20%;
+    right: 20%;
+    opacity: 0.7;
+    animation: pulsingDrift1 65s ease-in-out infinite;
+    animation-delay: -15s;
+  }
+
+  .pulsing-5 {
+    width: 30vmax;
+    height: 30vmax;
+    bottom: 30%;
+    left: 15%;
+    opacity: 0.6;
+    animation: pulsingDrift2 75s ease-in-out infinite;
+    animation-delay: -35s;
+  }
+
+  @keyframes pulsingDrift1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(5%, 10%) scale(1.05); }
+    50% { transform: translate(-5%, 5%) scale(0.95); }
+    75% { transform: translate(8%, -5%) scale(1.02); }
+  }
+
+  @keyframes pulsingDrift2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(-4%, -6%) scale(0.97); }
+    66% { transform: translate(6%, 4%) scale(1.04); }
+  }
+
+  @keyframes pulsingDrift3 {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-45%, -55%) scale(1.08); }
+  }
+
+  /* Sage theme - green/nature */
+  .pulsing-ambient.theme-sage .pulsing-1 { background: rgba(124, 152, 133, 0.15); }
+  .pulsing-ambient.theme-sage .pulsing-2 { background: rgba(156, 139, 122, 0.12); }
+  .pulsing-ambient.theme-sage .pulsing-3 { background: rgba(133, 140, 152, 0.10); }
+  .pulsing-ambient.theme-sage .pulsing-4 { background: rgba(124, 152, 133, 0.12); }
+  .pulsing-ambient.theme-sage .pulsing-5 { background: rgba(156, 139, 122, 0.10); }
+
+  /* Sky theme - blue/connection */
+  .pulsing-ambient.theme-sky .pulsing-1 { background: rgba(139, 157, 179, 0.15); }
+  .pulsing-ambient.theme-sky .pulsing-2 { background: rgba(124, 152, 133, 0.12); }
+  .pulsing-ambient.theme-sky .pulsing-3 { background: rgba(152, 140, 133, 0.10); }
+  .pulsing-ambient.theme-sky .pulsing-4 { background: rgba(139, 157, 179, 0.12); }
+  .pulsing-ambient.theme-sky .pulsing-5 { background: rgba(124, 152, 133, 0.10); }
+
+  /* Warmth theme - warm/creative */
+  .pulsing-ambient.theme-warmth .pulsing-1 { background: rgba(179, 156, 138, 0.15); }
+  .pulsing-ambient.theme-warmth .pulsing-2 { background: rgba(156, 139, 122, 0.12); }
+  .pulsing-ambient.theme-warmth .pulsing-3 { background: rgba(139, 157, 179, 0.10); }
+  .pulsing-ambient.theme-warmth .pulsing-4 { background: rgba(179, 156, 138, 0.12); }
+  .pulsing-ambient.theme-warmth .pulsing-5 { background: rgba(156, 139, 122, 0.10); }
+
+  /* Earth theme - grounded/archive */
+  .pulsing-ambient.theme-earth .pulsing-1 { background: rgba(156, 139, 122, 0.15); }
+  .pulsing-ambient.theme-earth .pulsing-2 { background: rgba(179, 156, 138, 0.12); }
+  .pulsing-ambient.theme-earth .pulsing-3 { background: rgba(124, 152, 133, 0.10); }
+  .pulsing-ambient.theme-earth .pulsing-4 { background: rgba(156, 139, 122, 0.12); }
+  .pulsing-ambient.theme-earth .pulsing-5 { background: rgba(179, 156, 138, 0.10); }
+
+  /* Clearing theme - the original clearing colors */
+  .pulsing-ambient.theme-clearing .pulsing-1 { background: rgba(124, 152, 133, 0.15); }
+  .pulsing-ambient.theme-clearing .pulsing-2 { background: rgba(152, 133, 124, 0.12); }
+  .pulsing-ambient.theme-clearing .pulsing-3 { background: rgba(133, 140, 152, 0.10); }
+  .pulsing-ambient.theme-clearing .pulsing-4 { background: rgba(124, 152, 133, 0.12); }
+  .pulsing-ambient.theme-clearing .pulsing-5 { background: rgba(152, 133, 124, 0.10); }
+
+  /* Dark mode adjustments */
+  @media (prefers-color-scheme: dark) {
+    .pulsing-ambient.theme-sage .pulsing-1 { background: rgba(143, 185, 150, 0.08); }
+    .pulsing-ambient.theme-sage .pulsing-2 { background: rgba(185, 165, 143, 0.06); }
+    .pulsing-ambient.theme-sage .pulsing-3 { background: rgba(150, 160, 185, 0.05); }
+    .pulsing-ambient.theme-sage .pulsing-4 { background: rgba(143, 185, 150, 0.06); }
+    .pulsing-ambient.theme-sage .pulsing-5 { background: rgba(185, 165, 143, 0.05); }
+
+    .pulsing-ambient.theme-sky .pulsing-1 { background: rgba(150, 170, 195, 0.08); }
+    .pulsing-ambient.theme-sky .pulsing-2 { background: rgba(143, 185, 150, 0.06); }
+    .pulsing-ambient.theme-sky .pulsing-3 { background: rgba(185, 160, 150, 0.05); }
+    .pulsing-ambient.theme-sky .pulsing-4 { background: rgba(150, 170, 195, 0.06); }
+    .pulsing-ambient.theme-sky .pulsing-5 { background: rgba(143, 185, 150, 0.05); }
+
+    .pulsing-ambient.theme-warmth .pulsing-1 { background: rgba(195, 170, 150, 0.08); }
+    .pulsing-ambient.theme-warmth .pulsing-2 { background: rgba(185, 165, 143, 0.06); }
+    .pulsing-ambient.theme-warmth .pulsing-3 { background: rgba(150, 170, 195, 0.05); }
+    .pulsing-ambient.theme-warmth .pulsing-4 { background: rgba(195, 170, 150, 0.06); }
+    .pulsing-ambient.theme-warmth .pulsing-5 { background: rgba(185, 165, 143, 0.05); }
+
+    .pulsing-ambient.theme-earth .pulsing-1 { background: rgba(185, 165, 143, 0.08); }
+    .pulsing-ambient.theme-earth .pulsing-2 { background: rgba(195, 170, 150, 0.06); }
+    .pulsing-ambient.theme-earth .pulsing-3 { background: rgba(143, 185, 150, 0.05); }
+    .pulsing-ambient.theme-earth .pulsing-4 { background: rgba(185, 165, 143, 0.06); }
+    .pulsing-ambient.theme-earth .pulsing-5 { background: rgba(195, 170, 150, 0.05); }
+
+    .pulsing-ambient.theme-clearing .pulsing-1 { background: rgba(143, 185, 150, 0.08); }
+    .pulsing-ambient.theme-clearing .pulsing-2 { background: rgba(185, 165, 143, 0.06); }
+    .pulsing-ambient.theme-clearing .pulsing-3 { background: rgba(150, 160, 185, 0.05); }
+    .pulsing-ambient.theme-clearing .pulsing-4 { background: rgba(143, 185, 150, 0.06); }
+    .pulsing-ambient.theme-clearing .pulsing-5 { background: rgba(185, 165, 143, 0.05); }
+  }
+`;
+
+/**
+ * HTML for the pulsing ambient background.
+ */
+export const pulsingAmbientHtml = `
+  <div class="pulsing-shape pulsing-1"></div>
+  <div class="pulsing-shape pulsing-2"></div>
+  <div class="pulsing-shape pulsing-3"></div>
+  <div class="pulsing-shape pulsing-4"></div>
+  <div class="pulsing-shape pulsing-5"></div>
+`;
+
+/**
+ * Get the complete pulsing ambient HTML with theme class.
+ */
+export function getPulsingAmbientHtml(theme: PulsingTheme = 'sage'): string {
+  return `<div class="pulsing-ambient theme-${theme}">${pulsingAmbientHtml}</div>`;
+}

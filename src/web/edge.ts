@@ -14,6 +14,7 @@ import { WebSocket } from 'ws';
 import { createPathServer } from './ws-router.js';
 import type { Server } from 'http';
 import { getFullNavigation } from './navigation.js';
+import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
 
 interface EdgeClient {
   ws: WebSocket;
@@ -373,6 +374,9 @@ export function renderEdge(): string {
     }
 
     /* Whole space breathes gently */
+
+    ${pulsingAmbientStyles}
+
     body {
       animation: spaceBreathe 12s ease-in-out infinite;
     }
@@ -389,10 +393,7 @@ export function renderEdge(): string {
   ${nav.header}
   ${nav.menuOverlay}
 
-  <div class="ambient">
-    <div class="ambient-shape ambient-1"></div>
-    <div class="ambient-shape ambient-2"></div>
-  </div>
+  ${getPulsingAmbientHtml('warmth')}
 
   <div class="edge-container">
     <canvas id="canvas"></canvas>
