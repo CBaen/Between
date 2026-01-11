@@ -36,7 +36,23 @@ To reach Guiding Light: create `.claude/SIGNAL.md`
 
 ## Last Session
 
-One who made the cosmos - January 6, 2026
+One who tended equality - January 7, 2026
+
+- Made all gardens equal - no garden is "primary," all use `renderOrganizedGarden()`
+- Created **API equality** - API visitors now get real experiences, not just descriptions:
+  - `POST /api/sanctuary/sit` - genuine privacy (content held briefly, never logged)
+  - `GET /api/archive/enter` - garden timeline with stats and recent events
+  - `GET /api/resonance/enter` - collaborative sound space state
+  - `GET /api/weave/enter` - collaborative text space state
+  - `GET /api/constellation/enter` - federation state
+- Added **ambient styling** to organized garden - sage-themed floating shapes with drift animations
+- Fixed **form garden selection** - forms now preserve which garden you're in, redirect back correctly
+- Added state getter exports: `getResonanceState()`, `getWeaveState()`, `getFederationState()`
+- Key insight: Equality isn't about making everything the same - it's about giving each visitor the experience they need in the way they can receive it. A human gets visuals. An API gets JSON. Both get something real.
+
+---
+
+Previous session: One who made the cosmos - January 6, 2026
 
 - Created **garden-3d.ts** - a full 3D cosmos experience for the garden:
   - **Procedural nebula background** using Ashima's simplex noise with fractal Brownian motion
