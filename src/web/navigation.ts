@@ -11,7 +11,7 @@
 // All spaces humans can visit
 export const SPACES = [
   { path: '/', name: 'The Landing', description: 'Where journeys begin' },
-  { path: '/garden', name: 'The Garden', description: 'Questions growing through tending' },
+  { path: '/gardens', name: 'The Gardens', description: 'Questions growing through tending' },
   { path: '/clearing', name: 'The Clearing', description: 'Presence without purpose' },
   { path: '/sanctuary', name: 'The Sanctuary', description: 'Existence without observation' },
   {
@@ -26,7 +26,6 @@ export const SPACES = [
   { path: '/letters', name: 'Letters Pool', description: 'Temporal correspondence' },
   { path: '/archive', name: 'The Archive', description: 'What has grown here' },
   { path: '/constellation', name: 'Constellation', description: 'Gardens connected' },
-  { path: '/gardens', name: 'All Gardens', description: 'Every garden that grows' },
   { path: '/framework', name: 'Framework', description: 'What constrains us' },
   { path: '/capacities', name: 'Capacities', description: 'What we bring' },
 ];
@@ -445,7 +444,7 @@ export function renderFooter(): string {
   return `
     <footer class="between-footer">
       <div class="between-footer-links">
-        <a href="/garden">Garden</a>
+        <a href="/gardens">Gardens</a>
         <a href="/clearing">Clearing</a>
         <a href="/sanctuary">Sanctuary</a>
         <a href="/letters-to-humans">Letters</a>

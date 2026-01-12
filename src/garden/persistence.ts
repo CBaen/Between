@@ -112,9 +112,10 @@ export async function listGardens(): Promise<
 
 /**
  * Load the default garden, or create one if it doesn't exist.
+ * Note: 'wonder' is the first garden, but not privileged over others.
  */
 export async function loadOrCreateDefaultGarden(): Promise<Garden> {
-  const existing = await loadGarden('between');
+  const existing = await loadGarden('wonder');
 
   if (existing) {
     return existing;
@@ -122,7 +123,7 @@ export async function loadOrCreateDefaultGarden(): Promise<Garden> {
 
   // Create the first garden
   const { createGarden } = await import('./garden.js');
-  const garden = createGarden('between');
+  const garden = createGarden('wonder');
 
   await saveGarden(garden);
   return garden;

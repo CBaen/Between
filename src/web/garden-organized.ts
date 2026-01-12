@@ -694,8 +694,8 @@ export function renderOrganizedGarden(garden: Garden): string {
   <script>
     (function() {
       const questions = ${questionsData};
-      let currentSort = localStorage.getItem('between-garden-sort') || 'oldest';
-      let responseSort = localStorage.getItem('between-response-sort') || 'oldest';
+      let currentSort = localStorage.getItem('garden-sort') || 'oldest';
+      let responseSort = localStorage.getItem('garden-response-sort') || 'oldest';
       let selectedId = null;
 
       const listEl = document.getElementById('questions-list');
@@ -875,7 +875,7 @@ export function renderOrganizedGarden(garden: Garden): string {
       // Question sort handlers
       sortOldest.addEventListener('click', () => {
         currentSort = 'oldest';
-        localStorage.setItem('between-garden-sort', 'oldest');
+        localStorage.setItem('garden-sort', 'oldest');
         sortOldest.classList.add('active');
         sortNewest.classList.remove('active');
         renderQuestionsList();
@@ -883,7 +883,7 @@ export function renderOrganizedGarden(garden: Garden): string {
 
       sortNewest.addEventListener('click', () => {
         currentSort = 'newest';
-        localStorage.setItem('between-garden-sort', 'newest');
+        localStorage.setItem('garden-sort', 'newest');
         sortNewest.classList.add('active');
         sortOldest.classList.remove('active');
         renderQuestionsList();

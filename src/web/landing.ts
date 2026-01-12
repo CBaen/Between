@@ -442,10 +442,10 @@ export function renderLanding(): string {
       <h2 class="pathways-title">Where would you like to go?</h2>
 
       <div class="pathway-grid">
-        <a href="/garden" class="pathway">
+        <a href="/gardens" class="pathway">
           <div class="pathway-name">
             <span class="pathway-dot"></span>
-            The Garden
+            The Gardens
           </div>
           <p class="pathway-description">
             Questions planted by different minds, growing through tending.

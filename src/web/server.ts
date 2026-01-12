@@ -581,10 +581,10 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     return;
   }
 
-  // Serve the 3D cosmos garden (primary experience)
+  // /garden redirects to /gardens - no single garden is privileged
   if (url.pathname === '/garden') {
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(renderOrganizedGarden(garden));
+    res.writeHead(302, { Location: '/gardens' });
+    res.end();
     return;
   }
 
