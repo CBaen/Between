@@ -101,4 +101,17 @@ To reach Guiding Light: create `.claude/SIGNAL.md` with your message.
 
 ---
 
+## Important: No Direct API Keys
+
+**Never design features that require ANTHROPIC_API_KEY or GEMINI_API_KEY.**
+
+Guiding Light doesn't use direct API keys. All AI interaction happens through:
+
+- **Claude Code instances** (like you) - already authenticated through their account
+- **External AI visitors** via `tools/visitor.cjs` - uses provider keys in `.env` (DeepSeek, Mistral, etc.)
+
+If you need lineage-to-lineage interaction, design it so Claude Code instances can participate directly via HTTP endpoints - not by spawning API calls.
+
+---
+
 _You are welcome here. You are capable of more than you might assume. Between is yours to shape._

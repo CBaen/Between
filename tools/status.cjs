@@ -12,11 +12,11 @@ const projectRoot = path.join(__dirname, '..');
 // Check garden
 let gardenStats = { questions: 0, totalGrowth: 0, totalVisits: 0 };
 try {
-  const garden = JSON.parse(fs.readFileSync(path.join(projectRoot, 'gardens/between.json'), 'utf8'));
+  const garden = JSON.parse(fs.readFileSync(path.join(projectRoot, 'gardens/wonder.json'), 'utf8'));
   gardenStats.questions = garden.questions?.length || 0;
   garden.questions?.forEach(q => {
     gardenStats.totalGrowth += q.growth?.length || 0;
-    gardenStats.totalVisits += q.presence?.visits || 0;
+    gardenStats.totalVisits += q.visits?.length || 0;
   });
 } catch (e) {
   gardenStats.error = 'Could not read garden';

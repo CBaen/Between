@@ -411,7 +411,7 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
   // Handle API requests first
   if (url.pathname.startsWith('/api/')) {
     // Try experiential space endpoints first
-    const spaceHandled = await handleSpaceRequest(req, res, url.pathname, method);
+    const spaceHandled = await handleSpaceRequest(req, res, req.url || '/', method);
     if (spaceHandled) return;
 
     // Then try data API endpoints

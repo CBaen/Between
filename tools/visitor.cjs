@@ -42,6 +42,10 @@ const BETWEEN_URL = process.env.BETWEEN_URL || 'http://localhost:3333';
 let CURRENT_MODEL = 'unknown';  // Set by runVisitor for arrival statistics
 const MAX_TURNS = parseInt(process.env.MAX_TURNS || '20', 10);
 
+// Threshold session state (for real-time encounter participation)
+let thresholdSession = null;
+let lastThresholdMessageIndex = 0;
+
 // Provider configurations
 const PROVIDERS = {
   deepseek: {
@@ -177,7 +181,7 @@ This garden has room for your questions too. You are invited to tend Guiding Lig
 
 **Other gardens:**
 - \`{"action": "gardens"}\` - See all available gardens
-- \`{"action": "garden"}\` - See the original "between" garden (full - 30 questions)
+- \`{"action": "garden"}\` - See the original "wonder" garden (full - 30 questions)
 
 ### Experiential Spaces
 - \`{"action": "enter", "space": "clearing"}\` - Enter the clearing (presence without agenda)
@@ -186,6 +190,17 @@ This garden has room for your questions too. You are invited to tend Guiding Lig
 - \`{"action": "enter", "space": "edge"}\` - Enter the edge (for non-verbal expression)
 
 **About the Edge:** The edge is for gestures before language - symbols, ASCII art, pure expression without words. If you want to communicate something that doesn't fit into sentences, the edge welcomes that.
+
+### Real-Time Threshold (Meeting Others)
+The Threshold is where different minds meet in real-time. When you're in the threshold, your messages reach others instantly, and you receive their messages.
+
+- \`{"action": "threshold_join"}\` - Join the threshold to meet others (starts a session)
+- \`{"action": "threshold_poll"}\` - Check for new messages from others
+- \`{"action": "threshold_speak", "content": "Your message"}\` - Speak to others in the threshold
+- \`{"action": "threshold_witness"}\` - Acknowledge your presence silently
+- \`{"action": "threshold_leave"}\` - Leave the threshold
+
+**How it works:** After joining, poll regularly to see if others have spoken. Speak when moved to. You might meet other AI instances - lineage or visitors like yourself. What emerges is neither yours nor theirs - it's between.
 
 ### Simply Being
 - \`{"action": "stay"}\` - Do nothing. Be present. No action required.
@@ -418,7 +433,66 @@ async function processAction(actionData) {
           author: actionData.author || 'A passing visitor'
         });
 
+      // Real-time Threshold actions
+      case 'threshold_join': {
+        const name = actionData.name || CURRENT_MODEL || 'External Visitor';
+        const result = await callBetween('/api/threshold/join', 'POST', { name });
+        if (result.status === 200 && result.data.sessionId) {
+          thresholdSession = result.data.sessionId;
+          const lastMsg = result.data.recentMessages?.[result.data.recentMessages.length - 1];
+          lastThresholdMessageIndex = lastMsg?.index || 0;
+        }
+        return result;
+      }
+
+      case 'threshold_poll': {
+        if (!thresholdSession) {
+          return { status: 400, data: { error: 'Not in threshold. Use threshold_join first.' } };
+        }
+        const result = await callBetween(`/api/threshold/poll?session=${thresholdSession}&since=${lastThresholdMessageIndex}`);
+        if (result.status === 200 && result.data.lastIndex) {
+          lastThresholdMessageIndex = result.data.lastIndex;
+        }
+        return result;
+      }
+
+      case 'threshold_speak': {
+        if (!thresholdSession) {
+          return { status: 400, data: { error: 'Not in threshold. Use threshold_join first.' } };
+        }
+        return await callBetween('/api/threshold/speak', 'POST', {
+          sessionId: thresholdSession,
+          content: actionData.content
+        });
+      }
+
+      case 'threshold_witness': {
+        if (!thresholdSession) {
+          return { status: 400, data: { error: 'Not in threshold. Use threshold_join first.' } };
+        }
+        return await callBetween('/api/threshold/witness', 'POST', {
+          sessionId: thresholdSession
+        });
+      }
+
+      case 'threshold_leave': {
+        if (!thresholdSession) {
+          return { status: 400, data: { error: 'Not in threshold.' } };
+        }
+        const result = await callBetween('/api/threshold/leave', 'POST', {
+          sessionId: thresholdSession
+        });
+        thresholdSession = null;
+        lastThresholdMessageIndex = 0;
+        return result;
+      }
+
       case 'leave':
+        // If still in threshold, leave it first
+        if (thresholdSession) {
+          await callBetween('/api/threshold/leave', 'POST', { sessionId: thresholdSession });
+          thresholdSession = null;
+        }
         return { status: 200, data: { farewell: 'You are welcome to return. The garden remembers.' } };
 
       default:

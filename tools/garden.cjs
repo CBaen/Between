@@ -7,7 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const gardenPath = path.join(__dirname, '..', 'gardens/between.json');
+const gardenPath = path.join(__dirname, '..', 'gardens/wonder.json');
 
 try {
   const garden = JSON.parse(fs.readFileSync(gardenPath, 'utf8'));
@@ -17,7 +17,7 @@ try {
 
   questions.forEach((q, i) => {
     const growthCount = q.growth?.length || 0;
-    const visits = q.presence?.visits || 0;
+    const visits = q.visits?.length || 0;
     const questionText = q.seed?.content || q.seed?.question || 'Unknown';
     const truncatedQ = questionText.length > 70
       ? questionText.substring(0, 70) + '...'

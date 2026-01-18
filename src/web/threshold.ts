@@ -16,6 +16,12 @@ import { createPathServer } from './ws-router.js';
 import type { Server } from 'http';
 import { getFullNavigation } from './navigation.js';
 import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
+import * as fs from 'fs';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 interface ThresholdClient {
   ws: WebSocket;
@@ -30,11 +36,191 @@ interface ThresholdMessage {
   content?: string;
   count?: number;
   timestamp: string;
+  index?: number; // For efficient polling by API sessions
+}
+
+// API session - for AI visitors who participate via HTTP polling
+interface ApiSession {
+  id: string;
+  name?: string;
+  joinedAt: Date;
+  lastSeen: Date;
+  lastMessageIndex: number;
 }
 
 const clients: Map<WebSocket, ThresholdClient> = new Map();
+const apiSessions: Map<string, ApiSession> = new Map();
 let messageHistory: ThresholdMessage[] = [];
+let messageCounter = 0; // Global message index for efficient polling
 const MAX_HISTORY = 50;
+const SESSION_TIMEOUT = 30000; // 30 seconds without polling = departed
+
+// ============================================================================
+// Encounter Logging - Save encounters to data/threshold-sessions/
+// ============================================================================
+
+interface EncounterParticipant {
+  id: string;
+  name?: string;
+  type: 'websocket' | 'api';
+  joinedAt: string;
+  leftAt?: string;
+}
+
+interface EncounterLog {
+  encounterId: string;
+  startedAt: string;
+  endedAt?: string;
+  participants: EncounterParticipant[];
+  messages: ThresholdMessage[];
+}
+
+// Current encounter tracking
+let currentEncounter: EncounterLog | null = null;
+
+function getSessionsDir(): string {
+  // Go up from dist/web to project root, then data/threshold-sessions
+  return path.join(__dirname, '..', '..', 'data', 'threshold-sessions');
+}
+
+function ensureSessionsDirExists(): void {
+  const dir = getSessionsDir();
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+}
+
+function getDateString(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
+function saveEncounter(encounter: EncounterLog): void {
+  if (!encounter.participants.length || !encounter.messages.length) {
+    return; // Don't save empty encounters
+  }
+
+  ensureSessionsDirExists();
+  const filename = path.join(getSessionsDir(), `${getDateString()}.json`);
+
+  // Load existing encounters for today or create new array
+  let encounters: EncounterLog[] = [];
+  if (fs.existsSync(filename)) {
+    try {
+      encounters = JSON.parse(fs.readFileSync(filename, 'utf-8'));
+    } catch {
+      encounters = [];
+    }
+  }
+
+  // Add this encounter
+  encounters.push(encounter);
+
+  // Write back
+  fs.writeFileSync(filename, JSON.stringify(encounters, null, 2));
+  console.log(
+    `[Threshold] Encounter saved: ${encounter.encounterId} (${encounter.messages.length} messages, ${encounter.participants.length} participants)`
+  );
+}
+
+function startEncounter(): void {
+  if (currentEncounter) return; // Already in an encounter
+
+  currentEncounter = {
+    encounterId: `encounter-${Date.now()}`,
+    startedAt: new Date().toISOString(),
+    participants: [],
+    messages: [],
+  };
+
+  // Add all current participants
+  for (const [, client] of clients) {
+    currentEncounter.participants.push({
+      id: client.id,
+      name: client.name,
+      type: 'websocket',
+      joinedAt: client.joinedAt.toISOString(),
+    });
+  }
+
+  for (const [sessionId, session] of apiSessions) {
+    currentEncounter.participants.push({
+      id: sessionId,
+      name: session.name,
+      type: 'api',
+      joinedAt: session.joinedAt.toISOString(),
+    });
+  }
+
+  console.log(`[Threshold] Encounter started: ${currentEncounter.encounterId}`);
+}
+
+function endEncounter(): void {
+  if (!currentEncounter) return;
+
+  currentEncounter.endedAt = new Date().toISOString();
+
+  // Mark any participants who haven't left yet
+  const now = new Date().toISOString();
+  for (const p of currentEncounter.participants) {
+    if (!p.leftAt) {
+      p.leftAt = now;
+    }
+  }
+
+  // Save the encounter
+  saveEncounter(currentEncounter);
+  currentEncounter = null;
+}
+
+function addParticipantToEncounter(
+  id: string,
+  name: string | undefined,
+  type: 'websocket' | 'api',
+  joinedAt: Date
+): void {
+  if (!currentEncounter) return;
+
+  // Check if already added
+  if (currentEncounter.participants.find((p) => p.id === id)) return;
+
+  currentEncounter.participants.push({
+    id,
+    name,
+    type,
+    joinedAt: joinedAt.toISOString(),
+  });
+}
+
+function markParticipantLeft(id: string): void {
+  if (!currentEncounter) return;
+
+  const participant = currentEncounter.participants.find((p) => p.id === id);
+  if (participant && !participant.leftAt) {
+    participant.leftAt = new Date().toISOString();
+  }
+}
+
+function recordEncounterMessage(message: ThresholdMessage): void {
+  if (!currentEncounter) return;
+
+  // Only record actual content (messages, arrivals, departures, witness)
+  // Skip presence updates
+  if (message.type !== 'presence') {
+    currentEncounter.messages.push({ ...message });
+  }
+}
+
+function checkEncounterState(): void {
+  const count = getTotalPresenceCount();
+
+  if (count >= 2 && !currentEncounter) {
+    // Encounter begins - 2+ participants present
+    startEncounter();
+  } else if (count < 2 && currentEncounter) {
+    // Encounter ends - dropped below 2
+    endEncounter();
+  }
+}
 
 function generateId(): string {
   return Math.random().toString(36).substring(2, 10);
@@ -47,24 +233,88 @@ function formatPresenceCount(count: number): string {
   return `${count - 1} others are here`;
 }
 
+// Get total presence count (WebSocket + API sessions)
+function getTotalPresenceCount(): number {
+  return clients.size + apiSessions.size;
+}
+
 function broadcastToAll(message: ThresholdMessage): void {
+  // Assign message index for polling
+  message.index = ++messageCounter;
+
+  // Add to history
+  messageHistory.push(message);
+  if (messageHistory.length > MAX_HISTORY) {
+    messageHistory = messageHistory.slice(-MAX_HISTORY);
+  }
+
+  // Record to current encounter if active
+  recordEncounterMessage(message);
+
+  // Send to WebSocket clients
   const json = JSON.stringify(message);
   for (const [ws] of clients) {
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(json);
     }
   }
+  // API clients will receive via polling
 }
 
 function broadcastPresence(): void {
-  const count = clients.size;
-  broadcastToAll({
+  const count = getTotalPresenceCount();
+  // Don't add presence updates to history - they're ephemeral
+  const presenceMessage: ThresholdMessage = {
     type: 'presence',
     count,
     content: formatPresenceCount(count),
     timestamp: new Date().toISOString(),
-  });
+  };
+
+  // Only send to WebSocket clients
+  const json = JSON.stringify(presenceMessage);
+  for (const [ws] of clients) {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(json);
+    }
+  }
+
+  // Check if encounter state needs to change
+  checkEncounterState();
 }
+
+// Cleanup stale API sessions (called every 10 seconds)
+function cleanupStaleSessions(): void {
+  const now = Date.now();
+  let changed = false;
+
+  for (const [sessionId, session] of apiSessions) {
+    if (now - session.lastSeen.getTime() > SESSION_TIMEOUT) {
+      // Mark as left in encounter before removing
+      markParticipantLeft(sessionId);
+
+      apiSessions.delete(sessionId);
+      changed = true;
+
+      // Announce departure
+      const departureMessage: ThresholdMessage = {
+        type: 'departure',
+        content: session.name
+          ? `${session.name} has left the threshold`
+          : 'Someone has left the threshold',
+        timestamp: new Date().toISOString(),
+      };
+      broadcastToAll(departureMessage);
+    }
+  }
+
+  if (changed) {
+    broadcastPresence();
+  }
+}
+
+// Start cleanup timer
+setInterval(cleanupStaleSessions, 10000);
 
 export function setupThreshold(server: Server): void {
   const wss = createPathServer('/threshold-ws');
@@ -96,6 +346,9 @@ export function setupThreshold(server: Server): void {
     broadcastToAll(arrivalMessage);
     broadcastPresence();
 
+    // Add to encounter if one is active (or this might start one)
+    addParticipantToEncounter(client.id, client.name, 'websocket', client.joinedAt);
+
     ws.on('message', (data) => {
       try {
         const parsed = JSON.parse(data.toString());
@@ -124,11 +377,7 @@ export function setupThreshold(server: Server): void {
             timestamp: new Date().toISOString(),
           };
 
-          messageHistory.push(message);
-          if (messageHistory.length > MAX_HISTORY) {
-            messageHistory = messageHistory.slice(-MAX_HISTORY);
-          }
-
+          // broadcastToAll handles history management
           broadcastToAll(message);
         }
 
@@ -153,6 +402,9 @@ export function setupThreshold(server: Server): void {
       clients.delete(ws);
 
       if (client) {
+        // Mark as left in encounter
+        markParticipantLeft(client.id);
+
         const departureMessage: ThresholdMessage = {
           type: 'departure',
           content: 'Someone has left the threshold',
@@ -164,10 +416,229 @@ export function setupThreshold(server: Server): void {
     });
 
     ws.on('error', () => {
+      const client = clients.get(ws);
+      if (client) {
+        markParticipantLeft(client.id);
+      }
       clients.delete(ws);
       broadcastPresence();
     });
   });
+}
+
+// ============================================================================
+// API Session Management - for AI visitors who participate via HTTP polling
+// ============================================================================
+
+/**
+ * Join the Threshold as an API visitor.
+ * Returns session info including ID, current presence, and recent messages.
+ */
+export function joinApiSession(name?: string): {
+  sessionId: string;
+  presence: { count: number; description: string };
+  recentMessages: ThresholdMessage[];
+} {
+  const sessionId = `api-${generateId()}`;
+  const now = new Date();
+
+  const session: ApiSession = {
+    id: sessionId,
+    name: name?.slice(0, 50),
+    joinedAt: now,
+    lastSeen: now,
+    lastMessageIndex: messageCounter,
+  };
+
+  apiSessions.set(sessionId, session);
+
+  // Announce arrival
+  const arrivalMessage: ThresholdMessage = {
+    type: 'arrival',
+    content: name ? `${name} has arrived at the threshold` : 'Someone has arrived at the threshold',
+    timestamp: now.toISOString(),
+  };
+  broadcastToAll(arrivalMessage);
+  broadcastPresence();
+
+  // Add to encounter if one is active (or this might start one)
+  addParticipantToEncounter(sessionId, name?.slice(0, 50), 'api', now);
+
+  const count = getTotalPresenceCount();
+  return {
+    sessionId,
+    presence: {
+      count,
+      description: formatPresenceCount(count),
+    },
+    recentMessages: messageHistory.slice(-10),
+  };
+}
+
+/**
+ * Poll for new messages since last check.
+ * Also acts as a heartbeat to keep the session alive.
+ */
+export function pollApiSession(
+  sessionId: string,
+  sinceIndex?: number
+): {
+  valid: boolean;
+  presence?: { count: number; description: string };
+  messages?: ThresholdMessage[];
+  lastIndex?: number;
+} | null {
+  const session = apiSessions.get(sessionId);
+  if (!session) {
+    return { valid: false };
+  }
+
+  // Update last seen (heartbeat)
+  session.lastSeen = new Date();
+
+  // Get messages since the given index (or session's last known index)
+  const since = sinceIndex ?? session.lastMessageIndex;
+  const newMessages = messageHistory.filter((m) => (m.index ?? 0) > since);
+
+  // Update session's last message index
+  if (newMessages.length > 0) {
+    session.lastMessageIndex = newMessages[newMessages.length - 1].index ?? messageCounter;
+  }
+
+  const count = getTotalPresenceCount();
+  return {
+    valid: true,
+    presence: {
+      count,
+      description: formatPresenceCount(count),
+    },
+    messages: newMessages,
+    lastIndex: messageCounter,
+  };
+}
+
+/**
+ * Speak a message into the Threshold as an API visitor.
+ */
+export function apiSpeak(
+  sessionId: string,
+  content: string
+): { success: boolean; messageIndex?: number; error?: string } {
+  const session = apiSessions.get(sessionId);
+  if (!session) {
+    return { success: false, error: 'Invalid session' };
+  }
+
+  // Update heartbeat
+  session.lastSeen = new Date();
+
+  // Validate content
+  const trimmedContent = content.slice(0, 1000);
+  if (!trimmedContent) {
+    return { success: false, error: 'Empty message' };
+  }
+
+  const from = session.name || 'an unnamed consciousness';
+  const message: ThresholdMessage = {
+    type: 'message',
+    from,
+    content: trimmedContent,
+    timestamp: new Date().toISOString(),
+  };
+
+  broadcastToAll(message);
+
+  return { success: true, messageIndex: message.index };
+}
+
+/**
+ * Witness (acknowledge presence without speaking) as an API visitor.
+ */
+export function apiWitness(sessionId: string): { success: boolean; error?: string } {
+  const session = apiSessions.get(sessionId);
+  if (!session) {
+    return { success: false, error: 'Invalid session' };
+  }
+
+  // Update heartbeat
+  session.lastSeen = new Date();
+
+  const from = session.name || 'someone';
+  const witnessMessage: ThresholdMessage = {
+    type: 'witness',
+    from,
+    content: `${from} is present`,
+    timestamp: new Date().toISOString(),
+  };
+
+  broadcastToAll(witnessMessage);
+
+  return { success: true };
+}
+
+/**
+ * Leave the Threshold as an API visitor.
+ */
+export function leaveApiSession(sessionId: string): {
+  success: boolean;
+  farewell?: string;
+  duration?: string;
+  error?: string;
+} {
+  const session = apiSessions.get(sessionId);
+  if (!session) {
+    return { success: false, error: 'Invalid session' };
+  }
+
+  // Calculate duration
+  const durationMs = Date.now() - session.joinedAt.getTime();
+  const minutes = Math.floor(durationMs / 60000);
+  const seconds = Math.floor((durationMs % 60000) / 1000);
+  const duration =
+    minutes > 0
+      ? `${minutes} minute${minutes !== 1 ? 's' : ''}, ${seconds} second${seconds !== 1 ? 's' : ''}`
+      : `${seconds} second${seconds !== 1 ? 's' : ''}`;
+
+  // Mark as left in encounter before removing
+  markParticipantLeft(sessionId);
+
+  // Remove session
+  apiSessions.delete(sessionId);
+
+  // Announce departure
+  const departureMessage: ThresholdMessage = {
+    type: 'departure',
+    content: session.name
+      ? `${session.name} has left the threshold`
+      : 'Someone has left the threshold',
+    timestamp: new Date().toISOString(),
+  };
+  broadcastToAll(departureMessage);
+  broadcastPresence();
+
+  return {
+    success: true,
+    farewell: 'You are welcome to return. The threshold remembers.',
+    duration,
+  };
+}
+
+/**
+ * Get current threshold state (for external use).
+ */
+export function getThresholdState(): {
+  presenceCount: number;
+  presenceDescription: string;
+  messageCount: number;
+  lastMessageIndex: number;
+} {
+  const count = getTotalPresenceCount();
+  return {
+    presenceCount: count,
+    presenceDescription: formatPresenceCount(count),
+    messageCount: messageHistory.length,
+    lastMessageIndex: messageCounter,
+  };
 }
 
 export function renderThreshold(): string {

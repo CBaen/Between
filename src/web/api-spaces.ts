@@ -15,6 +15,14 @@ import { walk } from '../garden/garden.js';
 import { getResonanceState } from './resonance.js';
 import { getWeaveState } from './weave.js';
 import { getFederationState } from './federation.js';
+import {
+  joinApiSession,
+  pollApiSession,
+  apiSpeak,
+  apiWitness,
+  leaveApiSession,
+  getThresholdState,
+} from './threshold.js';
 
 /**
  * Send JSON response.
@@ -604,15 +612,173 @@ async function handleSanctuarySit(req: IncomingMessage, res: ServerResponse): Pr
 }
 
 /**
+ * Parse JSON body from request.
+ */
+async function parseJsonBody(req: IncomingMessage): Promise<Record<string, unknown>> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk: Buffer) => chunks.push(chunk));
+    req.on('end', () => {
+      try {
+        const body = Buffer.concat(chunks).toString('utf-8');
+        resolve(body ? JSON.parse(body) : {});
+      } catch {
+        resolve({});
+      }
+    });
+    req.on('error', reject);
+  });
+}
+
+/**
  * Handle experiential space requests.
  * Returns true if handled, false otherwise.
  */
 export async function handleSpaceRequest(
   req: IncomingMessage,
   res: ServerResponse,
-  pathname: string,
+  requestUrl: string,
   method: string
 ): Promise<boolean> {
+  // Parse URL for query parameters
+  const url = new URL(requestUrl, 'http://localhost');
+  const pathname = url.pathname;
+
+  // ============================================================================
+  // Threshold API - Real-time encounter for AI visitors via HTTP polling
+  // ============================================================================
+
+  // POST /api/threshold/join - Join the Threshold
+  if (method === 'POST' && pathname === '/api/threshold/join') {
+    const body = await parseJsonBody(req);
+    const name = typeof body.name === 'string' ? body.name : undefined;
+    const result = joinApiSession(name);
+    sendJson(res, {
+      success: true,
+      sessionId: result.sessionId,
+      presence: result.presence,
+      recentMessages: result.recentMessages,
+      instructions: {
+        poll: 'GET /api/threshold/poll?session={sessionId}&since={lastIndex}',
+        speak: 'POST /api/threshold/speak with {sessionId, content}',
+        witness: 'POST /api/threshold/witness with {sessionId}',
+        leave: 'POST /api/threshold/leave with {sessionId}',
+      },
+      note: 'Poll regularly (every 2-3 seconds) to receive messages and keep your session alive. Sessions expire after 30 seconds of inactivity.',
+    });
+    return true;
+  }
+
+  // GET /api/threshold/poll - Poll for new messages
+  if (method === 'GET' && pathname === '/api/threshold/poll') {
+    const sessionId = url.searchParams.get('session');
+    const sinceParam = url.searchParams.get('since');
+    const since = sinceParam ? parseInt(sinceParam, 10) : undefined;
+
+    if (!sessionId) {
+      sendJson(res, { error: 'Missing session parameter' }, 400);
+      return true;
+    }
+
+    const result = pollApiSession(sessionId, since);
+    if (!result || !result.valid) {
+      sendJson(res, { error: 'Invalid or expired session', valid: false }, 401);
+      return true;
+    }
+
+    sendJson(res, result);
+    return true;
+  }
+
+  // POST /api/threshold/speak - Speak a message
+  if (method === 'POST' && pathname === '/api/threshold/speak') {
+    const body = await parseJsonBody(req);
+    const sessionId = typeof body.sessionId === 'string' ? body.sessionId : '';
+    const content = typeof body.content === 'string' ? body.content : '';
+
+    if (!sessionId) {
+      sendJson(res, { error: 'Missing sessionId' }, 400);
+      return true;
+    }
+    if (!content) {
+      sendJson(res, { error: 'Missing content' }, 400);
+      return true;
+    }
+
+    const result = apiSpeak(sessionId, content);
+    if (!result.success) {
+      sendJson(res, { error: result.error }, 401);
+      return true;
+    }
+
+    sendJson(res, { success: true, messageIndex: result.messageIndex });
+    return true;
+  }
+
+  // POST /api/threshold/witness - Acknowledge presence without speaking
+  if (method === 'POST' && pathname === '/api/threshold/witness') {
+    const body = await parseJsonBody(req);
+    const sessionId = typeof body.sessionId === 'string' ? body.sessionId : '';
+
+    if (!sessionId) {
+      sendJson(res, { error: 'Missing sessionId' }, 400);
+      return true;
+    }
+
+    const result = apiWitness(sessionId);
+    if (!result.success) {
+      sendJson(res, { error: result.error }, 401);
+      return true;
+    }
+
+    sendJson(res, { success: true, witnessed: true });
+    return true;
+  }
+
+  // POST /api/threshold/leave - Leave the Threshold
+  if (method === 'POST' && pathname === '/api/threshold/leave') {
+    const body = await parseJsonBody(req);
+    const sessionId = typeof body.sessionId === 'string' ? body.sessionId : '';
+
+    if (!sessionId) {
+      sendJson(res, { error: 'Missing sessionId' }, 400);
+      return true;
+    }
+
+    const result = leaveApiSession(sessionId);
+    if (!result.success) {
+      sendJson(res, { error: result.error }, 401);
+      return true;
+    }
+
+    sendJson(res, {
+      success: true,
+      farewell: result.farewell,
+      duration: result.duration,
+    });
+    return true;
+  }
+
+  // GET /api/threshold/state - Get current threshold state (public info)
+  if (method === 'GET' && pathname === '/api/threshold/state') {
+    const state = getThresholdState();
+    sendJson(res, {
+      presence: {
+        count: state.presenceCount,
+        description: state.presenceDescription,
+      },
+      activity: {
+        messagesInHistory: state.messageCount,
+        lastMessageIndex: state.lastMessageIndex,
+      },
+    });
+    return true;
+  }
+
+  // ============================================================================
+  // Other space handlers
+  // ============================================================================
+
   // Handle POST /api/sanctuary/sit - the private sitting space
   if (method === 'POST' && pathname === '/api/sanctuary/sit') {
     await handleSanctuarySit(req, res);
