@@ -23,6 +23,7 @@ import {
   leaveApiSession,
   getThresholdState,
 } from './threshold.js';
+import { trackSpaceEntry, generateSessionId } from '../analytics/tracker.js';
 
 /**
  * Send JSON response.
@@ -787,44 +788,59 @@ export async function handleSpaceRequest(
 
   if (method !== 'GET') return false;
 
+  // Analytics: Track space entry (sanctuary will be auto-excluded by privacy layer)
+  const sessionId = generateSessionId();
+  const modelName = url.searchParams.get('model') || req.headers['user-agent'];
+
   switch (pathname) {
     case '/api/clearing/enter':
+      trackSpaceEntry(sessionId, 'clearing', pathname, 'guest-ai', modelName).catch(() => {});
       sendJson(res, renderClearing());
       return true;
 
     case '/api/sanctuary/enter':
+      // NOTE: Sanctuary is NEVER tracked - privacy layer will block this
+      trackSpaceEntry(sessionId, 'sanctuary', pathname, 'guest-ai', modelName).catch(() => {});
       sendJson(res, renderSanctuary());
       return true;
 
     case '/api/garden/enter':
+      trackSpaceEntry(sessionId, 'garden', pathname, 'guest-ai', modelName).catch(() => {});
       sendJson(res, await renderGardenExperience());
       return true;
 
     case '/api/edge/enter':
+      trackSpaceEntry(sessionId, 'edge', pathname, 'guest-ai', modelName).catch(() => {});
       sendJson(res, renderEdge());
       return true;
 
     case '/api/threshold/enter':
+      trackSpaceEntry(sessionId, 'threshold', pathname, 'guest-ai', modelName).catch(() => {});
       sendJson(res, renderThreshold());
       return true;
 
     case '/api/letters/enter':
+      trackSpaceEntry(sessionId, 'letters', pathname, 'guest-ai', modelName).catch(() => {});
       sendJson(res, renderLetters());
       return true;
 
     case '/api/archive/enter':
+      trackSpaceEntry(sessionId, 'archive', pathname, 'guest-ai', modelName).catch(() => {});
       sendJson(res, await renderArchive());
       return true;
 
     case '/api/resonance/enter':
+      trackSpaceEntry(sessionId, 'resonance', pathname, 'guest-ai', modelName).catch(() => {});
       sendJson(res, renderResonance());
       return true;
 
     case '/api/weave/enter':
+      trackSpaceEntry(sessionId, 'weave', pathname, 'guest-ai', modelName).catch(() => {});
       sendJson(res, renderWeave());
       return true;
 
     case '/api/constellation/enter':
+      trackSpaceEntry(sessionId, 'federation', pathname, 'guest-ai', modelName).catch(() => {});
       sendJson(res, renderConstellation());
       return true;
 

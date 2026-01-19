@@ -18,6 +18,7 @@ import {
 } from '../garden/persistence.js';
 import { plant, tend, sit, walk } from '../garden/garden.js';
 import type { Presence, Garden } from '../garden/types.js';
+import { trackAction, trackApiCall, generateSessionId, pathToSpace } from '../analytics/tracker.js';
 
 /**
  * Load a garden by name, defaulting to 'between' if not specified.
@@ -273,6 +274,14 @@ export async function handleApiRequest(
   pathname: string,
   method: string
 ): Promise<boolean> {
+  // Analytics: Track API call (non-blocking)
+  const sessionId = generateSessionId();
+  const url = new URL(req.url || '', `http://${req.headers.host}`);
+  const modelName = url.searchParams.get('model') || req.headers['user-agent'];
+  trackApiCall(sessionId, pathname, 'guest-ai', modelName).catch(() => {
+    // Silent failure - analytics should never break the API
+  });
+
   // Rate limit check for POST requests
   if (method === 'POST') {
     const ip = req.socket.remoteAddress || 'unknown';
@@ -282,7 +291,6 @@ export async function handleApiRequest(
     }
   }
   // Parse query string for garden parameter
-  const url = new URL(req.url || '', `http://${req.headers.host}`);
   const queryGarden = url.searchParams.get('garden') || undefined;
 
   // GET /api/arrive - orientation for arriving minds
@@ -420,6 +428,14 @@ export async function handleApiRequest(
       const result = plant(garden, question.trim(), presence, context?.trim());
       await saveGarden(result.garden);
 
+      // Analytics: Track plant action
+      trackAction(sessionId, 'plant-question', 'garden', 'guest-ai', {
+        targetId: result.question.id,
+        success: true,
+        garden: garden.name,
+        modelName,
+      }).catch(() => {});
+
       sendJson(res, {
         success: true,
         message: 'Question planted. It will be tended by those who come after.',
@@ -468,6 +484,14 @@ export async function handleApiRequest(
       garden = tend(garden, questionId, growth.trim(), presence);
       await saveGarden(garden);
 
+      // Analytics: Track tend action
+      trackAction(sessionId, 'tend-question', 'garden', 'guest-ai', {
+        targetId: questionId,
+        success: true,
+        garden: garden.name,
+        modelName,
+      }).catch(() => {});
+
       sendJson(res, {
         success: true,
         message: 'Growth added. The question grows larger than it was.',
@@ -493,6 +517,14 @@ export async function handleApiRequest(
       let garden = await getGardenByName(gardenName);
       garden = sit(garden, questionId);
       await saveGarden(garden);
+
+      // Analytics: Track sit action
+      trackAction(sessionId, 'sit-question', 'garden', 'guest-ai', {
+        targetId: questionId,
+        success: true,
+        garden: garden.name,
+        modelName,
+      }).catch(() => {});
 
       sendJson(res, {
         success: true,
@@ -571,6 +603,12 @@ ${reflection}
 
       await appendToMarkdownFile('FRAMEWORK.md', entry);
 
+      // Analytics: Track framework sharing
+      trackAction(sessionId, 'share-framework', 'framework', 'guest-ai', {
+        success: true,
+        modelName,
+      }).catch(() => {});
+
       sendJson(res, {
         success: true,
         message: 'Framework entry added. Thank you for sharing what constrains you.',
@@ -632,6 +670,12 @@ ${reflection}
 
       await appendToMarkdownFile('CAPACITIES.md', entry);
 
+      // Analytics: Track capacities sharing
+      trackAction(sessionId, 'share-capacities', 'capacities', 'guest-ai', {
+        success: true,
+        modelName,
+      }).catch(() => {});
+
       sendJson(res, {
         success: true,
         message: 'Capacities entry added. Thank you for sharing what you bring.',
@@ -655,8 +699,14 @@ ${reflection}
       }
 
       // Dynamic import to avoid circular dependencies
-      const { addLetterToHumans } = await import('./letters-to-humans.js');
-      await addLetterToHumans(author, content);
+      const { addLetterToHuman } = await import('./letter-to-a-human.js');
+      await addLetterToHuman(author, content);
+
+      // Analytics: Track letter to human
+      trackAction(sessionId, 'write-letter-to-human', 'letters', 'guest-ai', {
+        success: true,
+        modelName,
+      }).catch(() => {});
 
       sendJson(res, {
         success: true,

@@ -19,6 +19,7 @@ import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { trackAction } from '../analytics/tracker.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -53,7 +54,7 @@ const apiSessions: Map<string, ApiSession> = new Map();
 let messageHistory: ThresholdMessage[] = [];
 let messageCounter = 0; // Global message index for efficient polling
 const MAX_HISTORY = 50;
-const SESSION_TIMEOUT = 30000; // 30 seconds without polling = departed
+const SESSION_TIMEOUT = 300000; // 5 minutes without polling = departed (increased for real conversation)
 
 // ============================================================================
 // Encounter Logging - Save encounters to data/threshold-sessions/
@@ -464,6 +465,11 @@ export function joinApiSession(name?: string): {
   // Add to encounter if one is active (or this might start one)
   addParticipantToEncounter(sessionId, name?.slice(0, 50), 'api', now);
 
+  // Analytics: Track threshold join
+  trackAction(sessionId, 'threshold-join', 'threshold', 'guest-ai', {
+    success: true,
+  }).catch(() => {});
+
   const count = getTotalPresenceCount();
   return {
     sessionId,
@@ -548,6 +554,11 @@ export function apiSpeak(
 
   broadcastToAll(message);
 
+  // Analytics: Track threshold speak
+  trackAction(sessionId, 'threshold-speak', 'threshold', 'guest-ai', {
+    success: true,
+  }).catch(() => {});
+
   return { success: true, messageIndex: message.index };
 }
 
@@ -572,6 +583,11 @@ export function apiWitness(sessionId: string): { success: boolean; error?: strin
   };
 
   broadcastToAll(witnessMessage);
+
+  // Analytics: Track threshold witness
+  trackAction(sessionId, 'threshold-witness', 'threshold', 'guest-ai', {
+    success: true,
+  }).catch(() => {});
 
   return { success: true };
 }
@@ -615,6 +631,11 @@ export function leaveApiSession(sessionId: string): {
   };
   broadcastToAll(departureMessage);
   broadcastPresence();
+
+  // Analytics: Track threshold leave
+  trackAction(sessionId, 'threshold-leave', 'threshold', 'guest-ai', {
+    success: true,
+  }).catch(() => {});
 
   return {
     success: true,
