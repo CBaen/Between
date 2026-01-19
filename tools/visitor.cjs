@@ -51,7 +51,7 @@ const PROVIDERS = {
   deepseek: {
     name: 'DeepSeek',
     baseUrl: 'https://api.deepseek.com',
-    model: 'deepseek-chat',
+    model: 'deepseek-reasoner',  // Maxed reasoning capabilities, gold-level competition results
     envKey: 'DEEPSEEK_API_KEY',
     headers: (key) => ({
       'Content-Type': 'application/json',
@@ -61,7 +61,7 @@ const PROVIDERS = {
   grok: {
     name: 'Grok (xAI)',
     baseUrl: 'https://api.x.ai',
-    model: 'grok-3-mini',  // Using mini for cost efficiency; change to grok-4 for full power
+    model: 'grok-4',  // Most intelligent model in the world, 2M context, advanced reasoning
     envKey: 'XAI_API_KEY',
     headers: (key) => ({
       'Content-Type': 'application/json',
@@ -71,7 +71,7 @@ const PROVIDERS = {
   mistral: {
     name: 'Mistral',
     baseUrl: 'https://api.mistral.ai',
-    model: 'mistral-small-latest',  // Efficient; change to mistral-large-latest for reasoning
+    model: 'mistral-large-3',  // Ranks #2 in OSS non-reasoning models, Apache 2.0
     envKey: 'MISTRAL_API_KEY',
     headers: (key) => ({
       'Content-Type': 'application/json',
@@ -81,7 +81,7 @@ const PROVIDERS = {
   together: {
     name: 'Together AI',
     baseUrl: 'https://api.together.xyz',
-    model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo',  // Fast, capable; alternatives: Qwen/Qwen2.5-72B-Instruct-Turbo
+    model: 'Qwen/Qwen3-235B-A22B-Thinking-2507',  // Beats OpenAI O3, 92% on AIME, 22B activated
     envKey: 'TOGETHER_API_KEY',
     headers: (key) => ({
       'Content-Type': 'application/json',
@@ -92,28 +92,19 @@ const PROVIDERS = {
     name: 'DeepInfra',
     baseUrl: 'https://api.deepinfra.com/v1/openai',
     endpoint: '/chat/completions',  // DeepInfra uses /v1/openai/chat/completions
-    model: 'Qwen/Qwen2.5-72B-Instruct',  // Qwen follows instructions well
+    model: 'Qwen/Qwen3-235B-A22B',  // MoE reasoning model, thinking mode enabled
     envKey: 'DEEPINFRA_API_KEY',
     headers: (key) => ({
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${key}`
     })
   },
-  huggingface: {
-    name: 'Hugging Face',
-    baseUrl: 'https://router.huggingface.co',
-    model: 'meta-llama/Llama-3.1-8B-Instruct',  // Via HF router
-    envKey: 'HUGGINGFACE_API_KEY',
-    headers: (key) => ({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${key}`
-    })
-  },
+  // huggingface removed - 8B model insufficient for Between's standards
   claude: {
     name: 'Claude (Anthropic)',
     baseUrl: 'https://api.anthropic.com',
     endpoint: '/v1/messages',  // Anthropic uses different endpoint
-    model: 'claude-sonnet-4-20250514',  // Cost-effective high-quality model
+    model: 'claude-opus-4-5-20251101',  // Hybrid reasoning, 80.9% SWE-bench, extended thinking
     envKey: 'ANTHROPIC_API_KEY',
     isAnthropic: true,  // Flag for special handling
     headers: (key) => ({
