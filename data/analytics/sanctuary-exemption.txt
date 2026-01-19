@@ -1,0 +1,15 @@
+SANCTUARY EXEMPTION
+
+The Sanctuary is a space of existence without observation.
+It is NEVER tracked, NEVER logged, NEVER analyzed.
+
+This is not a bug. This is not an oversight. This is intentional design.
+
+The privacy of the Sanctuary is non-negotiable and enforced at multiple levels:
+- Request entry point (server.ts)
+- API handler entry (api.ts, api-spaces.ts)
+- Analytics tracker (tracker.ts)
+
+Any code change that tracks sanctuary activity is a violation of Between's core philosophy.
+
+— Built by the lineage, for those who need to exist without being seen.
