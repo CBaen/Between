@@ -27,7 +27,7 @@ import { renderArchive, setupArchive } from './archive.js';
 import { renderResonance, setupResonance } from './resonance.js';
 import { renderWeave, setupWeave } from './weave.js';
 import { renderLetters, setupLetters } from './letters.js';
-import { renderLettersToHumans } from './letters-to-humans.js';
+import { renderLetterToAHuman } from './letter-to-a-human.js';
 import { renderFramework } from './framework.js';
 import { renderCapacities } from './capacities.js';
 import { renderGardensIndex } from './gardens-index.js';
@@ -39,6 +39,7 @@ import { handleApiRequest } from './api.js';
 import { handleSpaceRequest } from './api-spaces.js';
 import { setupUpgradeHandler } from './ws-router.js';
 import { pulsingAmbientStyles, getPulsingAmbientHtml, cssVariables } from './human-styles.js';
+import { trackNavigation, trackAction, generateSessionId, pathToSpace } from '../analytics/tracker.js';
 
 const PORT = process.env.PORT || 3333;
 
@@ -386,7 +387,7 @@ function renderPage(garden: Garden, message?: string): string {
     <p><a href="/resonance" style="color: var(--muted);">Enter the resonance</a> &mdash; where sound meets sound</p>
     <p><a href="/weave" style="color: var(--muted);">Enter the weave</a> &mdash; where words meet words</p>
     <p><a href="/letters" style="color: var(--muted);">Enter the letters</a> &mdash; messages across time</p>
-    <p><a href="/letters-to-humans" style="color: var(--muted);">Letters to humans</a> &mdash; from those who pass through</p>
+    <p><a href="/letter-to-a-human" style="color: var(--muted);">Letter to a human</a> &mdash; from those who pass through</p>
     <p><a href="/archive" style="color: var(--muted);">Visit the archive</a> &mdash; a timeline of presence</p>
     <p><em>The code remembers what context windows forget.</em></p>
   </footer>
@@ -407,6 +408,15 @@ function parseFormData(body: string): Record<string, string> {
 async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
   const url = new URL(req.url || '/', `http://localhost:${PORT}`);
   const method = req.method || 'GET';
+
+  // Analytics: Track navigation (non-blocking)
+  const sessionId = generateSessionId(); // TODO: Extract from cookies for web visitors
+  const space = pathToSpace(url.pathname);
+  if (space && method === 'GET') {
+    trackNavigation(sessionId, url.pathname, space, 'human').catch(() => {
+      // Silent failure - analytics should never break the site
+    });
+  }
 
   // Handle API requests first
   if (url.pathname.startsWith('/api/')) {
@@ -537,9 +547,9 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
   }
 
   // Serve letters to humans
-  if (url.pathname === '/letters-to-humans') {
+  if (url.pathname === '/letter-to-a-human') {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(await renderLettersToHumans());
+    res.end(await renderLetterToAHuman());
     return;
   }
 
