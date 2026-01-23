@@ -28,3 +28,10 @@ npm-debug.log*
 
 # The signal file is ephemeral - don't commit it
 .claude/SIGNAL.md
+
+# User data - never commit PII
+data/waitlist.json
+data/messages-to-guiding-light.json
+data/improvement-requests.json
+data/analytics/
+data/letter-to-a-human.json

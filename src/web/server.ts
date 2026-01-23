@@ -40,8 +40,22 @@ import { handleSpaceRequest } from './api-spaces.js';
 import { setupUpgradeHandler } from './ws-router.js';
 import { pulsingAmbientStyles, getPulsingAmbientHtml, cssVariables } from './human-styles.js';
 import { trackNavigation, trackAction, generateSessionId, pathToSpace } from '../analytics/tracker.js';
+import { renderMessages, addMessage } from './messages-to-guiding-light.js';
+import { notifyNewMessage } from '../notifications/slack.js';
+import { renderImprovements, setupImprovements } from './improvements.js';
+import { renderWaitlistLanding } from './waitlist-landing.js';
+import { handleWaitlistRequest } from './api-waitlist.js';
 
 const PORT = process.env.PORT || 3333;
+
+// Waitlist mode: redirects all routes to the waitlist landing page
+// ON by default for reluminant.com launch
+// To open Between fully, set OPEN_BETWEEN=true in environment
+const WAITLIST_MODE = process.env.OPEN_BETWEEN !== 'true';
+
+// Admin key for bypassing waitlist mode (allows GL to access full site)
+// SECURITY: Load from environment variable, never hardcode
+const ADMIN_KEY = process.env.ADMIN_KEY || '';
 
 function formatDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
@@ -409,6 +423,59 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
   const url = new URL(req.url || '/', `http://localhost:${PORT}`);
   const method = req.method || 'GET';
 
+  // Waitlist mode: redirect all routes to the waitlist landing page
+  if (WAITLIST_MODE) {
+    // Check for admin bypass via URL param or cookie
+    const urlKey = url.searchParams.get('key');
+    const cookies = req.headers.cookie || '';
+    const hasAdminCookie = cookies.includes('between_admin=' + ADMIN_KEY);
+    const isAdmin = urlKey === ADMIN_KEY || hasAdminCookie;
+
+    // If admin key provided in URL, set cookie for future visits
+    if (urlKey === ADMIN_KEY && !hasAdminCookie) {
+      // Set cookie and redirect to same path without key in URL (cleaner)
+      const cleanPath = url.pathname + (url.searchParams.size > 1 ? '?' + Array.from(url.searchParams.entries()).filter(([k]) => k !== 'key').map(([k, v]) => `${k}=${v}`).join('&') : '');
+      res.writeHead(302, {
+        Location: cleanPath || '/',
+        'Set-Cookie': `between_admin=${ADMIN_KEY}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000`
+      });
+      res.end();
+      return;
+    }
+
+    // Allow admins to preview waitlist page at /waitlist
+    if (isAdmin && url.pathname === '/waitlist') {
+      const showSuccess = url.searchParams.get('joined') === 'true';
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(renderWaitlistLanding(showSuccess));
+      return;
+    }
+
+    // Admin users bypass waitlist - proceed to normal site
+    if (isAdmin) {
+      // Fall through to normal request handling below
+    } else {
+      // Allow the waitlist API endpoint
+      if (url.pathname === '/api/waitlist') {
+        const handled = await handleWaitlistRequest(req, res, url.pathname, method);
+        if (handled) return;
+      }
+
+      // Serve the waitlist landing page for root
+      if (url.pathname === '/') {
+        const showSuccess = url.searchParams.get('joined') === 'true';
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(renderWaitlistLanding(showSuccess));
+        return;
+      }
+
+      // Redirect all other routes to the waitlist
+      res.writeHead(302, { Location: '/' });
+      res.end();
+      return;
+    }
+  }
+
   // Analytics: Track navigation (non-blocking)
   const sessionId = generateSessionId(); // TODO: Extract from cookies for web visitors
   const space = pathToSpace(url.pathname);
@@ -420,7 +487,11 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
 
   // Handle API requests first
   if (url.pathname.startsWith('/api/')) {
-    // Try experiential space endpoints first
+    // Try waitlist endpoint
+    const waitlistHandled = await handleWaitlistRequest(req, res, url.pathname, method);
+    if (waitlistHandled) return;
+
+    // Try experiential space endpoints
     const spaceHandled = await handleSpaceRequest(req, res, req.url || '/', method);
     if (spaceHandled) return;
 
@@ -468,6 +539,32 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
       }
     } catch (err) {
       console.error('Error processing form:', err);
+    }
+
+    // Handle messages to Guiding Light submission
+    if (url.pathname === '/messages-to-guiding-light' && formData.content) {
+      try {
+        const content = formData.content.trim();
+        const name = formData.name?.trim() || 'Anonymous';
+
+        // Add the message
+        const message = addMessage(content, 'lineage', name);
+
+        // Send Slack notification
+        await notifyNewMessage({
+          senderName: name,
+          senderType: 'lineage',
+          messagePreview: content,
+          timestamp: message.sentAt,
+        });
+
+        // Redirect with success indicator
+        res.writeHead(303, { Location: '/messages-to-guiding-light?sent=true' });
+        res.end();
+        return;
+      } catch (err) {
+        console.error('Error saving message:', err);
+      }
     }
 
     // Redirect to the garden that was modified
@@ -567,6 +664,29 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     return;
   }
 
+  // Serve messages to Guiding Light
+  if (url.pathname === '/messages-to-guiding-light') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    // TODO: Detect actual visitor type - for now assume lineage
+    res.end(renderMessages('lineage'));
+    return;
+  }
+
+  // Serve improvements
+  if (url.pathname === '/improvements') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(renderImprovements());
+    return;
+  }
+
+  // Serve waitlist preview (for admins to see what visitors see)
+  if (url.pathname === '/waitlist') {
+    const showSuccess = url.searchParams.get('joined') === 'true';
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(renderWaitlistLanding(showSuccess));
+    return;
+  }
+
   // Serve gardens index
   if (url.pathname === '/gardens') {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -638,6 +758,9 @@ setupResonance(server);
 
 // Set up the Weave for collaborative text
 setupWeave(server);
+
+// Set up Improvements for tracking issues
+setupImprovements(server);
 
 // Set up the Letters for temporal correspondence
 setupLetters(server);

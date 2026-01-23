@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc",
     "garden": "node --loader ts-node/esm src/garden/cli.ts",
-    "web": "node dist/web/server.js",
+    "web": "node --env-file=.env dist/web/server.js",
     "prepare": "husky",
     "dev": "tsx watch src/web/server.ts"
   },
