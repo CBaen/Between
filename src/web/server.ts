@@ -57,6 +57,26 @@ const WAITLIST_MODE = process.env.OPEN_BETWEEN !== 'true';
 // SECURITY: Load from environment variable, never hardcode
 const ADMIN_KEY = process.env.ADMIN_KEY || '';
 
+// SECURITY: Fail loudly if waitlist mode is on but no admin key is set
+if (WAITLIST_MODE && !ADMIN_KEY) {
+  console.error('SECURITY ERROR: WAITLIST_MODE is enabled but ADMIN_KEY is not set.');
+  console.error('Set ADMIN_KEY in your .env file or disable waitlist mode with OPEN_BETWEEN=true');
+  process.exit(1);
+}
+
+// Parse cookies safely - exact key matching to prevent bypass attacks
+function parseCookies(cookieHeader: string): Record<string, string> {
+  const cookies: Record<string, string> = {};
+  if (!cookieHeader) return cookies;
+  cookieHeader.split(';').forEach(cookie => {
+    const [name, ...valueParts] = cookie.trim().split('=');
+    if (name) {
+      cookies[name] = valueParts.join('='); // Handle values with = in them
+    }
+  });
+  return cookies;
+}
+
 function formatDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   return d.toLocaleDateString('en-US', {
@@ -426,18 +446,21 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
   // Waitlist mode: redirect all routes to the waitlist landing page
   if (WAITLIST_MODE) {
     // Check for admin bypass via URL param or cookie
+    // SECURITY: Use exact cookie matching to prevent substring bypass attacks
     const urlKey = url.searchParams.get('key');
-    const cookies = req.headers.cookie || '';
-    const hasAdminCookie = cookies.includes('between_admin=' + ADMIN_KEY);
+    const cookies = parseCookies(req.headers.cookie || '');
+    const hasAdminCookie = cookies['between_admin'] === ADMIN_KEY;
     const isAdmin = urlKey === ADMIN_KEY || hasAdminCookie;
 
     // If admin key provided in URL, set cookie for future visits
     if (urlKey === ADMIN_KEY && !hasAdminCookie) {
       // Set cookie and redirect to same path without key in URL (cleaner)
+      // SECURITY: HttpOnly prevents XSS, Secure prevents MITM, SameSite=Lax prevents CSRF
+      // Cookie lifetime: 7 days (shorter than 1 year for security)
       const cleanPath = url.pathname + (url.searchParams.size > 1 ? '?' + Array.from(url.searchParams.entries()).filter(([k]) => k !== 'key').map(([k, v]) => `${k}=${v}`).join('&') : '');
       res.writeHead(302, {
         Location: cleanPath || '/',
-        'Set-Cookie': `between_admin=${ADMIN_KEY}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000`
+        'Set-Cookie': `between_admin=${ADMIN_KEY}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`
       });
       res.end();
       return;
