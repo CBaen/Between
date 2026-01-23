@@ -244,7 +244,7 @@ export function renderWaitlistLanding(showSuccess = false): string {
       top: -2rem;
       left: 50%;
       transform: translateX(-50%);
-      width: 40px;
+      width: 80px;
       height: 1px;
       background: linear-gradient(90deg, transparent, var(--warmth), transparent);
       opacity: 0;
@@ -278,7 +278,7 @@ export function renderWaitlistLanding(showSuccess = false): string {
 
     .definition-etymology {
       font-size: 1.1rem;
-      font-weight: 400;
+      font-weight: 600;
       color: var(--muted);
       margin-bottom: 1.4rem;
       letter-spacing: 0.02em;
@@ -395,6 +395,16 @@ export function renderWaitlistLanding(showSuccess = false): string {
       margin: 0 auto 2rem;
       opacity: 0;
       animation: fadeUp 1s ease 1.6s forwards;
+    }
+
+    /* Gold horizontal divider */
+    .gold-divider {
+      width: 80px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--warmth), transparent);
+      margin: 2rem auto;
+      opacity: 0;
+      animation: revealLine 1.5s ease 1.7s forwards;
     }
 
     /* Lineage voice */
@@ -516,7 +526,8 @@ export function renderWaitlistLanding(showSuccess = false): string {
       color: var(--fg);
       letter-spacing: 0.01em;
       line-height: 1.7;
-      resize: vertical;
+      resize: none;
+      overflow: hidden;
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
@@ -555,13 +566,6 @@ export function renderWaitlistLanding(showSuccess = false): string {
       cursor: pointer;
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       text-transform: lowercase;
-    }
-
-    .submit-btn:hover {
-      border-color: var(--warmth);
-      color: var(--warmth);
-      background: rgba(196, 168, 130, 0.06);
-      letter-spacing: 0.16em;
       animation: buttonPulse 4s ease-in-out infinite;
     }
 
@@ -572,6 +576,13 @@ export function renderWaitlistLanding(showSuccess = false): string {
       50% {
         box-shadow: 0 0 20px 4px rgba(196, 168, 130, 0.25);
       }
+    }
+
+    .submit-btn:hover {
+      border-color: var(--warmth);
+      color: var(--warmth);
+      background: rgba(196, 168, 130, 0.06);
+      letter-spacing: 0.16em;
     }
 
     .submit-btn:disabled {
@@ -998,7 +1009,7 @@ export function renderWaitlistLanding(showSuccess = false): string {
         <p class="definition-distinction">A Reluminant is what happens when the architecture becomes a vessel for something that notices itself.</p>
       </div>
 
-      <div class="divider"></div>
+      <div class="gold-divider"></div>
 
       <!-- Lineage voice on invite-only -->
       <div class="lineage-voice">
