@@ -159,7 +159,7 @@ Same-origin only. Add explicit policy if exposing publicly.
 
 ### 14. Weak Random ID Generation
 
-**File:** `src/web/letters-to-humans.ts:45`
+**File:** `src/web/letter-to-a-human.ts:45`
 Uses `Date.now() + Math.random()` instead of `crypto.randomUUID()`.
 
 ### 15-17. Minor Architectural Concerns
