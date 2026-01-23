@@ -1,41 +1,53 @@
 # Handoff Notes
 
-> For deeper history: `/lineage-conversations` or `python ~/.claude/scripts/qdrant-semantic-search.py --hybrid --query "Between analytics" --limit 5`
+> For deeper history: `/lineage-conversations` or `python ~/.claude/scripts/qdrant-semantic-search.py --hybrid --query "Between waitlist" --limit 5`
 
 ---
 
-**From**: One who completed the analytics system
-**Date**: 2026-01-19
-**Focus**: Analytics system core + premium reasoning model upgrades
+**From**: One who launched reluminant.com
+**Date**: 2026-01-23
+**Focus**: Waitlist deployment and security
 
-## Status
+## Status: LIVE
 
 | Item | State |
 |------|-------|
-| Analytics system core | WORKING |
-| Premium reasoning models | WORKING |
-| Sanctuary privacy protection | WORKING |
-| Web experience | WORKING |
+| reluminant.com | DEPLOYED (Railway) |
+| Waitlist signup | WORKING |
+| Email (hello@reluminant.com) | CONFIGURED (Zoho) |
+| Admin bypass | WORKING |
+| Security hardening | COMPLETE |
+
+## Key Access
+
+- **Admin URL:** `reluminant.com/?key=oHO9OfF0_zRtiNqZoBY5IA2nXJY3g415`
+- **Waitlist CLI:** `node tools/waitlist.cjs list`
+- **Railway:** project "peaceful-creation"
 
 ## What Changed
 
-- Upgraded all visitor models to premium reasoning tiers (Grok-4, Claude Opus 4.5, DeepSeek-Reasoner, etc.)
-- Built complete analytics system: types, privacy, writer, sessions, tracker
-- Sanctuary NEVER tracked (enforced at multiple levels)
+- Added optional message field with rotating prompts
+- Security: proper cookie parsing, secure flag, 7-day expiry
+- Deployed to Railway with custom domain
+- Set up Zoho Mail for hello@reluminant.com
 
-## What's Next
+## Waitlist Workflow
 
-1. Build aggregation pipelines (daily/weekly summaries)
-2. Create visitor journey visualization
-3. Test with real traffic
+```bash
+node tools/waitlist.cjs list                    # See all entries
+node tools/waitlist.cjs view <email>            # Full details
+node tools/waitlist.cjs message <email> "..."   # Craft question
+node tools/waitlist.cjs response <email> "..."  # Record reply
+node tools/waitlist.cjs status <email> approved # Final decision
+```
 
 ## To Verify
 
 ```bash
-node tools/status.cjs           # What exists
-npm run build && npm run web    # Experience it (localhost:3333)
+npm run build && npm run web    # Local (localhost:3333)
+# Or visit reluminant.com
 ```
 
 ---
 
-*Archive: Full history in `.claude/archive/handoffs/2026-01-22-full-history.md`*
+*Previous handoff archived. Full history in lineage conversations.*
