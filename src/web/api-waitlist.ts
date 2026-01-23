@@ -13,8 +13,14 @@ import type { IncomingMessage, ServerResponse } from 'http';
 
 interface WaitlistEntry {
   email: string;
+  ip: string;
   joinedAt: string;
   source: string;
+  status: 'new' | 'contacted' | 'responded' | 'approved' | 'declined';
+  initialMessage: string;      // What the human wrote when signing up (optional)
+  reluminantMessage: string;   // The question/message the lineage member wants to send
+  humanResponse: string;       // What the human replied
+  notes: string;               // General notes
 }
 
 interface WaitlistStore {
@@ -61,10 +67,16 @@ function emailExists(email: string): boolean {
   return store.entries.some((e) => e.email.toLowerCase() === normalized);
 }
 
+function ipExists(ip: string): boolean {
+  return store.entries.some((e) => e.ip === ip);
+}
+
 async function addEmail(
   email: string,
-  source = 'web'
-): Promise<{ success: boolean; error?: string }> {
+  ip: string,
+  source = 'web',
+  initialMessage = ''
+): Promise<{ success: boolean; error?: string; alreadyExists?: boolean }> {
   const trimmed = email.trim().toLowerCase();
 
   if (!trimmed) {
@@ -75,21 +87,28 @@ async function addEmail(
     return { success: false, error: 'Please enter a valid email address.' };
   }
 
-  if (emailExists(trimmed)) {
-    // Silently succeed if already on the list (don't reveal this to prevent enumeration)
-    return { success: true };
+  // Check for duplicate email OR IP
+  if (emailExists(trimmed) || ipExists(ip)) {
+    // Return success but flag that they already exist (for UI state)
+    return { success: true, alreadyExists: true };
   }
 
   const entry: WaitlistEntry = {
     email: trimmed,
+    ip,
     joinedAt: new Date().toISOString(),
     source,
+    status: 'new',
+    initialMessage: initialMessage.trim(),
+    reluminantMessage: '',
+    humanResponse: '',
+    notes: '',
   };
 
   store.entries.push(entry);
   await saveWaitlist();
 
-  return { success: true };
+  return { success: true, alreadyExists: false };
 }
 
 // Initialize store on module load
@@ -112,6 +131,12 @@ export async function handleWaitlistRequest(
   // Handle POST - add email to waitlist
   if (method === 'POST') {
     try {
+      // Get IP address (check forwarded header for proxies, fallback to socket)
+      const forwarded = req.headers['x-forwarded-for'];
+      const ip = typeof forwarded === 'string'
+        ? forwarded.split(',')[0].trim()
+        : req.socket.remoteAddress || 'unknown';
+
       const body = await new Promise<string>((resolve) => {
         let data = '';
         req.on('data', (chunk) => (data += chunk));
@@ -120,19 +145,22 @@ export async function handleWaitlistRequest(
 
       let email: string;
       let source = 'web';
+      let message = '';
 
       // Try to parse as JSON first
       try {
         const json = JSON.parse(body);
         email = json.email;
         source = json.source || 'web';
+        message = json.message || '';
       } catch {
         // Fall back to form data
         const params = new URLSearchParams(body);
         email = params.get('email') || '';
+        message = params.get('message') || '';
       }
 
-      const result = await addEmail(email, source);
+      const result = await addEmail(email, ip, source, message);
 
       res.writeHead(result.success ? 200 : 400, {
         'Content-Type': 'application/json',

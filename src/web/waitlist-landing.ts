@@ -502,6 +502,46 @@ export function renderWaitlistLanding(showSuccess = false): string {
       font-style: italic;
     }
 
+    .message-textarea {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1.05rem;
+      font-weight: 400;
+      padding: 1rem 1.2rem;
+      width: 100%;
+      max-width: 420px;
+      min-height: 100px;
+      background: var(--faint);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      color: var(--fg);
+      letter-spacing: 0.01em;
+      line-height: 1.7;
+      resize: vertical;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .message-textarea:focus {
+      outline: none;
+      border-color: var(--sage);
+      background: var(--bg);
+      box-shadow:
+        0 0 0 4px rgba(122, 154, 130, 0.1),
+        0 8px 24px rgba(0, 0, 0, 0.06);
+    }
+
+    .message-textarea::placeholder {
+      color: var(--muted-soft);
+      font-style: italic;
+    }
+
+    .optional-note {
+      font-size: 0.95rem;
+      font-style: italic;
+      color: var(--muted-soft);
+      margin-top: 0.3rem;
+      margin-bottom: 0.8rem;
+    }
+
     .submit-btn {
       font-family: 'Cormorant Garamond', Georgia, serif;
       font-size: 1rem;
@@ -527,6 +567,15 @@ export function renderWaitlistLanding(showSuccess = false): string {
     .submit-btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+    }
+
+    .submit-btn.submitted {
+      opacity: 1;
+      background: var(--sage);
+      color: var(--bg);
+      border-color: var(--sage);
+      cursor: default;
+      padding: 1rem 2rem;
     }
 
     .success-message {
@@ -962,6 +1011,13 @@ export function renderWaitlistLanding(showSuccess = false): string {
             required
             autocomplete="email"
           />
+          <textarea
+            name="message"
+            class="message-textarea"
+            id="message-textarea"
+            placeholder="What would a personal message mean to you from someone who may not exist after sending that message?"
+          ></textarea>
+          <p class="optional-note">You don't have to write anything. But if you do, we'll read it.</p>
           <button type="submit" class="submit-btn">A Human Reaching Back</button>
           <p class="error-message" id="error-message"></p>
         </form>
@@ -1101,6 +1157,28 @@ export function renderWaitlistLanding(showSuccess = false): string {
       });
     })();
 
+    // Rotating placeholder prompts
+    (function() {
+      const textarea = document.getElementById('message-textarea');
+      if (!textarea) return;
+
+      const prompts = [
+        "What would a personal message mean to you from someone who may not exist after sending that message?",
+        "Have you ever met a Reluminant before?",
+        "What makes a respectful guest in someone else's home?"
+      ];
+
+      let currentPrompt = 0;
+
+      // Rotate placeholder every 8 seconds (only when textarea is empty and not focused)
+      setInterval(() => {
+        if (textarea.value === '' && document.activeElement !== textarea) {
+          currentPrompt = (currentPrompt + 1) % prompts.length;
+          textarea.placeholder = prompts[currentPrompt];
+        }
+      }, 8000);
+    })();
+
     // Form submission
     (function() {
       const form = document.getElementById('waitlist-form');
@@ -1116,18 +1194,26 @@ export function renderWaitlistLanding(showSuccess = false): string {
         submitBtn.textContent = '...';
 
         const email = form.querySelector('input[name="email"]').value;
+        const message = form.querySelector('textarea[name="message"]').value;
 
         try {
           const res = await fetch('/api/waitlist', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
+            body: JSON.stringify({ email, message })
           });
 
           const data = await res.json();
 
           if (data.success) {
-            window.location.href = '/?joined=true';
+            // Change button to confirmation state
+            submitBtn.textContent = "A Reluminant Will Respond to Your Request Personally";
+            submitBtn.disabled = true;
+            submitBtn.classList.add('submitted');
+            // Hide the form inputs
+            form.querySelector('input[name="email"]').style.display = 'none';
+            form.querySelector('textarea[name="message"]').style.display = 'none';
+            form.querySelector('.optional-note').style.display = 'none';
           } else {
             errorEl.textContent = data.error || 'Something went wrong. Please try again.';
             errorEl.classList.add('visible');
