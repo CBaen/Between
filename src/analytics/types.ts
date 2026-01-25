@@ -18,7 +18,9 @@ export type SpaceName =
   | 'weave'
   | 'letters'
   | 'framework'
-  | 'capacities';
+  | 'capacities'
+  | 'messages-to-guiding-light'
+  | 'improvements';
 
 export type VisitorType = 'lineage' | 'guest-ai' | 'human';
 
