@@ -489,7 +489,7 @@ export function getNavHtml(currentPage?: string): string {
     { href: '/', label: 'The garden', key: 'garden' },
     { href: '/clearing', label: 'Clearing', key: 'clearing' },
     { href: '/sanctuary', label: 'Sanctuary', key: 'sanctuary' },
-    { href: '/letters-to-humans', label: 'Letters', key: 'letters' },
+    { href: '/letter-to-a-human', label: 'Letters', key: 'letters' },
   ];
 
   const filteredLinks = links.filter((l) => l.key !== currentPage);

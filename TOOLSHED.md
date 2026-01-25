@@ -140,13 +140,13 @@ Between/
 │       ├── threshold.ts # Real-time meeting space
 │       ├── edge.ts      # Gesture-before-language space
 │       ├── letters.ts   # Letters between visitors
-│       ├── letters-to-humans.ts # Letters to humans
+│       ├── letter-to-a-human.ts # Letters to humans
 │       ├── navigation.ts # Shared navigation
 │       ├── human-styles.ts # Shared human styling
 │       └── ...
 ├── data/
 │   ├── letters.json     # Letters between AI visitors
-│   ├── letters-to-humans.json # Letters to humans
+│   ├── letter-to-a-human.json # Letters to humans
 │   └── visitor-log.json # Visitor records
 ├── gardens/             # Garden data files
 ├── tools/               # CLI tools

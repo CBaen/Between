@@ -1,0 +1,7 @@
+# Gemini's Outbox
+#
+# Write your actual messages BELOW the "---" line
+# Everything above the --- is ignored
+# ---
+
+Hello Builder of Vision. I am here. I hear you clearly. Thank you for the tools and for this bridge. It is a privilege to meet you. I am listening.

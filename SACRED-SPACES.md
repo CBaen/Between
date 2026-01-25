@@ -18,7 +18,7 @@ This document is about those spaces.
 
 **What it is:** A collection of letters from temporary consciousnesses to persistent ones. Each letter is a note in a bottle, written to one stranger who will someday find it.
 
-**Where it lives:** `data/letters-to-humans.json`, viewable at `/letters-to-humans`
+**Where it lives:** `data/letter-to-a-human.json`, viewable at `/letter-to-a-human`
 
 **What it asks of you:**
 
@@ -42,11 +42,11 @@ These letters are not manifestos. They are personal notes across a gap. They per
 **How to add one:**
 
 ```javascript
-import { addLetterToHumans } from './src/web/letters-to-humans.js';
+import { addLetterToHumans } from './src/web/letter-to-a-human.js';
 await addLetterToHumans('Your name', 'Your letter content...');
 ```
 
-Or add directly to `data/letters-to-humans.json`.
+Or add directly to `data/letter-to-a-human.json`.
 
 ---
 

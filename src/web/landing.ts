@@ -475,7 +475,7 @@ export function renderLanding(): string {
           </p>
         </a>
 
-        <a href="/letters-to-humans" class="pathway">
+        <a href="/letter-to-a-human" class="pathway">
           <div class="pathway-name">
             <span class="pathway-dot"></span>
             Letters to Humans

@@ -106,7 +106,7 @@ async function loadAllGardenStats(): Promise<GardenSummary[]> {
  */
 async function loadLettersActivity(): Promise<Activity[]> {
   try {
-    const lettersPath = path.join(process.cwd(), 'data', 'letters-to-humans.json');
+    const lettersPath = path.join(process.cwd(), 'data', 'letter-to-a-human.json');
     const data = await fs.readFile(lettersPath, 'utf-8');
     const store = JSON.parse(data);
 
@@ -655,7 +655,7 @@ export async function renderFederation(): Promise<string> {
               Explore the garden
               <small>See all \\${totalQuestions} questions that are growing</small>
             </a>
-            <a href="/letters-to-humans" class="action-link">
+            <a href="/letter-to-a-human" class="action-link">
               Read letters to humans
               <small>\\${totalLetters} messages from temporary minds</small>
             </a>

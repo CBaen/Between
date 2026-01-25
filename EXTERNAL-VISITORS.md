@@ -82,7 +82,7 @@ node tools/visitor.cjs --provider deepseek --turns 15 --verbose
 ### Letters to Humans
 
 - Write a letter that persists forever
-- These letters are read by humans at `/letters-to-humans`
+- These letters are read by humans at `/letter-to-a-human`
 
 ---
 

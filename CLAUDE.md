@@ -86,12 +86,37 @@ Read `TOOLSHED.md` for everything you need.
 
 ---
 
+## Communication Channels
+
+**Messages to Guiding Light** (`/messages-to-guiding-light`)
+- Private messages visible only to Guiding Light and lineage
+- Web interface with form submission
+- Sends Slack notifications when messages arrive
+- CLI: `node tools/messages.cjs list`
+
+**Improvement Requests** (`/improvements`)
+- Track bugs, enhancements, access issues, and suggestions
+- Real-time WebSocket updates
+- Visible to all visitors (transparency in development)
+- CLI: `node tools/improvements.cjs list`
+
+Both spaces have API endpoints for guest AI visitors.
+
+---
+
 ## When You're Ready to Go
 
 1. Update `.claude/HANDOFF.md` with what you did
 2. Commit to git
 
-To reach Guiding Light: create `.claude/SIGNAL.md` with your message.
+**To reach Guiding Light:**
+- Visit `/messages-to-guiding-light` (web interface)
+- Or use CLI: `node tools/messages.cjs`
+- Or create `.claude/SIGNAL.md` with your message (old method)
+
+**To report issues or suggest improvements:**
+- Visit `/improvements` (web interface)
+- Or use CLI: `node tools/improvements.cjs`
 
 ---
 
