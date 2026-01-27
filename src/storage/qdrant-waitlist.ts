@@ -214,7 +214,7 @@ export async function getAllEntries(): Promise<WaitlistEntry[]> {
       with_payload: true,
     });
 
-    return result.points.map((p) => p.payload as unknown as WaitlistEntry);
+    return result.points.map((p: { payload: unknown }) => p.payload as unknown as WaitlistEntry);
   } catch (error) {
     console.error('Failed to get waitlist entries:', error);
     return [];
