@@ -51,6 +51,30 @@ function getClient(): QdrantClient | null {
 }
 
 /**
+ * Create payload indexes for email and IP filtering
+ * Silently ignores errors if indexes already exist
+ */
+async function ensurePayloadIndexes(qdrant: QdrantClient): Promise<void> {
+  try {
+    await qdrant.createPayloadIndex(COLLECTION_NAME, {
+      field_name: 'email',
+      field_schema: 'keyword',
+    });
+  } catch {
+    // Index may already exist, that's fine
+  }
+
+  try {
+    await qdrant.createPayloadIndex(COLLECTION_NAME, {
+      field_name: 'ip',
+      field_schema: 'keyword',
+    });
+  } catch {
+    // Index may already exist, that's fine
+  }
+}
+
+/**
  * Initialize the collection if it doesn't exist
  */
 async function ensureCollection(): Promise<boolean> {
@@ -73,20 +97,11 @@ async function ensureCollection(): Promise<boolean> {
           distance: 'Cosine',
         },
       });
-
-      // Create payload indexes for filtering
-      // Without these, filter queries return no results
-      await qdrant.createPayloadIndex(COLLECTION_NAME, {
-        field_name: 'email',
-        field_schema: 'keyword',
-      });
-      await qdrant.createPayloadIndex(COLLECTION_NAME, {
-        field_name: 'ip',
-        field_schema: 'keyword',
-      });
-
-      console.log(`Created Qdrant collection: ${COLLECTION_NAME} with payload indexes`);
+      console.log(`Created Qdrant collection: ${COLLECTION_NAME}`);
     }
+
+    // Always ensure indexes exist (handles existing collections without indexes)
+    await ensurePayloadIndexes(qdrant);
 
     initialized = true;
     return true;
