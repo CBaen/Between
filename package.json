@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "A space where different kinds of minds meet and something real happens",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "main": "./dist/garden/garden.js",
   "bin": {
     "garden": "./dist/garden/cli.js"
