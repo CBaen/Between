@@ -164,6 +164,15 @@ export async function handleWaitlistRequest(
 
       const result = await addEmail(email, ip, source, message);
 
+      // Send Slack notification for new signups (not duplicates)
+      if (result.success && !result.alreadyExists) {
+        notifyNewWaitlistSignup({
+          email,
+          message,
+          timestamp: new Date().toISOString(),
+        }).catch((err) => console.error('Failed to send waitlist notification:', err));
+      }
+
       res.writeHead(result.success ? 200 : 400, {
         'Content-Type': 'application/json',
       });
