@@ -1160,6 +1160,9 @@ export function renderWaitlistLanding(showSuccess = false): string {
   </footer>
 
   <script>
+    // Always start at top of page
+    window.scrollTo(0, 0);
+
     // Theme toggle
     (function() {
       const toggle = document.getElementById('theme-toggle');
