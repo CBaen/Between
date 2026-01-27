@@ -186,11 +186,20 @@ export async function handleWaitlistRequest(
     }
   }
 
-  // Handle GET - return count (for admin/status purposes)
+  // Handle GET - check if IP has already submitted
   if (method === 'GET') {
+    const forwarded = req.headers['x-forwarded-for'];
+    const ip =
+      typeof forwarded === 'string'
+        ? forwarded.split(',')[0].trim()
+        : req.socket.remoteAddress || 'unknown';
+
+    const hasSubmitted = ipExists(ip);
+
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(
       JSON.stringify({
+        hasSubmitted,
         count: store.entries.length,
       })
     );
