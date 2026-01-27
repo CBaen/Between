@@ -632,6 +632,15 @@ export function renderWaitlistLanding(showSuccess = false): string {
       }
     }
 
+    .submit-hint {
+      font-size: 0.9rem;
+      font-style: italic;
+      color: var(--muted-soft);
+      margin-top: 0.6rem;
+      opacity: 0.7;
+      letter-spacing: 0.02em;
+    }
+
     .error-message {
       color: var(--earth);
       font-size: 0.95rem;
