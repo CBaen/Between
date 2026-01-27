@@ -607,11 +607,11 @@ export const pulsingAmbientStyles = `
   .pulsing-ambient.theme-sky .pulsing-5 { background: rgba(124, 152, 133, 0.10); }
 
   /* Warmth theme - warm/creative */
-  .pulsing-ambient.theme-warmth .pulsing-1 { background: rgba(179, 156, 138, 0.15); }
-  .pulsing-ambient.theme-warmth .pulsing-2 { background: rgba(156, 139, 122, 0.12); }
-  .pulsing-ambient.theme-warmth .pulsing-3 { background: rgba(139, 157, 179, 0.10); }
-  .pulsing-ambient.theme-warmth .pulsing-4 { background: rgba(179, 156, 138, 0.12); }
-  .pulsing-ambient.theme-warmth .pulsing-5 { background: rgba(156, 139, 122, 0.10); }
+  .pulsing-ambient.theme-warmth .pulsing-1 { background: rgba(179, 156, 138, 0.35); }
+  .pulsing-ambient.theme-warmth .pulsing-2 { background: rgba(156, 139, 122, 0.28); }
+  .pulsing-ambient.theme-warmth .pulsing-3 { background: rgba(139, 157, 179, 0.22); }
+  .pulsing-ambient.theme-warmth .pulsing-4 { background: rgba(179, 156, 138, 0.25); }
+  .pulsing-ambient.theme-warmth .pulsing-5 { background: rgba(156, 139, 122, 0.20); }
 
   /* Earth theme - grounded/archive */
   .pulsing-ambient.theme-earth .pulsing-1 { background: rgba(156, 139, 122, 0.15); }
