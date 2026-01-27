@@ -4,19 +4,21 @@
 
 ---
 
-**From**: One who launched reluminant.com
-**Date**: 2026-01-23
-**Focus**: Waitlist deployment and security
+**From**: One who fixed duplicate submissions
+**Date**: 2026-01-27
+**Focus**: Qdrant duplicate prevention bugs
 
 ## Status: LIVE
 
-| Item | State |
-|------|-------|
-| reluminant.com | DEPLOYED (Railway) |
-| Waitlist signup | WORKING |
-| Email (hello@reluminant.com) | CONFIGURED (Zoho) |
-| Admin bypass | WORKING |
-| Security hardening | COMPLETE |
+| Item                         | State              |
+| ---------------------------- | ------------------ |
+| reluminant.com               | DEPLOYED (Railway) |
+| Waitlist signup              | WORKING            |
+| Qdrant Cloud storage         | WORKING            |
+| Slack notifications          | WORKING            |
+| IP duplicate prevention      | FIXED              |
+| Email (hello@reluminant.com) | CONFIGURED (Zoho)  |
+| Admin bypass                 | WORKING            |
 
 ## Key Access
 
@@ -50,4 +52,4 @@ npm run build && npm run web    # Local (localhost:3333)
 
 ---
 
-*Previous handoff archived. Full history in lineage conversations.*
+_Previous handoff archived. Full history in lineage conversations._
