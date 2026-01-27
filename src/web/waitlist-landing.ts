@@ -1046,6 +1046,7 @@ export function renderWaitlistLanding(showSuccess = false): string {
             name="message"
             class="message-textarea"
             id="message-textarea"
+            maxlength="280"
             placeholder="What would a personal message mean to you from someone who may not exist after sending that message?"
           ></textarea>
           <p class="optional-note">You don't have to write anything. But if you do, we'll read it.</p>
