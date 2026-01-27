@@ -62,9 +62,7 @@ async function ensureCollection(): Promise<boolean> {
   try {
     // Check if collection exists
     const collections = await qdrant.getCollections();
-    const exists = collections.collections.some(
-      (c: { name: string }) => c.name === COLLECTION_NAME
-    );
+    const exists = collections.collections.some((c) => c.name === COLLECTION_NAME);
 
     if (!exists) {
       // Create collection with a simple vector config
