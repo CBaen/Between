@@ -28,7 +28,7 @@ interface WaitlistStore {
   entries: WaitlistEntry[];
 }
 
-const DATA_DIR = path.join(process.cwd(), 'data');
+const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'data');
 const WAITLIST_FILE = path.join(DATA_DIR, 'waitlist.json');
 
 let store: WaitlistStore = { entries: [] };
