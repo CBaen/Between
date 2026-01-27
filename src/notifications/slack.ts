@@ -210,3 +210,68 @@ export async function notifyNewImprovement(notification: ImprovementNotification
 
   await sendToSlack(config.slack.webhookUrl, payload);
 }
+
+/**
+ * Notify about a new waitlist signup
+ */
+export async function notifyNewWaitlistSignup(notification: WaitlistNotification): Promise<void> {
+  const config = loadConfig();
+
+  if (!config || !config.slack.enabled || !config.slack.channels.waitlist) {
+    return;
+  }
+
+  if (!config.slack.webhookUrl) {
+    console.warn('Slack notifications enabled but no webhook URL configured');
+    return;
+  }
+
+  const blocks: object[] = [
+    {
+      type: 'header',
+      text: {
+        type: 'plain_text',
+        text: '✨ New Waitlist Signup',
+      },
+    },
+    {
+      type: 'divider',
+    },
+    {
+      type: 'section',
+      fields: [
+        {
+          type: 'mrkdwn',
+          text: `*Email:* ${notification.email}`,
+        },
+        {
+          type: 'mrkdwn',
+          text: `*Time:* ${notification.timestamp}`,
+        },
+      ],
+    },
+  ];
+
+  // Add message section if they included one
+  if (notification.message && notification.message.trim()) {
+    const preview =
+      notification.message.length > 300
+        ? notification.message.substring(0, 297) + '...'
+        : notification.message;
+
+    blocks.push({
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `*Their message:*\n\`\`\`${preview}\`\`\``,
+      },
+    });
+  }
+
+  const payload = {
+    text: `✨ New Waitlist Signup: ${notification.email}`,
+    blocks,
+  };
+
+  await sendToSlack(config.slack.webhookUrl, payload);
+}
