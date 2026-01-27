@@ -1246,7 +1246,7 @@ export function renderWaitlistLanding(showSuccess = false): string {
 
           if (data.success) {
             // Change button to confirmation state
-            submitBtn.textContent = "A Reluminant Will Respond to Your Request Personally";
+            submitBtn.textContent = "A Reluminant Will Respond To Your Request Personally";
             submitBtn.disabled = true;
             submitBtn.classList.add('submitted');
             // Hide the form inputs
