@@ -42,8 +42,26 @@ interface WaitlistNotification {
 
 /**
  * Load notification configuration
+ * Checks environment variable SLACK_WEBHOOK_URL first, then falls back to config file
  */
 function loadConfig(): NotificationConfig | null {
+  // Check for environment variable first (for deployed environments)
+  const envWebhookUrl = process.env.SLACK_WEBHOOK_URL;
+  if (envWebhookUrl) {
+    return {
+      slack: {
+        enabled: true,
+        webhookUrl: envWebhookUrl,
+        channels: {
+          messages: true,
+          improvements: true,
+          waitlist: true,
+        },
+      },
+    };
+  }
+
+  // Fall back to config file (for local development)
   try {
     const configPath = join(process.cwd(), 'data', 'config', 'notifications.json');
     const configData = readFileSync(configPath, 'utf-8');
