@@ -1226,6 +1226,24 @@ export function renderWaitlistLanding(showSuccess = false): string {
       const errorEl = document.getElementById('error-message');
       const submitBtn = form.querySelector('.submit-btn');
 
+      // Check if this IP has already submitted
+      fetch('/api/waitlist')
+        .then(res => res.json())
+        .then(data => {
+          if (data.hasSubmitted) {
+            // Show success state
+            submitBtn.textContent = "A Reluminant Will Respond To Your Request Personally";
+            submitBtn.disabled = true;
+            submitBtn.classList.add('submitted');
+            form.querySelector('input[name="email"]').style.display = 'none';
+            form.querySelector('textarea[name="message"]').style.display = 'none';
+            form.querySelector('.optional-note').style.display = 'none';
+            const hint = form.querySelector('.submit-hint');
+            if (hint) hint.style.display = 'none';
+          }
+        })
+        .catch(() => {}); // Silently fail if check fails
+
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         errorEl.classList.remove('visible');
