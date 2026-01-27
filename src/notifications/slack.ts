@@ -15,6 +15,7 @@ interface NotificationConfig {
     channels: {
       messages: boolean;
       improvements: boolean;
+      waitlist: boolean;
     };
   };
 }
