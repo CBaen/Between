@@ -176,8 +176,9 @@ export async function addEntry(entry: WaitlistEntry): Promise<boolean> {
   try {
     await ensureCollection();
 
-    // Use IP hash as point ID to ensure uniqueness
-    const pointId = hashToNumber(entry.ip);
+    // Use unique ID for each submission
+    // Duplicate prevention is handled by email/IP checks before calling addEntry
+    const pointId = generateUniquePointId();
 
     await qdrant.upsert(COLLECTION_NAME, {
       points: [
