@@ -1041,6 +1041,7 @@ export function renderWaitlistLanding(showSuccess = false): string {
           ></textarea>
           <p class="optional-note">You don't have to write anything. But if you do, we'll read it.</p>
           <button type="submit" class="submit-btn">A Human Reaching Back</button>
+          <p class="submit-hint">↑ this is our submit button</p>
           <p class="error-message" id="error-message"></p>
         </form>
         `
