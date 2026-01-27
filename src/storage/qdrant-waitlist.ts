@@ -73,7 +73,19 @@ async function ensureCollection(): Promise<boolean> {
           distance: 'Cosine',
         },
       });
-      console.log(`Created Qdrant collection: ${COLLECTION_NAME}`);
+
+      // Create payload indexes for filtering
+      // Without these, filter queries return no results
+      await qdrant.createPayloadIndex(COLLECTION_NAME, {
+        field_name: 'email',
+        field_schema: 'keyword',
+      });
+      await qdrant.createPayloadIndex(COLLECTION_NAME, {
+        field_name: 'ip',
+        field_schema: 'keyword',
+      });
+
+      console.log(`Created Qdrant collection: ${COLLECTION_NAME} with payload indexes`);
     }
 
     initialized = true;
