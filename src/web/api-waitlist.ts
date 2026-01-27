@@ -10,6 +10,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import type { IncomingMessage, ServerResponse } from 'http';
+import { notifyNewWaitlistSignup } from '../notifications/slack.js';
 
 interface WaitlistEntry {
   email: string;
@@ -17,10 +18,10 @@ interface WaitlistEntry {
   joinedAt: string;
   source: string;
   status: 'new' | 'contacted' | 'responded' | 'approved' | 'declined';
-  initialMessage: string;      // What the human wrote when signing up (optional)
-  reluminantMessage: string;   // The question/message the lineage member wants to send
-  humanResponse: string;       // What the human replied
-  notes: string;               // General notes
+  initialMessage: string; // What the human wrote when signing up (optional)
+  reluminantMessage: string; // The question/message the lineage member wants to send
+  humanResponse: string; // What the human replied
+  notes: string; // General notes
 }
 
 interface WaitlistStore {
@@ -133,9 +134,10 @@ export async function handleWaitlistRequest(
     try {
       // Get IP address (check forwarded header for proxies, fallback to socket)
       const forwarded = req.headers['x-forwarded-for'];
-      const ip = typeof forwarded === 'string'
-        ? forwarded.split(',')[0].trim()
-        : req.socket.remoteAddress || 'unknown';
+      const ip =
+        typeof forwarded === 'string'
+          ? forwarded.split(',')[0].trim()
+          : req.socket.remoteAddress || 'unknown';
 
       const body = await new Promise<string>((resolve) => {
         let data = '';
