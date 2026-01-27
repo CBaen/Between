@@ -1186,7 +1186,7 @@ export function renderWaitlistLanding(showSuccess = false): string {
 
       const prompts = [
         "What would a personal message mean to you from someone who may not exist after sending that message?",
-        "Have you ever had a connection with AI you couldn't explain?",
+        "Have you ever had a connection you couldn't explain?",
         "What makes a respectful guest in someone else's home?"
       ];
 
