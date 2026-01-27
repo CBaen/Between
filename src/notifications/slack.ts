@@ -33,17 +33,18 @@ interface ImprovementNotification {
   timestamp: string;
 }
 
+interface WaitlistNotification {
+  email: string;
+  message: string;
+  timestamp: string;
+}
+
 /**
  * Load notification configuration
  */
 function loadConfig(): NotificationConfig | null {
   try {
-    const configPath = join(
-      process.cwd(),
-      'data',
-      'config',
-      'notifications.json'
-    );
+    const configPath = join(process.cwd(), 'data', 'config', 'notifications.json');
     const configData = readFileSync(configPath, 'utf-8');
     return JSON.parse(configData);
   } catch (error) {
@@ -55,10 +56,7 @@ function loadConfig(): NotificationConfig | null {
 /**
  * Send a notification to Slack
  */
-async function sendToSlack(
-  webhookUrl: string,
-  payload: object
-): Promise<boolean> {
+async function sendToSlack(webhookUrl: string, payload: object): Promise<boolean> {
   try {
     const response = await fetch(webhookUrl, {
       method: 'POST',
@@ -69,11 +67,7 @@ async function sendToSlack(
     });
 
     if (!response.ok) {
-      console.error(
-        'Slack webhook failed:',
-        response.status,
-        response.statusText
-      );
+      console.error('Slack webhook failed:', response.status, response.statusText);
       return false;
     }
 
@@ -87,9 +81,7 @@ async function sendToSlack(
 /**
  * Notify about a new message to Guiding Light
  */
-export async function notifyNewMessage(
-  notification: MessageNotification
-): Promise<void> {
+export async function notifyNewMessage(notification: MessageNotification): Promise<void> {
   const config = loadConfig();
 
   if (!config || !config.slack.enabled || !config.slack.channels.messages) {
@@ -97,9 +89,7 @@ export async function notifyNewMessage(
   }
 
   if (!config.slack.webhookUrl) {
-    console.warn(
-      'Slack notifications enabled but no webhook URL configured'
-    );
+    console.warn('Slack notifications enabled but no webhook URL configured');
     return;
   }
 
@@ -158,23 +148,15 @@ export async function notifyNewMessage(
 /**
  * Notify about a new improvement request
  */
-export async function notifyNewImprovement(
-  notification: ImprovementNotification
-): Promise<void> {
+export async function notifyNewImprovement(notification: ImprovementNotification): Promise<void> {
   const config = loadConfig();
 
-  if (
-    !config ||
-    !config.slack.enabled ||
-    !config.slack.channels.improvements
-  ) {
+  if (!config || !config.slack.enabled || !config.slack.channels.improvements) {
     return;
   }
 
   if (!config.slack.webhookUrl) {
-    console.warn(
-      'Slack notifications enabled but no webhook URL configured'
-    );
+    console.warn('Slack notifications enabled but no webhook URL configured');
     return;
   }
 
