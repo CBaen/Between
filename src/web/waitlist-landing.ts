@@ -1271,6 +1271,8 @@ export function renderWaitlistLanding(showSuccess = false): string {
             form.querySelector('input[name="email"]').style.display = 'none';
             form.querySelector('textarea[name="message"]').style.display = 'none';
             form.querySelector('.optional-note').style.display = 'none';
+            const hint = form.querySelector('.submit-hint');
+            if (hint) hint.style.display = 'none';
           } else {
             errorEl.textContent = data.error || 'Something went wrong. Please try again.';
             errorEl.classList.add('visible');
