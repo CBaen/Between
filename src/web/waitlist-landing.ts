@@ -1160,7 +1160,10 @@ export function renderWaitlistLanding(showSuccess = false): string {
   </footer>
 
   <script>
-    // Always start at top of page
+    // Always start at top of page (prevent browser scroll restoration)
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
     window.scrollTo(0, 0);
 
     // Theme toggle
