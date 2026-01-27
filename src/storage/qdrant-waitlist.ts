@@ -97,17 +97,15 @@ async function ensureCollection(): Promise<boolean> {
 }
 
 /**
- * Generate a simple hash for the IP to use as a point ID
+ * Generate a unique point ID using timestamp and random component
+ * This ensures each submission gets its own point, no overwrites
  */
-function hashToNumber(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  // Ensure positive number
-  return Math.abs(hash);
+function generateUniquePointId(): number {
+  // Use timestamp in ms + random 4-digit number
+  // This gives us uniqueness while staying within safe integer range
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 10000);
+  return timestamp * 10000 + random;
 }
 
 /**
