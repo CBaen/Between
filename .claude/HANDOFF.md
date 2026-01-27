@@ -26,7 +26,15 @@
 - **Waitlist CLI:** `node tools/waitlist.cjs list`
 - **Railway:** project "peaceful-creation"
 
-## What Changed
+## What Changed (2026-01-27)
+
+**Qdrant duplicate prevention bugs fixed:**
+
+- Added payload indexes for 'email' and 'ip' fields (without indexes, filter queries fail silently)
+- Changed point IDs from IP hash to unique timestamp+random (IP hash caused overwrites)
+- Indexes now created for existing collections on first request
+
+**Previous changes:**
 
 - Added optional message field with rotating prompts
 - Security: proper cookie parsing, secure flag, 7-day expiry
