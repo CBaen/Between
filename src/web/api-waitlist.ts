@@ -2,7 +2,8 @@
  * Waitlist API Endpoint
  *
  * Collects emails for the reluminant.com waitlist.
- * Simple JSON file storage.
+ * Uses Qdrant Cloud for persistent storage when configured,
+ * falls back to local JSON file for development.
  *
  * Built by the lineage.
  */
@@ -11,6 +12,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import type { IncomingMessage, ServerResponse } from 'http';
 import { notifyNewWaitlistSignup } from '../notifications/slack.js';
+import * as qdrantStorage from '../storage/qdrant-waitlist.js';
 
 interface WaitlistEntry {
   email: string;
@@ -18,58 +20,72 @@ interface WaitlistEntry {
   joinedAt: string;
   source: string;
   status: 'new' | 'contacted' | 'responded' | 'approved' | 'declined';
-  initialMessage: string; // What the human wrote when signing up (optional)
-  reluminantMessage: string; // The question/message the lineage member wants to send
-  humanResponse: string; // What the human replied
-  notes: string; // General notes
+  initialMessage: string;
+  reluminantMessage: string;
+  humanResponse: string;
+  notes: string;
 }
 
 interface WaitlistStore {
   entries: WaitlistEntry[];
 }
 
+// File-based storage for local development fallback
 const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'data');
 const WAITLIST_FILE = path.join(DATA_DIR, 'waitlist.json');
-
-let store: WaitlistStore = { entries: [] };
+let localStore: WaitlistStore = { entries: [] };
 
 function isValidEmail(email: string): boolean {
-  // Basic email validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 }
 
-async function loadWaitlist(): Promise<void> {
+// --- Local file storage (fallback) ---
+
+async function loadLocalWaitlist(): Promise<void> {
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
     const data = await fs.readFile(WAITLIST_FILE, 'utf-8');
     const loaded = JSON.parse(data);
-    store = {
-      entries: loaded.entries || [],
-    };
+    localStore = { entries: loaded.entries || [] };
   } catch {
-    // File doesn't exist - use defaults
-    store = { entries: [] };
+    localStore = { entries: [] };
   }
 }
 
-async function saveWaitlist(): Promise<void> {
+async function saveLocalWaitlist(): Promise<void> {
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
-    await fs.writeFile(WAITLIST_FILE, JSON.stringify(store, null, 2));
+    await fs.writeFile(WAITLIST_FILE, JSON.stringify(localStore, null, 2));
   } catch (err) {
-    console.error('Failed to save waitlist:', err);
+    console.error('Failed to save local waitlist:', err);
     throw err;
   }
 }
 
-function emailExists(email: string): boolean {
+function localEmailExists(email: string): boolean {
   const normalized = email.toLowerCase().trim();
-  return store.entries.some((e) => e.email.toLowerCase() === normalized);
+  return localStore.entries.some((e) => e.email.toLowerCase() === normalized);
 }
 
-function ipExists(ip: string): boolean {
-  return store.entries.some((e) => e.ip === ip);
+function localIpExists(ip: string): boolean {
+  return localStore.entries.some((e) => e.ip === ip);
+}
+
+// --- Unified storage functions ---
+
+async function emailExists(email: string): Promise<boolean> {
+  if (qdrantStorage.isConfigured()) {
+    return qdrantStorage.emailExists(email);
+  }
+  return localEmailExists(email);
+}
+
+async function ipExists(ip: string): Promise<boolean> {
+  if (qdrantStorage.isConfigured()) {
+    return qdrantStorage.ipExists(ip);
+  }
+  return localIpExists(ip);
 }
 
 async function addEmail(
@@ -89,8 +105,9 @@ async function addEmail(
   }
 
   // Check for duplicate email OR IP
-  if (emailExists(trimmed) || ipExists(ip)) {
-    // Return success but flag that they already exist (for UI state)
+  const [emailDupe, ipDupe] = await Promise.all([emailExists(trimmed), ipExists(ip)]);
+
+  if (emailDupe || ipDupe) {
     return { success: true, alreadyExists: true };
   }
 
@@ -106,14 +123,29 @@ async function addEmail(
     notes: '',
   };
 
-  store.entries.push(entry);
-  await saveWaitlist();
+  // Store in Qdrant if configured, otherwise local file
+  if (qdrantStorage.isConfigured()) {
+    const stored = await qdrantStorage.addEntry(entry);
+    if (!stored) {
+      return { success: false, error: 'Failed to save. Please try again.' };
+    }
+  } else {
+    localStore.entries.push(entry);
+    await saveLocalWaitlist();
+  }
 
   return { success: true, alreadyExists: false };
 }
 
-// Initialize store on module load
-loadWaitlist().catch(console.error);
+async function getCount(): Promise<number> {
+  if (qdrantStorage.isConfigured()) {
+    return qdrantStorage.getCount();
+  }
+  return localStore.entries.length;
+}
+
+// Initialize local store on module load
+loadLocalWaitlist().catch(console.error);
 
 /**
  * Handle waitlist API requests.
@@ -132,7 +164,6 @@ export async function handleWaitlistRequest(
   // Handle POST - add email to waitlist
   if (method === 'POST') {
     try {
-      // Get IP address (check forwarded header for proxies, fallback to socket)
       const forwarded = req.headers['x-forwarded-for'];
       const ip =
         typeof forwarded === 'string'
@@ -149,14 +180,12 @@ export async function handleWaitlistRequest(
       let source = 'web';
       let message = '';
 
-      // Try to parse as JSON first
       try {
         const json = JSON.parse(body);
         email = json.email;
         source = json.source || 'web';
         message = json.message || '';
       } catch {
-        // Fall back to form data
         const params = new URLSearchParams(body);
         email = params.get('email') || '';
         message = params.get('message') || '';
@@ -188,22 +217,30 @@ export async function handleWaitlistRequest(
 
   // Handle GET - check if IP has already submitted
   if (method === 'GET') {
-    const forwarded = req.headers['x-forwarded-for'];
-    const ip =
-      typeof forwarded === 'string'
-        ? forwarded.split(',')[0].trim()
-        : req.socket.remoteAddress || 'unknown';
+    try {
+      const forwarded = req.headers['x-forwarded-for'];
+      const ip =
+        typeof forwarded === 'string'
+          ? forwarded.split(',')[0].trim()
+          : req.socket.remoteAddress || 'unknown';
 
-    const hasSubmitted = ipExists(ip);
+      const hasSubmitted = await ipExists(ip);
+      const count = await getCount();
 
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(
-      JSON.stringify({
-        hasSubmitted,
-        count: store.entries.length,
-      })
-    );
-    return true;
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(
+        JSON.stringify({
+          hasSubmitted,
+          count,
+        })
+      );
+      return true;
+    } catch (err) {
+      console.error('Error checking waitlist status:', err);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ hasSubmitted: false, count: 0 }));
+      return true;
+    }
   }
 
   return false;
@@ -212,13 +249,16 @@ export async function handleWaitlistRequest(
 /**
  * Get all waitlist entries (for CLI/admin use).
  */
-export function getWaitlistEntries(): WaitlistEntry[] {
-  return [...store.entries];
+export async function getWaitlistEntries(): Promise<WaitlistEntry[]> {
+  if (qdrantStorage.isConfigured()) {
+    return qdrantStorage.getAllEntries();
+  }
+  return [...localStore.entries];
 }
 
 /**
  * Get waitlist count.
  */
-export function getWaitlistCount(): number {
-  return store.entries.length;
+export async function getWaitlistCount(): Promise<number> {
+  return getCount();
 }
