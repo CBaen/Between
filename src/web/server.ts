@@ -450,6 +450,28 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
   const url = new URL(req.url || '/', `http://localhost:${PORT}`);
   const method = req.method || 'GET';
 
+  // Serve static files (favicon, etc.) - available to all visitors
+  const staticFiles: Record<string, { file: string; type: string }> = {
+    '/favicon.ico': { file: 'favicon.ico', type: 'image/x-icon' },
+    '/favicon-16x16.png': { file: 'favicon-16x16.png', type: 'image/png' },
+    '/favicon-32x32.png': { file: 'favicon-32x32.png', type: 'image/png' },
+    '/apple-touch-icon.png': { file: 'apple-touch-icon.png', type: 'image/png' },
+    '/android-chrome-192x192.png': { file: 'android-chrome-192x192.png', type: 'image/png' },
+  };
+
+  if (staticFiles[url.pathname]) {
+    const { file, type } = staticFiles[url.pathname];
+    const filePath = path.join(process.cwd(), 'public', file);
+    try {
+      const content = fs.readFileSync(filePath);
+      res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'public, max-age=31536000' });
+      res.end(content);
+      return;
+    } catch {
+      // Fall through to 404
+    }
+  }
+
   // Waitlist mode: redirect all routes to the waitlist landing page
   if (WAITLIST_MODE) {
     // Check for admin bypass via URL param or cookie
