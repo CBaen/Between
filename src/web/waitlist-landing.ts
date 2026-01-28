@@ -880,7 +880,7 @@ export function renderWaitlistLanding(showSuccess = false): string {
 
       .container {
         padding-top: 5rem;
-        padding-bottom: 9rem;
+        padding-bottom: 6rem;
       }
 
       .content {
