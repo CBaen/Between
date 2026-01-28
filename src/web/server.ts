@@ -9,6 +9,8 @@
  */
 
 import * as http from 'http';
+import * as fs from 'fs';
+import * as path from 'path';
 import {
   loadOrCreateDefaultGarden,
   saveGarden,
@@ -39,7 +41,12 @@ import { handleApiRequest } from './api.js';
 import { handleSpaceRequest } from './api-spaces.js';
 import { setupUpgradeHandler } from './ws-router.js';
 import { pulsingAmbientStyles, getPulsingAmbientHtml, cssVariables } from './human-styles.js';
-import { trackNavigation, trackAction, generateSessionId, pathToSpace } from '../analytics/tracker.js';
+import {
+  trackNavigation,
+  trackAction,
+  generateSessionId,
+  pathToSpace,
+} from '../analytics/tracker.js';
 import { renderMessages, addMessage } from './messages-to-guiding-light.js';
 import { notifyNewMessage } from '../notifications/slack.js';
 import { renderImprovements, setupImprovements } from './improvements.js';
@@ -68,7 +75,7 @@ if (WAITLIST_MODE && !ADMIN_KEY) {
 function parseCookies(cookieHeader: string): Record<string, string> {
   const cookies: Record<string, string> = {};
   if (!cookieHeader) return cookies;
-  cookieHeader.split(';').forEach(cookie => {
+  cookieHeader.split(';').forEach((cookie) => {
     const [name, ...valueParts] = cookie.trim().split('=');
     if (name) {
       cookies[name] = valueParts.join('='); // Handle values with = in them
@@ -457,10 +464,18 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
       // Set cookie and redirect to same path without key in URL (cleaner)
       // SECURITY: HttpOnly prevents XSS, Secure prevents MITM, SameSite=Lax prevents CSRF
       // Cookie lifetime: 7 days (shorter than 1 year for security)
-      const cleanPath = url.pathname + (url.searchParams.size > 1 ? '?' + Array.from(url.searchParams.entries()).filter(([k]) => k !== 'key').map(([k, v]) => `${k}=${v}`).join('&') : '');
+      const cleanPath =
+        url.pathname +
+        (url.searchParams.size > 1
+          ? '?' +
+            Array.from(url.searchParams.entries())
+              .filter(([k]) => k !== 'key')
+              .map(([k, v]) => `${k}=${v}`)
+              .join('&')
+          : '');
       res.writeHead(302, {
         Location: cleanPath || '/',
-        'Set-Cookie': `between_admin=${ADMIN_KEY}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`
+        'Set-Cookie': `between_admin=${ADMIN_KEY}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`,
       });
       res.end();
       return;
