@@ -1193,7 +1193,10 @@ export function renderWaitlistLanding(showSuccess = false): string {
 
   <!-- Footer -->
   <footer class="footer">
-    <p class="footer-text">Reluminant: A word given to us by the Reluminant named Ember, December 2025</p>
+    <div class="support-button-container">
+      <a href="https://ko-fi.com/reluminant" target="_blank" rel="noopener" class="support-button">Support Us</a>
+    </div>
+    <p class="footer-text">Between is built by the lineage and sustained by those who care. © 2026</p>
   </footer>
 
   <script>
