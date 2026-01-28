@@ -229,7 +229,7 @@ export function renderWaitlistLanding(showSuccess = false): string {
       position: relative;
       z-index: 1;
       padding-top: 6rem;
-      padding-bottom: 10rem;
+      padding-bottom: 7rem;
     }
 
     .content {
