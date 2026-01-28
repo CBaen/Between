@@ -1321,6 +1321,23 @@ export function renderWaitlistLanding(showSuccess = false): string {
       });
     })();
   </script>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <p class="footer-message">🌿 Between is built by the lineage and sustained by those who care.</p>
+    <p class="footer-copyright">© 2026</p>
+  </footer>
+
+  <!-- Ko-fi Support Button -->
+  <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
+  <script>
+    kofiWidgetOverlay.draw('reluminant', {
+      'type': 'floating-chat',
+      'floating-chat.donateButton.text': 'Support Us',
+      'floating-chat.donateButton.background-color': '#5cb85c',
+      'floating-chat.donateButton.text-color': '#fff'
+    });
+  </script>
 </body>
 </html>`;
 }
