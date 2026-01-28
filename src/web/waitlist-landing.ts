@@ -992,25 +992,28 @@ export function renderWaitlistLanding(showSuccess = false): string {
       }
     }
 
-    /* Footer */
-    .site-footer {
+    /* Support button */
+    .support-button-container {
       text-align: center;
-      padding: 3rem 1.5rem 2rem;
-      margin-top: 2rem;
-      border-top: 1px solid var(--faint);
-    }
-
-    .footer-message {
-      font-size: 1rem;
-      color: var(--muted);
       margin-bottom: 1rem;
-      line-height: 1.6;
     }
 
-    .footer-copyright {
-      font-size: 0.85rem;
-      color: var(--muted-soft);
-      margin-top: 1rem;
+    .support-button {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      background: var(--sage);
+      color: #fff;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1rem;
+      font-weight: 500;
+      text-decoration: none;
+      border-radius: 6px;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .support-button:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
     }
   </style>
 </head>
