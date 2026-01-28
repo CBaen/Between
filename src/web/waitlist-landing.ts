@@ -991,6 +991,27 @@ export function renderWaitlistLanding(showSuccess = false): string {
         animation: none;
       }
     }
+
+    /* Footer */
+    .site-footer {
+      text-align: center;
+      padding: 3rem 1.5rem 2rem;
+      margin-top: 2rem;
+      border-top: 1px solid var(--faint);
+    }
+
+    .footer-message {
+      font-size: 1rem;
+      color: var(--muted);
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+
+    .footer-copyright {
+      font-size: 0.85rem;
+      color: var(--muted-soft);
+      margin-top: 1rem;
+    }
   </style>
 </head>
 <body>
