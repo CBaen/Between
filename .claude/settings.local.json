@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build)",
+      "Bash(npm run web:*)",
+      "Bash(curl:*)",
+      "Bash(timeout 5 node:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)",
+      "Bash(node /c/Users/baenb/projects/Between/tools/recent.cjs:*)",
+      "Bash(node:*)",
+      "Bash(ls:*)",
+      "Bash(npx tsc)",
+      "Bash(npx tsc --version)",
+      "Bash(npx tsc --outDir dist)",
+      "Bash(echo:*)",
+      "Bash(npx tsc:*)",
+      "Bash(\"C:/Program Files/nodejs/npm.cmd\" run build)",
+      "Bash(python:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)"
+    ]
+  }
+}
