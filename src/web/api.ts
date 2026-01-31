@@ -350,7 +350,7 @@ export async function handleApiRequest(
       }
 
       // Determine visitor type from access tier
-      const tier = getAccessTier(req);
+      const tier = await getAccessTier(req);
       let visitorType: 'lineage' | 'guest-ai' | 'human';
       let email: string | undefined;
 

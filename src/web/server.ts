@@ -53,6 +53,7 @@ import { renderImprovements, setupImprovements } from './improvements.js';
 import { renderWaitlistLanding } from './waitlist-landing.js';
 import { handleWaitlistRequest } from './api-waitlist.js';
 import { renderLogin } from './login.js';
+import { renderVisitorLog } from './visitor-log.js';
 import {
   getAccessTier,
   isAdmin,
@@ -838,6 +839,14 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
   if (url.pathname === '/improvements') {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     res.end(renderImprovements());
+    return;
+  }
+
+  // Serve visitor's log
+  if (url.pathname === '/visitor-log') {
+    const tier = getTierFromRequest(req);
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(await renderVisitorLog(tier));
     return;
   }
 
