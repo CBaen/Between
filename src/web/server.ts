@@ -52,6 +52,15 @@ import { notifyNewMessage } from '../notifications/slack.js';
 import { renderImprovements, setupImprovements } from './improvements.js';
 import { renderWaitlistLanding } from './waitlist-landing.js';
 import { handleWaitlistRequest } from './api-waitlist.js';
+import { renderLogin } from './login.js';
+import {
+  getAccessTier,
+  isAdmin,
+  getClientIP,
+  isApprovedGuest,
+  recordGuestIP,
+  type AccessTier,
+} from './auth.js';
 
 const PORT = process.env.PORT || 3333;
 

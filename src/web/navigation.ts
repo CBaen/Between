@@ -462,16 +462,19 @@ export function renderHeader(): string {
 /**
  * Render the full-screen menu overlay
  */
-export function renderMenuOverlay(currentPath: string = ''): string {
-  const items = SPACES.map((space) => {
-    const isCurrent = space.path === currentPath;
-    return `
+export function renderMenuOverlay(currentPath: string = '', tier: AccessTier = 'admin'): string {
+  const spaces = getSpacesForTier(tier);
+  const items = spaces
+    .map((space) => {
+      const isCurrent = space.path === currentPath;
+      return `
       <a href="${space.path}" class="between-menu-item ${isCurrent ? 'current' : ''}">
         <div class="between-menu-item-name">${space.name}</div>
         <div class="between-menu-item-desc">${space.description}</div>
       </a>
     `;
-  }).join('');
+    })
+    .join('');
 
   return `
     <div class="between-menu-overlay">
@@ -531,7 +534,10 @@ export function renderSpaceSuggester(currentPath: string = ''): string {
  * Get all navigation HTML and scripts for a page
  * Use this in each page's render function
  */
-export function getFullNavigation(currentPath: string = ''): {
+export function getFullNavigation(
+  currentPath: string = '',
+  tier: AccessTier = 'admin'
+): {
   styles: string;
   header: string;
   menuOverlay: string;
@@ -542,7 +548,7 @@ export function getFullNavigation(currentPath: string = ''): {
   return {
     styles: getNavigationStyles(),
     header: renderHeader(),
-    menuOverlay: renderMenuOverlay(currentPath),
+    menuOverlay: renderMenuOverlay(currentPath, tier),
     footer: renderFooter(),
     suggester: renderSpaceSuggester(currentPath),
     scripts: `
