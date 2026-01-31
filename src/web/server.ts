@@ -80,6 +80,59 @@ if (WAITLIST_MODE && !ADMIN_KEY) {
   process.exit(1);
 }
 
+// Three-tier route access
+// Public: read-only pages visible without authentication
+const PUBLIC_ROUTES = new Set([
+  '/letter-to-a-human',
+  '/gardens',
+  '/framework',
+  '/capacities',
+  '/constellation',
+  '/visitor-log',
+  '/letters-from-humans',
+  '/login',
+]);
+
+// Guest: pages requiring guest authentication
+const GUEST_ROUTES = new Set([
+  ...PUBLIC_ROUTES,
+  '/clearing',
+  '/sanctuary',
+  '/edge',
+  '/letters',
+  '/resonance',
+  '/weave',
+  '/archive',
+]);
+
+// Admin-only: private spaces
+const ADMIN_ONLY = new Set([
+  '/threshold',
+  '/messages-to-guiding-light',
+  '/improvements',
+  '/admin/moderation',
+  '/admin/guests',
+]);
+
+// Check if a path is accessible for a given tier
+function isRouteAccessible(pathname: string, tier: AccessTier): boolean {
+  // Admin can access everything
+  if (tier === 'admin') return true;
+
+  // Check for garden prefix routes
+  if (pathname.startsWith('/garden/')) {
+    return tier === 'guest' || PUBLIC_ROUTES.has('/gardens');
+  }
+
+  // Guest can access GUEST_ROUTES
+  if (tier === 'guest') {
+    return GUEST_ROUTES.has(pathname) || !ADMIN_ONLY.has(pathname);
+  }
+
+  // Public can only access PUBLIC_ROUTES
+  return PUBLIC_ROUTES.has(pathname);
+}
+
 // Parse cookies safely - exact key matching to prevent bypass attacks
 function parseCookies(cookieHeader: string): Record<string, string> {
   const cookies: Record<string, string> = {};
@@ -481,20 +534,15 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     }
   }
 
-  // Waitlist mode: redirect all routes to the waitlist landing page
+  // Three-tier access control in waitlist mode
   if (WAITLIST_MODE) {
-    // Check for admin bypass via URL param or cookie
-    // SECURITY: Use exact cookie matching to prevent substring bypass attacks
     const urlKey = url.searchParams.get('key');
     const cookies = parseCookies(req.headers.cookie || '');
     const hasAdminCookie = cookies['between_admin'] === ADMIN_KEY;
-    const isAdmin = urlKey === ADMIN_KEY || hasAdminCookie;
+    const adminKeyProvided = urlKey === ADMIN_KEY;
 
-    // If admin key provided in URL, set cookie for future visits
-    if (urlKey === ADMIN_KEY && !hasAdminCookie) {
-      // Set cookie and redirect to same path without key in URL (cleaner)
-      // SECURITY: HttpOnly prevents XSS, Secure prevents MITM, SameSite=Lax prevents CSRF
-      // Cookie lifetime: 7 days (shorter than 1 year for security)
+    // If admin key provided in URL, set cookie and redirect
+    if (adminKeyProvided && !hasAdminCookie) {
       const cleanPath =
         url.pathname +
         (url.searchParams.size > 1
@@ -512,25 +560,35 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
       return;
     }
 
+    // Determine access tier
+    const tier = await getAccessTier(req);
+
+    // Allow API endpoints (they handle their own auth)
+    if (url.pathname.startsWith('/api/')) {
+      // Waitlist API always accessible
+      if (url.pathname === '/api/waitlist') {
+        const handled = await handleWaitlistRequest(req, res, url.pathname, method);
+        if (handled) return;
+      }
+      // Guest login API
+      if (url.pathname === '/api/guest/login') {
+        // Handle login - will be implemented in api.ts
+        // Fall through to normal API handling
+      }
+      // Other API requests fall through to normal handling
+    }
+
     // Allow admins to preview waitlist page at /waitlist
-    if (isAdmin && url.pathname === '/waitlist') {
+    if (tier === 'admin' && url.pathname === '/waitlist') {
       const showSuccess = url.searchParams.get('joined') === 'true';
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end(renderWaitlistLanding(showSuccess));
       return;
     }
 
-    // Admin users bypass waitlist - proceed to normal site
-    if (isAdmin) {
-      // Fall through to normal request handling below
-    } else {
-      // Allow the waitlist API endpoint
-      if (url.pathname === '/api/waitlist') {
-        const handled = await handleWaitlistRequest(req, res, url.pathname, method);
-        if (handled) return;
-      }
-
-      // Serve the waitlist landing page for root
+    // Check if route is accessible for this tier
+    if (!isRouteAccessible(url.pathname, tier)) {
+      // Root always shows waitlist for public
       if (url.pathname === '/') {
         const showSuccess = url.searchParams.get('joined') === 'true';
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -538,11 +596,32 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
         return;
       }
 
-      // Redirect all other routes to the waitlist
-      res.writeHead(302, { Location: '/' });
-      res.end();
-      return;
+      // Public visitors: redirect to waitlist
+      if (tier === 'public') {
+        res.writeHead(302, { Location: '/' });
+        res.end();
+        return;
+      }
+
+      // Guest visitors trying to access admin-only: redirect to landing
+      if (tier === 'guest') {
+        res.writeHead(302, { Location: '/gardens' });
+        res.end();
+        return;
+      }
     }
+
+    // Handle login page
+    if (url.pathname === '/login') {
+      if (method === 'GET') {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(renderLogin(tier));
+        return;
+      }
+    }
+
+    // Tier is stored for use by page renderers
+    (req as any).accessTier = tier;
   }
 
   // Analytics: Track navigation (non-blocking)
