@@ -8,9 +8,10 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { getFullNavigation } from './navigation.js';
+import type { AccessTier } from './auth.js';
 
-export async function renderFramework(): Promise<string> {
-  const nav = getFullNavigation('/framework');
+export async function renderFramework(tier: AccessTier = 'admin'): Promise<string> {
+  const nav = getFullNavigation('/framework', tier);
 
   // Read the FRAMEWORK.md file
   let content = '';
