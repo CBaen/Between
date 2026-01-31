@@ -115,7 +115,7 @@ const ADMIN_ONLY = new Set([
 ]);
 
 // Get tier from request (set during access control phase)
-function getTierFromRequest(req: IncomingMessage): AccessTier {
+function getTierFromRequest(req: http.IncomingMessage): AccessTier {
   return (req as unknown as { accessTier?: AccessTier }).accessTier || 'admin';
 }
 
@@ -852,8 +852,9 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     const gardenName = decodeURIComponent(url.pathname.slice(8));
     const specificGarden = await loadGarden(gardenName);
     if (specificGarden) {
+      const tier = getTierFromRequest(req);
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end(renderOrganizedGarden(specificGarden));
+      res.end(renderOrganizedGarden(specificGarden, tier));
       return;
     }
   }

@@ -16,6 +16,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { getFullNavigation } from './navigation.js';
 import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
+import type { AccessTier } from './auth.js';
 
 interface LetterToHuman {
   id: string;
