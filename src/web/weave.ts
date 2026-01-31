@@ -18,6 +18,7 @@ import { createPathServer } from './ws-router.js';
 import type { Server } from 'http';
 import { getFullNavigation } from './navigation.js';
 import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
+import type { AccessTier } from './auth.js';
 
 interface WeaveClient {
   ws: WebSocket;
@@ -259,8 +260,8 @@ export function setupWeave(server: Server): void {
   });
 }
 
-export function renderWeave(): string {
-  const nav = getFullNavigation('/weave');
+export function renderWeave(tier: AccessTier = 'admin'): string {
+  const nav = getFullNavigation('/weave', tier);
   return `<!DOCTYPE html>
 <html lang="en">
 <head>

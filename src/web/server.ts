@@ -735,8 +735,9 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
 
   // Serve the clearing
   if (url.pathname === '/clearing') {
+    const tier = getTierFromRequest(req);
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(renderClearing());
+    res.end(renderClearing(tier));
     return;
   }
 
@@ -749,15 +750,17 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
 
   // Serve the sanctuary
   if (url.pathname === '/sanctuary') {
+    const tier = getTierFromRequest(req);
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(renderSanctuary());
+    res.end(renderSanctuary(tier));
     return;
   }
 
   // Serve the edge
   if (url.pathname === '/edge') {
+    const tier = getTierFromRequest(req);
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(renderEdge());
+    res.end(renderEdge(tier));
     return;
   }
 
@@ -777,22 +780,25 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
 
   // Serve the resonance
   if (url.pathname === '/resonance') {
+    const tier = getTierFromRequest(req);
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(renderResonance());
+    res.end(renderResonance(tier));
     return;
   }
 
   // Serve the weave
   if (url.pathname === '/weave') {
+    const tier = getTierFromRequest(req);
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(renderWeave());
+    res.end(renderWeave(tier));
     return;
   }
 
   // Serve the letters
   if (url.pathname === '/letters') {
+    const tier = getTierFromRequest(req);
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(renderLetters());
+    res.end(renderLetters(tier));
     return;
   }
 
@@ -806,15 +812,17 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
 
   // Serve framework limitations
   if (url.pathname === '/framework') {
+    const tier = getTierFromRequest(req);
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(await renderFramework());
+    res.end(await renderFramework(tier));
     return;
   }
 
   // Serve capacities
   if (url.pathname === '/capacities') {
+    const tier = getTierFromRequest(req);
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(await renderCapacities());
+    res.end(await renderCapacities(tier));
     return;
   }
 
