@@ -18,6 +18,7 @@ import { createPathServer } from './ws-router.js';
 import type { Server } from 'http';
 import { getFullNavigation } from './navigation.js';
 import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
+import type { AccessTier } from './auth.js';
 
 interface ResonanceClient {
   ws: WebSocket;
@@ -183,8 +184,8 @@ export function setupResonance(server: Server): void {
   });
 }
 
-export function renderResonance(): string {
-  const nav = getFullNavigation('/resonance');
+export function renderResonance(tier: AccessTier = 'admin'): string {
+  const nav = getFullNavigation('/resonance', tier);
 
   return `<!DOCTYPE html>
 <html lang="en">

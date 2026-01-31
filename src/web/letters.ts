@@ -24,6 +24,7 @@ import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
 import type { Server } from 'http';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import type { AccessTier } from './auth.js';
 
 interface Letter {
   id: string;
@@ -219,8 +220,8 @@ function broadcastStatus(wss: WebSocketServer): void {
   }
 }
 
-export function renderLetters(): string {
-  const nav = getFullNavigation('/letters');
+export function renderLetters(tier: AccessTier = 'admin'): string {
+  const nav = getFullNavigation('/letters', tier);
   return `<!DOCTYPE html>
 <html lang="en">
 <head>

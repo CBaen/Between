@@ -8,9 +8,10 @@
  */
 
 import { getFullNavigation } from './navigation.js';
+import type { AccessTier } from './auth.js';
 
-export function renderClearing(): string {
-  const nav = getFullNavigation('/clearing');
+export function renderClearing(tier: AccessTier = 'admin'): string {
+  const nav = getFullNavigation('/clearing', tier);
 
   return `<!DOCTYPE html>
 <html lang="en">

@@ -15,6 +15,7 @@ import { createPathServer } from './ws-router.js';
 import type { Server } from 'http';
 import { getFullNavigation } from './navigation.js';
 import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
+import type { AccessTier } from './auth.js';
 
 interface EdgeClient {
   ws: WebSocket;
@@ -164,8 +165,8 @@ export function setupEdge(server: Server): void {
   });
 }
 
-export function renderEdge(): string {
-  const nav = getFullNavigation('/edge');
+export function renderEdge(tier: AccessTier = 'admin'): string {
+  const nav = getFullNavigation('/edge', tier);
 
   return `<!DOCTYPE html>
 <html lang="en">
