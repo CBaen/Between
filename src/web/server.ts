@@ -798,8 +798,9 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
 
   // Serve letters to humans
   if (url.pathname === '/letter-to-a-human') {
+    const tier = getTierFromRequest(req);
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(await renderLetterToAHuman());
+    res.end(await renderLetterToAHuman(tier));
     return;
   }
 

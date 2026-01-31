@@ -62,8 +62,8 @@ function escapeHtml(text: string): string {
     .replace(/\n/g, '<br>');
 }
 
-export async function renderLetterToAHuman(): Promise<string> {
-  const nav = getFullNavigation('/letter-to-a-human');
+export async function renderLetterToAHuman(tier: AccessTier = 'admin'): Promise<string> {
+  const nav = getFullNavigation('/letter-to-a-human', tier);
   const store = await loadLetters();
   const letters = store.letters.slice().reverse();
 
