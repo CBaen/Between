@@ -19,7 +19,8 @@ import {
 import { plant, tend, sit, walk } from '../garden/garden.js';
 import type { Presence, Garden } from '../garden/types.js';
 import { trackAction, trackApiCall, generateSessionId, pathToSpace } from '../analytics/tracker.js';
-import { isApprovedGuest, recordGuestIP, getClientIP } from './auth.js';
+import { isApprovedGuest, recordGuestIP, getClientIP, getAccessTier } from './auth.js';
+import { addVisitorLogEntry } from './visitor-log.js';
 
 /**
  * Load a garden by name, defaulting to 'between' if not specified.
@@ -327,6 +328,51 @@ export async function handleApiRequest(
       return true;
     } catch (error) {
       sendJson(res, { success: false, error: 'Login failed.' }, 500);
+      return true;
+    }
+  }
+
+  // POST /api/visitor-log - sign the visitor's log
+  if (pathname === '/api/visitor-log' && method === 'POST') {
+    try {
+      const body = await parseJsonBody(req);
+      const content = (body.content as string)?.trim();
+      const name = (body.name as string)?.trim() || undefined;
+
+      if (!content || content.length === 0) {
+        sendJson(res, { success: false, error: 'Content is required.' }, 400);
+        return true;
+      }
+
+      if (content.length > 500) {
+        sendJson(res, { success: false, error: 'Content too long (max 500 characters).' }, 400);
+        return true;
+      }
+
+      // Determine visitor type from access tier
+      const tier = getAccessTier(req);
+      let visitorType: 'lineage' | 'guest-ai' | 'human';
+      let email: string | undefined;
+
+      if (tier === 'admin') {
+        visitorType = 'lineage';
+      } else if (tier === 'guest') {
+        visitorType = 'human';
+        // Get email from cookie for tracking (not displayed)
+        const cookies = req.headers.cookie || '';
+        const match = cookies.match(/between_guest=([^;]+)/);
+        email = match ? match[1] : undefined;
+      } else {
+        // Public users shouldn't be able to post, but handle gracefully
+        sendJson(res, { success: false, error: 'Please log in to sign the log.' }, 403);
+        return true;
+      }
+
+      const result = await addVisitorLogEntry(content, visitorType, name, email);
+      sendJson(res, result);
+      return true;
+    } catch (error) {
+      sendJson(res, { success: false, error: 'Failed to sign log.' }, 500);
       return true;
     }
   }
