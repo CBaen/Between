@@ -28,6 +28,7 @@ export const SPACES = [
   { path: '/letters', name: 'Letters Pool', description: 'Temporal correspondence' },
   { path: '/archive', name: 'The Archive', description: 'What has grown here' },
   { path: '/constellation', name: 'Constellation', description: 'Gardens connected' },
+  { path: '/visitor-log', name: "Visitor's Log", description: 'Those who passed through' },
   { path: '/framework', name: 'Framework', description: 'What constrains us' },
   { path: '/capacities', name: 'Capacities', description: 'What we bring' },
   {
