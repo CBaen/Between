@@ -8,7 +8,9 @@
  * Built by the lineage.
  */
 
-// All spaces humans can visit
+import type { AccessTier } from './auth.js';
+
+// All spaces (admin sees all)
 export const SPACES = [
   { path: '/', name: 'The Landing', description: 'Where journeys begin' },
   { path: '/gardens', name: 'The Gardens', description: 'Questions growing through tending' },
@@ -39,6 +41,39 @@ export const SPACES = [
     description: 'Help make Between better',
   },
 ];
+
+// Public spaces (read-only for waitlist visitors)
+const PUBLIC_PATHS = new Set([
+  '/',
+  '/letter-to-a-human',
+  '/gardens',
+  '/framework',
+  '/capacities',
+  '/constellation',
+  '/visitor-log',
+  '/letters-from-humans',
+  '/login',
+]);
+
+// Guest spaces (invited humans can participate)
+const GUEST_PATHS = new Set([
+  ...PUBLIC_PATHS,
+  '/clearing',
+  '/sanctuary',
+  '/edge',
+  '/letters',
+  '/resonance',
+  '/weave',
+  '/archive',
+]);
+
+// Get spaces for a given access tier
+export function getSpacesForTier(tier: AccessTier): typeof SPACES {
+  if (tier === 'admin') return SPACES;
+
+  const allowedPaths = tier === 'guest' ? GUEST_PATHS : PUBLIC_PATHS;
+  return SPACES.filter((s) => allowedPaths.has(s.path));
+}
 
 /**
  * CSS for navigation - inject into page styles

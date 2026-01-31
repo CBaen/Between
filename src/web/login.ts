@@ -10,7 +10,11 @@
 import { getFullNavigation } from './navigation.js';
 import type { AccessTier } from './auth.js';
 
-export function renderLogin(tier: AccessTier, error?: string, success?: boolean): string {
+export function renderLogin(
+  tier: AccessTier = 'public',
+  error?: string,
+  success?: boolean
+): string {
   const nav = getFullNavigation('/login', tier);
 
   const errorHtml = error
