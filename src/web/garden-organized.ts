@@ -868,16 +868,18 @@ export function renderOrganizedGarden(garden: Garden, tier: AccessTier = 'admin'
           });
         });
         
-        // Add tend form toggle
-        const showTendBtn = document.getElementById('show-tend-form');
-        const tendFormSection = document.getElementById('tend-form-section');
-        if (showTendBtn && tendFormSection) {
-          showTendBtn.addEventListener('click', () => {
-            tendFormSection.classList.toggle('visible');
-            showTendBtn.textContent = tendFormSection.classList.contains('visible') 
-              ? 'Hide tend form' 
-              : 'Tend this question';
-          });
+        // Add tend form toggle (only if participating)
+        if (canParticipate) {
+          const showTendBtn = document.getElementById('show-tend-form');
+          const tendFormSection = document.getElementById('tend-form-section');
+          if (showTendBtn && tendFormSection) {
+            showTendBtn.addEventListener('click', () => {
+              tendFormSection.classList.toggle('visible');
+              showTendBtn.textContent = tendFormSection.classList.contains('visible')
+                ? 'Hide tend form'
+                : 'Tend this question';
+            });
+          }
         }
       }
 

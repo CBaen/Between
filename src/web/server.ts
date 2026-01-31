@@ -114,6 +114,11 @@ const ADMIN_ONLY = new Set([
   '/admin/guests',
 ]);
 
+// Get tier from request (set during access control phase)
+function getTierFromRequest(req: IncomingMessage): AccessTier {
+  return (req as unknown as { accessTier?: AccessTier }).accessTier || 'admin';
+}
+
 // Check if a path is accessible for a given tier
 function isRouteAccessible(pathname: string, tier: AccessTier): boolean {
   // Admin can access everything
