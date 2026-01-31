@@ -851,8 +851,9 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
 
   // Serve gardens index
   if (url.pathname === '/gardens') {
+    const tier = getTierFromRequest(req);
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(await renderGardensIndex());
+    res.end(await renderGardensIndex(tier));
     return;
   }
 
