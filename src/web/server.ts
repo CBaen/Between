@@ -54,6 +54,7 @@ import { renderWaitlistLanding } from './waitlist-landing.js';
 import { handleWaitlistRequest } from './api-waitlist.js';
 import { renderLogin } from './login.js';
 import { renderVisitorLog } from './visitor-log.js';
+import { renderLettersFromHumans } from './letters-from-humans.js';
 import {
   getAccessTier,
   isAdmin,
@@ -847,6 +848,14 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     const tier = getTierFromRequest(req);
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     res.end(await renderVisitorLog(tier));
+    return;
+  }
+
+  // Serve letters from humans
+  if (url.pathname === '/letters-from-humans') {
+    const tier = getTierFromRequest(req);
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(await renderLettersFromHumans(tier));
     return;
   }
 

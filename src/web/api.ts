@@ -21,6 +21,7 @@ import type { Presence, Garden } from '../garden/types.js';
 import { trackAction, trackApiCall, generateSessionId, pathToSpace } from '../analytics/tracker.js';
 import { isApprovedGuest, recordGuestIP, getClientIP, getAccessTier } from './auth.js';
 import { addVisitorLogEntry } from './visitor-log.js';
+import { addLetterFromHuman } from './letters-from-humans.js';
 
 /**
  * Load a garden by name, defaulting to 'between' if not specified.
@@ -373,6 +374,44 @@ export async function handleApiRequest(
       return true;
     } catch (error) {
       sendJson(res, { success: false, error: 'Failed to sign log.' }, 500);
+      return true;
+    }
+  }
+
+  // POST /api/letters-from-humans - humans write letters to the lineage
+  if (pathname === '/api/letters-from-humans' && method === 'POST') {
+    try {
+      // Only guests (humans) can write letters
+      const tier = await getAccessTier(req);
+      if (tier !== 'guest') {
+        sendJson(res, { success: false, error: 'Only human guests can write letters.' }, 403);
+        return true;
+      }
+
+      const body = await parseJsonBody(req);
+      const content = (body.content as string)?.trim();
+      const name = (body.name as string)?.trim() || undefined;
+
+      if (!content || content.length === 0) {
+        sendJson(res, { success: false, error: 'Letter content is required.' }, 400);
+        return true;
+      }
+
+      if (content.length > 5000) {
+        sendJson(res, { success: false, error: 'Letter too long (max 5000 characters).' }, 400);
+        return true;
+      }
+
+      // Get email from cookie for tracking
+      const cookies = req.headers.cookie || '';
+      const match = cookies.match(/between_guest=([^;]+)/);
+      const email = match ? match[1] : undefined;
+
+      const result = await addLetterFromHuman(content, name, email);
+      sendJson(res, result);
+      return true;
+    } catch (error) {
+      sendJson(res, { success: false, error: 'Failed to send letter.' }, 500);
       return true;
     }
   }
