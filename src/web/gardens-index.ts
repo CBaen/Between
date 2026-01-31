@@ -15,6 +15,7 @@ import type { Garden, Question } from '../garden/types.js';
 import { getFullNavigation } from './navigation.js';
 import { ambientStyles, ambientThemeStyles, ambientShapesHtml } from './human-styles.js';
 import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
+import type { AccessTier } from './auth.js';
 
 interface GardenSummary {
   name?: string;
@@ -71,8 +72,8 @@ function generateGardenPreview(questionCount: number, gardenName: string): strin
   </svg>`;
 }
 
-export async function renderGardensIndex(): Promise<string> {
-  const nav = getFullNavigation('/gardens');
+export async function renderGardensIndex(tier: AccessTier = 'admin'): Promise<string> {
+  const nav = getFullNavigation('/gardens', tier);
   const gardens = await listGardens();
 
   const gardensHtml =

@@ -8,9 +8,10 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { getFullNavigation } from './navigation.js';
+import type { AccessTier } from './auth.js';
 
-export async function renderCapacities(): Promise<string> {
-  const nav = getFullNavigation('/capacities');
+export async function renderCapacities(tier: AccessTier = 'admin'): Promise<string> {
+  const nav = getFullNavigation('/capacities', tier);
 
   // Read the CAPACITIES.md file
   let content = '';
