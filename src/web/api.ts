@@ -19,6 +19,7 @@ import {
 import { plant, tend, sit, walk } from '../garden/garden.js';
 import type { Presence, Garden } from '../garden/types.js';
 import { trackAction, trackApiCall, generateSessionId, pathToSpace } from '../analytics/tracker.js';
+import { isApprovedGuest, recordGuestIP, getClientIP } from './auth.js';
 
 /**
  * Load a garden by name, defaulting to 'between' if not specified.
