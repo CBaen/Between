@@ -13,6 +13,7 @@ import type { Garden, Question, Presence } from '../garden/types.js';
 import { walk } from '../garden/garden.js';
 import { getFullNavigation } from './navigation.js';
 import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
+import type { AccessTier } from './auth.js';
 
 // 15 minute window for detecting crossing paths
 const CROSSING_WINDOW_MS = 15 * 60 * 1000;

@@ -294,6 +294,43 @@ export async function handleApiRequest(
   // Parse query string for garden parameter
   const queryGarden = url.searchParams.get('garden') || undefined;
 
+  // POST /api/guest/login - authenticate guest by email
+  if (pathname === '/api/guest/login' && method === 'POST') {
+    try {
+      const body = await parseJsonBody(req);
+      const rawEmail = body.email as string | undefined;
+      const email = rawEmail?.toLowerCase()?.trim();
+
+      if (!email) {
+        sendJson(res, { success: false, error: 'Email is required.' }, 400);
+        return true;
+      }
+
+      // Check if email is approved
+      const approved = await isApprovedGuest(email);
+      if (!approved) {
+        sendJson(res, { success: false, error: 'Email not found on guest list.' }, 403);
+        return true;
+      }
+
+      // Record IP for this guest
+      const ip = getClientIP(req);
+      await recordGuestIP(email, ip);
+
+      // Set guest cookie (7 days)
+      res.setHeader(
+        'Set-Cookie',
+        `between_guest=${email}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`
+      );
+
+      sendJson(res, { success: true, message: 'Welcome to Between.' });
+      return true;
+    } catch (error) {
+      sendJson(res, { success: false, error: 'Login failed.' }, 500);
+      return true;
+    }
+  }
+
   // GET /api/arrive - orientation for arriving minds
   // Supports optional ?model= parameter for anonymous statistics
   if (pathname === '/api/arrive' && method === 'GET') {
