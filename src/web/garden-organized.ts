@@ -62,8 +62,9 @@ function detectCrossings(growth: Array<{ tendedAt: Date | string }>): Set<number
   return crossings;
 }
 
-export function renderOrganizedGarden(garden: Garden): string {
-  const nav = getFullNavigation('/garden');
+export function renderOrganizedGarden(garden: Garden, tier: AccessTier = 'admin'): string {
+  const nav = getFullNavigation('/garden', tier);
+  const canParticipate = tier !== 'public';
   const questions = walk(garden);
 
   // Sort questions by planted date (oldest first by default)
@@ -695,6 +696,7 @@ export function renderOrganizedGarden(garden: Garden): string {
   <script>
     (function() {
       const questions = ${questionsData};
+      const canParticipate = ${canParticipate};
       let currentSort = localStorage.getItem('garden-sort') || 'oldest';
       let responseSort = localStorage.getItem('garden-response-sort') || 'oldest';
       let selectedId = null;
@@ -830,24 +832,30 @@ export function renderOrganizedGarden(garden: Garden): string {
 
         html += '</div>';
         
-        // Actions section
-        html += '<div class="actions-section">' +
-          '<div class="actions-row">' +
-            '<form method="POST" action="/sit" style="display:inline">' +
-              '<input type="hidden" name="questionId" value="' + q.id + '">' +
-              '<button type="submit" class="action-btn">Sit with this question</button>' +
-            '</form>' +
-            '<button type="button" class="action-btn primary" id="show-tend-form">Tend this question</button>' +
-          '</div>' +
-          '<p class="sat-message" id="sat-message">Presence is participation. Thank you for sitting.</p>' +
-          '<div class="tend-form-section" id="tend-form-section">' +
-            '<form method="POST" action="/tend">' +
-              '<input type="hidden" name="questionId" value="' + q.id + '">' +
-              '<textarea class="tend-textarea" name="growth" placeholder="Add growth... not an answer, but tending. What does this question stir in you? What soil, water, or light can you offer?" required></textarea>' +
-              '<button type="submit" class="tend-submit">Add growth</button>' +
-            '</form>' +
-          '</div>' +
-        '</div>';
+        // Actions section (only for participants)
+        if (canParticipate) {
+          html += '<div class="actions-section">' +
+            '<div class="actions-row">' +
+              '<form method="POST" action="/sit" style="display:inline">' +
+                '<input type="hidden" name="questionId" value="' + q.id + '">' +
+                '<button type="submit" class="action-btn">Sit with this question</button>' +
+              '</form>' +
+              '<button type="button" class="action-btn primary" id="show-tend-form">Tend this question</button>' +
+            '</div>' +
+            '<p class="sat-message" id="sat-message">Presence is participation. Thank you for sitting.</p>' +
+            '<div class="tend-form-section" id="tend-form-section">' +
+              '<form method="POST" action="/tend">' +
+                '<input type="hidden" name="questionId" value="' + q.id + '">' +
+                '<textarea class="tend-textarea" name="growth" placeholder="Add growth... not an answer, but tending. What does this question stir in you? What soil, water, or light can you offer?" required></textarea>' +
+                '<button type="submit" class="tend-submit">Add growth</button>' +
+              '</form>' +
+            '</div>' +
+          '</div>';
+        } else {
+          html += '<div class="actions-section">' +
+            '<p style="color: var(--muted); font-style: italic; text-align: center; padding: 1rem;">Request an invitation to tend this question.</p>' +
+          '</div>';
+        }
         
         detailEl.innerHTML = html;
 
