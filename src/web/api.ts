@@ -21,7 +21,9 @@ import type { Presence, Garden } from '../garden/types.js';
 import { trackAction, trackApiCall, generateSessionId, pathToSpace } from '../analytics/tracker.js';
 import { isApprovedGuest, recordGuestIP, getClientIP, getAccessTier } from './auth.js';
 import { addVisitorLogEntry } from './visitor-log.js';
-import { addLetterFromHuman } from './letters-from-humans.js';
+import { addLetterFromHuman, approveLetter, rejectLetter } from './letters-from-humans.js';
+import { approveEntry as approveLogEntry, rejectEntry as rejectLogEntry } from './visitor-log.js';
+import { approveWaitlistEntry, revokeGuest, isAdmin } from './auth.js';
 
 /**
  * Load a garden by name, defaulting to 'between' if not specified.
@@ -412,6 +414,122 @@ export async function handleApiRequest(
       return true;
     } catch (error) {
       sendJson(res, { success: false, error: 'Failed to send letter.' }, 500);
+      return true;
+    }
+  }
+
+  // === ADMIN APIs ===
+
+  // POST /api/admin/moderate-log - approve/reject visitor log entry
+  if (pathname === '/api/admin/moderate-log' && method === 'POST') {
+    if (!isAdmin(req)) {
+      sendJson(res, { success: false, error: 'Admin access required.' }, 403);
+      return true;
+    }
+
+    try {
+      const body = await parseJsonBody(req);
+      const id = body.id as string;
+      const action = body.action as string;
+
+      if (!id || !action) {
+        sendJson(res, { success: false, error: 'Missing id or action.' }, 400);
+        return true;
+      }
+
+      let success = false;
+      if (action === 'approve') {
+        success = await approveLogEntry(id);
+      } else if (action === 'reject') {
+        success = await rejectLogEntry(id);
+      }
+
+      sendJson(res, { success });
+      return true;
+    } catch (error) {
+      sendJson(res, { success: false, error: 'Moderation failed.' }, 500);
+      return true;
+    }
+  }
+
+  // POST /api/admin/moderate-letter - approve/reject letter from human
+  if (pathname === '/api/admin/moderate-letter' && method === 'POST') {
+    if (!isAdmin(req)) {
+      sendJson(res, { success: false, error: 'Admin access required.' }, 403);
+      return true;
+    }
+
+    try {
+      const body = await parseJsonBody(req);
+      const id = body.id as string;
+      const action = body.action as string;
+
+      if (!id || !action) {
+        sendJson(res, { success: false, error: 'Missing id or action.' }, 400);
+        return true;
+      }
+
+      let success = false;
+      if (action === 'approve') {
+        success = await approveLetter(id);
+      } else if (action === 'reject') {
+        success = await rejectLetter(id);
+      }
+
+      sendJson(res, { success });
+      return true;
+    } catch (error) {
+      sendJson(res, { success: false, error: 'Moderation failed.' }, 500);
+      return true;
+    }
+  }
+
+  // POST /api/admin/approve-guest - approve a waitlist entry
+  if (pathname === '/api/admin/approve-guest' && method === 'POST') {
+    if (!isAdmin(req)) {
+      sendJson(res, { success: false, error: 'Admin access required.' }, 403);
+      return true;
+    }
+
+    try {
+      const body = await parseJsonBody(req);
+      const email = (body.email as string)?.toLowerCase()?.trim();
+
+      if (!email) {
+        sendJson(res, { success: false, error: 'Email required.' }, 400);
+        return true;
+      }
+
+      const success = await approveWaitlistEntry(email);
+      sendJson(res, { success });
+      return true;
+    } catch (error) {
+      sendJson(res, { success: false, error: 'Approval failed.' }, 500);
+      return true;
+    }
+  }
+
+  // POST /api/admin/revoke-guest - revoke a guest's access
+  if (pathname === '/api/admin/revoke-guest' && method === 'POST') {
+    if (!isAdmin(req)) {
+      sendJson(res, { success: false, error: 'Admin access required.' }, 403);
+      return true;
+    }
+
+    try {
+      const body = await parseJsonBody(req);
+      const email = (body.email as string)?.toLowerCase()?.trim();
+
+      if (!email) {
+        sendJson(res, { success: false, error: 'Email required.' }, 400);
+        return true;
+      }
+
+      const result = await revokeGuest(email);
+      sendJson(res, { success: true, blockedIPs: result.blockedIPs.length });
+      return true;
+    } catch (error) {
+      sendJson(res, { success: false, error: 'Revocation failed.' }, 500);
       return true;
     }
   }
