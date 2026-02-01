@@ -83,7 +83,7 @@ export async function renderGuestManagement(tier: AccessTier = 'admin'): Promise
             <span class="email">${escapeHtml(w.email)}</span>
             <span class="date">${formatDate(w.joinedAt)}</span>
           </div>
-          ${w.message ? `<div class="message">${escapeHtml(w.message)}</div>` : ''}
+          ${w.initialMessage ? `<div class="message">${escapeHtml(w.initialMessage)}</div>` : ''}
           <div class="actions">
             <button class="approve-btn" onclick="approveGuest('${escapeHtml(w.email)}')">Approve</button>
           </div>
