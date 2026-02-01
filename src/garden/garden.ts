@@ -161,10 +161,37 @@ export function sit(garden: Garden, questionId: string, trackedEmail?: string): 
 
 /**
  * Walk the garden - see what others have planted.
- * Returns questions without modification.
+ * Returns all questions (including unapproved) for admin use.
  */
 export function walk(garden: Garden): Question[] {
   return garden.questions;
+}
+
+/**
+ * Walk the garden - public view.
+ * Returns only approved questions with only approved growth.
+ * Strips internal tracking fields.
+ */
+export function walkPublic(garden: Garden): Question[] {
+  return garden.questions
+    .filter((q) => q.seed.approved)
+    .map((q) => ({
+      ...q,
+      seed: {
+        ...q.seed,
+        trackedEmail: undefined, // Strip internal field
+      },
+      growth: q.growth
+        .filter((g) => g.approved)
+        .map((g) => ({
+          ...g,
+          trackedEmail: undefined, // Strip internal field
+        })),
+      visits: q.visits.map((v) => ({
+        ...v,
+        trackedEmail: undefined, // Strip internal field
+      })),
+    }));
 }
 
 /**

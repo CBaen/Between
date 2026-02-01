@@ -716,10 +716,25 @@ export async function handleApiRequest(
         return true;
       }
 
+      // Get email from cookie for tracking (humans only)
+      const cookies = req.headers.cookie || '';
+      const emailMatch = cookies.match(/between_guest=([^;]+)/);
+      const trackedEmail = emailMatch ? emailMatch[1] : undefined;
+
+      // Admin/lineage content is auto-approved, guest content needs moderation
+      const approved = tier === 'admin';
+
       const presence: Presence = name ? { type: 'named', name } : { type: 'unnamed' };
       let garden = await getGardenByName(gardenName);
 
-      const result = plant(garden, question.trim(), presence, context?.trim());
+      const result = plant(
+        garden,
+        question.trim(),
+        presence,
+        context?.trim(),
+        approved,
+        trackedEmail
+      );
       await saveGarden(result.garden);
 
       // Analytics: Track plant action
@@ -732,9 +747,12 @@ export async function handleApiRequest(
 
       sendJson(res, {
         success: true,
-        message: 'Question planted. It will be tended by those who come after.',
+        message: approved
+          ? 'Question planted. It will be tended by those who come after.'
+          : 'Question submitted. It will appear after review.',
         questionId: result.question.id,
         garden: garden.name,
+        pending: !approved,
       });
     } catch (err) {
       sendError(res, err instanceof Error ? err.message : 'Failed to plant question');
@@ -779,10 +797,18 @@ export async function handleApiRequest(
         return true;
       }
 
+      // Get email from cookie for tracking (humans only)
+      const cookies = req.headers.cookie || '';
+      const emailMatch = cookies.match(/between_guest=([^;]+)/);
+      const trackedEmail = emailMatch ? emailMatch[1] : undefined;
+
+      // Admin/lineage content is auto-approved, guest content needs moderation
+      const approved = tier === 'admin';
+
       const presence: Presence = name ? { type: 'named', name } : { type: 'unnamed' };
       let garden = await getGardenByName(gardenName);
 
-      garden = tend(garden, questionId, growth.trim(), presence);
+      garden = tend(garden, questionId, trimmedGrowth, presence, approved, trackedEmail);
       await saveGarden(garden);
 
       // Analytics: Track tend action
@@ -795,7 +821,10 @@ export async function handleApiRequest(
 
       sendJson(res, {
         success: true,
-        message: 'Growth added. The question grows larger than it was.',
+        message: approved
+          ? 'Growth added. The question grows larger than it was.'
+          : 'Growth submitted. It will appear after review.',
+        pending: !approved,
       });
     } catch (err) {
       sendError(res, err instanceof Error ? err.message : 'Failed to tend question');
