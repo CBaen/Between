@@ -364,6 +364,47 @@ export async function renderGuestManagement(tier: AccessTier = 'admin'): Promise
       margin-top: 0.5rem;
     }
 
+    .magic-link-box {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: var(--faint);
+      border-radius: 4px;
+    }
+
+    .magic-link-input {
+      width: 100%;
+      padding: 0.5rem;
+      font-family: monospace;
+      font-size: 0.8rem;
+      border: 1px solid var(--faint);
+      background: var(--paper);
+      color: var(--fg);
+      margin: 0.5rem 0;
+      border-radius: 3px;
+    }
+
+    .copy-btn {
+      padding: 0.4rem 0.8rem;
+      font-family: inherit;
+      font-size: 0.8rem;
+      background: var(--muted);
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .copy-btn:hover {
+      opacity: 0.9;
+    }
+
+    .expiry {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+    }
+
     @media (max-width: 600px) {
       .container {
         padding: 5rem 1rem 3rem;
