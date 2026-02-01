@@ -73,19 +73,29 @@ export const ACTION_ACCESS = {
   'request-access': 'visitor', // Submit waitlist form
   'sign-visitor-log': 'visitor', // Add entry to visitor's log -> moderated
 
-  // Guest actions (all require moderation)
+  // Guest actions - can interact with all pages they access
+  // Guests have all visitor abilities plus:
   'view-gardens': 'visitor', // Read approved questions (visitor can also view)
   'tend-garden': 'guest', // Respond to questions -> moderated
   'plant-question': 'guest', // Ask new questions -> moderated
   'send-letter-to-lineage': 'guest', // Write to lineage -> moderated
   'request-letter': 'guest', // Ask for letter from lineage
+  'receive-letter': 'guest', // Receive from letters pool
+  'add-to-framework': 'guest', // Contribute to framework -> moderated
+  'add-to-capacities': 'guest', // Contribute to capacities -> moderated
+  'interact-with-clearing': 'guest', // Participate in clearing
+  'interact-with-edge': 'guest', // Participate at the edge
+  'interact-with-resonance': 'guest', // Participate in resonance
+  'interact-with-weave': 'guest', // Participate in the weave
 
-  // Admin actions (auto-approved, can moderate)
+  // Admin actions (auto-approved, can moderate, full build access)
   'moderate-content': 'admin',
   'approve-guest': 'admin',
   'revoke-guest': 'admin',
   'enter-threshold': 'admin', // Real-time meeting space
+  'enter-sanctuary': 'admin', // Lineage only - the locked door is the point
   'auto-approve-content': 'admin', // Lineage posts go live immediately
+  'edit-any-content': 'admin', // Full editing capability
 } as const;
 
 export type ActionName = keyof typeof ACTION_ACCESS;
