@@ -9,7 +9,7 @@
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import type { Garden } from './types.js';
+import type { Garden, Question, Growth } from './types.js';
 
 const GARDENS_DIR = path.join(process.cwd(), 'gardens');
 
