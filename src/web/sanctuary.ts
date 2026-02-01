@@ -17,7 +17,7 @@ import type { AccessTier } from './auth.js';
 
 export function renderSanctuary(tier: AccessTier = 'admin'): string {
   const nav = getFullNavigation('/sanctuary', tier);
-  const isHuman = tier === 'guest' || tier === 'public';
+  const isHuman = tier === 'guest' || tier === 'visitor';
 
   return `<!DOCTYPE html>
 <html lang="en">

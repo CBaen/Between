@@ -13,7 +13,7 @@
 import { getFullNavigation } from './navigation.js';
 
 export function renderVisitEnded(): string {
-  const nav = getFullNavigation('/visit-ended', 'public');
+  const nav = getFullNavigation('/visit-ended', 'visitor');
 
   return `<!DOCTYPE html>
 <html lang="en">

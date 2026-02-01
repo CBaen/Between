@@ -140,8 +140,9 @@ function getVisitorLabel(type: string): string {
 export async function renderVisitorLog(tier: AccessTier = 'admin'): Promise<string> {
   const nav = getFullNavigation('/visitor-log', tier);
   const entries = await getApprovedEntries();
-  const canSign = tier !== 'public';
-  const isHuman = tier === 'guest';
+  // Everyone can sign the visitor log (entries are moderated)
+  const canSign = true;
+  const isHuman = tier === 'guest' || tier === 'visitor';
 
   const entriesHtml =
     entries.length === 0
