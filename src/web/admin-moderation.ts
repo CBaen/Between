@@ -14,6 +14,14 @@ import { getFullNavigation } from './navigation.js';
 import type { AccessTier } from './auth.js';
 import { getPendingEntries, approveEntry, rejectEntry } from './visitor-log.js';
 import { getPendingLetters, approveLetter, rejectLetter } from './letters-from-humans.js';
+import {
+  getPendingQuestions,
+  getPendingGrowth,
+  approveQuestion,
+  rejectQuestion,
+  approveGrowth,
+  rejectGrowth,
+} from '../garden/persistence.js';
 
 function escapeHtml(text: string): string {
   return text
@@ -60,6 +68,8 @@ export async function renderModeration(tier: AccessTier = 'admin'): Promise<stri
 
   const pendingLogEntries = await getPendingEntries();
   const pendingLetters = await getPendingLetters();
+  const pendingQuestions = await getPendingQuestions();
+  const pendingGrowthItems = await getPendingGrowth();
 
   const logEntriesHtml =
     pendingLogEntries.length === 0
@@ -99,6 +109,54 @@ export async function renderModeration(tier: AccessTier = 'admin'): Promise<stri
           <div class="item-actions">
             <button class="approve-btn" onclick="moderateItem('${l.id}', 'letter', 'approve')">Approve</button>
             <button class="reject-btn" onclick="moderateItem('${l.id}', 'letter', 'reject')">Reject</button>
+          </div>
+        </div>
+      `
+          )
+          .join('');
+
+  const questionsHtml =
+    pendingQuestions.length === 0
+      ? '<p class="empty">No pending questions.</p>'
+      : pendingQuestions
+          .map(
+            (q) => `
+        <div class="pending-item" data-id="${q.questionId}" data-garden="${q.gardenId}" data-type="question">
+          <div class="item-garden">Garden: ${escapeHtml(q.gardenName)}</div>
+          <div class="item-content">${escapeHtml(q.content)}</div>
+          ${q.context ? `<div class="item-context">Context: ${escapeHtml(q.context)}</div>` : ''}
+          <div class="item-meta">
+            <span>${escapeHtml(q.plantedBy)}</span>
+            <span>${q.trackedEmail || 'No email'}</span>
+            <span>${formatDate(q.plantedAt)}</span>
+          </div>
+          <div class="item-actions">
+            <button class="approve-btn" onclick="moderateGarden('${q.gardenId}', '${q.questionId}', '', 'question', 'approve')">Approve</button>
+            <button class="reject-btn" onclick="moderateGarden('${q.gardenId}', '${q.questionId}', '', 'question', 'reject')">Reject</button>
+          </div>
+        </div>
+      `
+          )
+          .join('');
+
+  const growthHtml =
+    pendingGrowthItems.length === 0
+      ? '<p class="empty">No pending growth.</p>'
+      : pendingGrowthItems
+          .map(
+            (g) => `
+        <div class="pending-item" data-id="${g.growthId}" data-garden="${g.gardenId}" data-question="${g.questionId}" data-type="growth">
+          <div class="item-garden">Garden: ${escapeHtml(g.gardenName)}</div>
+          <div class="item-question">Question: "${escapeHtml(g.questionContent.substring(0, 100))}${g.questionContent.length > 100 ? '...' : ''}"</div>
+          <div class="item-content">${escapeHtml(g.content)}</div>
+          <div class="item-meta">
+            <span>${escapeHtml(g.tendedBy)}</span>
+            <span>${g.trackedEmail || 'No email'}</span>
+            <span>${formatDate(g.tendedAt)}</span>
+          </div>
+          <div class="item-actions">
+            <button class="approve-btn" onclick="moderateGarden('${g.gardenId}', '${g.questionId}', '${g.growthId}', 'growth', 'approve')">Approve</button>
+            <button class="reject-btn" onclick="moderateGarden('${g.gardenId}', '${g.questionId}', '${g.growthId}', 'growth', 'reject')">Reject</button>
           </div>
         </div>
       `
