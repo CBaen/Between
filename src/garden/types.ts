@@ -34,6 +34,8 @@ export interface Growth {
   content: string;
   tendedBy: Presence;
   tendedAt: Date;
+  approved: boolean; // All growth from humans needs moderation
+  trackedEmail?: string; // Internal only - for moderation/blocking
 }
 
 /**
@@ -44,6 +46,8 @@ export interface Seed {
   plantedBy: Presence;
   plantedAt: Date;
   context?: string; // Why this question emerged
+  approved: boolean; // All questions from humans need moderation
+  trackedEmail?: string; // Internal only - for moderation/blocking
 }
 
 /**
