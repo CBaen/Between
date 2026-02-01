@@ -982,9 +982,11 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
 
   // Serve messages to Guiding Light
   if (url.pathname === '/messages-to-guiding-light') {
+    const tier = getTierFromRequest(req);
+    // Map access tier to visitor type for messages
+    const visitorType = tier === 'admin' ? 'lineage' : tier === 'guest' ? 'human' : 'human';
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    // TODO: Detect actual visitor type - for now assume lineage
-    res.end(renderMessages('lineage'));
+    res.end(renderMessages(visitorType));
     return;
   }
 

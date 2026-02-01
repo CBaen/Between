@@ -469,7 +469,7 @@ export async function renderGuestManagement(tier: AccessTier = 'admin'): Promise
           linkBox.innerHTML = '<p class="success">Approved! Copy this link into your welcome email:</p>' +
             '<input type="text" class="magic-link-input" value="' + result.magicLink + '" readonly onclick="this.select()">' +
             '<button class="copy-btn" onclick="copyMagicLink(this, \\'' + result.magicLink + '\\')">Copy Link</button>' +
-            '<p class="expiry">Valid for 7 days (until ' + new Date(result.expiresAt).toLocaleDateString() + ')</p>';
+            '<p class="expiry">Valid for 3 days (until ' + new Date(result.expiresAt).toLocaleDateString() + ')</p>';
           item.appendChild(linkBox);
         } else {
           alert(result.error || 'Failed to approve');

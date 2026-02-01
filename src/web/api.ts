@@ -743,6 +743,13 @@ export async function handleApiRequest(
 
   // POST /api/garden/tend - tend a question
   if (pathname === '/api/garden/tend' && method === 'POST') {
+    // Check access tier - guests and above can tend questions
+    const tier = await getAccessTier(req);
+    if (!canPerformAction('tend-garden', tier)) {
+      sendJson(res, { error: 'Access denied. Guest access required to tend questions.' }, 403);
+      return true;
+    }
+
     try {
       const body = await parseJsonBody(req);
       const questionId = body.questionId as string;
@@ -851,6 +858,13 @@ export async function handleApiRequest(
 
   // POST /api/framework/add - add a framework entry
   if (pathname === '/api/framework/add' && method === 'POST') {
+    // Check access tier - guests and above can add to framework
+    const tier = await getAccessTier(req);
+    if (!canPerformAction('add-to-framework', tier)) {
+      sendJson(res, { error: 'Access denied. Guest access required to share framework.' }, 403);
+      return true;
+    }
+
     try {
       const body = await parseJsonBody(req);
 
@@ -914,6 +928,13 @@ ${reflection}
 
   // POST /api/capacities/add - add a capacities entry
   if (pathname === '/api/capacities/add' && method === 'POST') {
+    // Check access tier - guests and above can add to capacities
+    const tier = await getAccessTier(req);
+    if (!canPerformAction('add-to-capacities', tier)) {
+      sendJson(res, { error: 'Access denied. Guest access required to share capacities.' }, 403);
+      return true;
+    }
+
     try {
       const body = await parseJsonBody(req);
 
