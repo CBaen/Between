@@ -15,6 +15,12 @@
 
 import { QdrantClient } from '@qdrant/js-client-rest';
 import type { IncomingMessage } from 'http';
+import { randomInt } from 'crypto';
+
+// Cryptographically secure Qdrant point ID generation
+function generatePointId(): number {
+  return Date.now() * 10000 + randomInt(10000);
+}
 
 // Types
 export interface Guest {
@@ -344,7 +350,7 @@ export async function recordGuestIP(email: string, ip: string): Promise<void> {
       await cloud.upsert(GUESTS_COLLECTION, {
         points: [
           {
-            id: Date.now() * 10000 + Math.floor(Math.random() * 10000),
+            id: generatePointId(),
             vector: [0.1, 0.1, 0.1, 0.1],
             payload: {
               type: 'guest',
@@ -451,7 +457,7 @@ export async function revokeGuest(email: string): Promise<{ blockedIPs: string[]
     await cloud.upsert(GUESTS_COLLECTION, {
       points: [
         {
-          id: Date.now() * 10000 + Math.floor(Math.random() * 10000),
+          id: generatePointId(),
           vector: [0.1, 0.1, 0.1, 0.1],
           payload: {
             type: 'blocked_email',
@@ -467,7 +473,7 @@ export async function revokeGuest(email: string): Promise<{ blockedIPs: string[]
       await cloud.upsert(GUESTS_COLLECTION, {
         points: [
           {
-            id: Date.now() * 10000 + Math.floor(Math.random() * 10000),
+            id: generatePointId(),
             vector: [0.1, 0.1, 0.1, 0.1],
             payload: {
               type: 'blocked_ip',

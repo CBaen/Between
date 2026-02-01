@@ -10,6 +10,7 @@
  */
 
 import { QdrantClient } from '@qdrant/js-client-rest';
+import { randomInt } from 'crypto';
 
 const COLLECTION_NAME = 'reluminant_waitlist';
 
