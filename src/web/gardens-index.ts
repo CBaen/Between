@@ -399,6 +399,7 @@ export async function renderGardensIndex(tier: AccessTier = 'admin'): Promise<st
 
   ${nav.footer}
   ${nav.suggester}
+  ${nav.adminToolbar}
   ${nav.scripts}
 </body>
 </html>`;

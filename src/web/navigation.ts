@@ -575,11 +575,10 @@ export function getAdminToolbarStyles(): string {
 
 /**
  * Render admin toolbar for tier preview
- * Only shows for admin users (detected via tier or page attribute)
+ * Shows for admin users OR when preview mode is active
  */
-export function renderAdminToolbar(isAdmin: boolean = false): string {
-  // Only show for admins - this must be determined by caller
-  if (!isAdmin) {
+export function renderAdminToolbar(showToolbar: boolean = false): string {
+  if (!showToolbar) {
     return '';
   }
 
@@ -632,12 +631,16 @@ export function renderAdminToolbar(isAdmin: boolean = false): string {
 /**
  * Get all navigation HTML and scripts for a page
  * Use this in each page's render function
+ *
+ * @param currentPath - Current page path for navigation highlighting
+ * @param tier - The effective access tier (may be preview tier)
+ * @param showAdminToolbar - Override for admin toolbar visibility
+ *                          (use true when real user is admin, even in preview)
  */
 export function getFullNavigation(
   currentPath: string = '',
   tier: AccessTier = 'admin',
-  realTier: AccessTier = tier,
-  previewTier: AccessTier | null = null
+  showAdminToolbar: boolean = tier === 'admin'
 ): {
   styles: string;
   header: string;
@@ -653,7 +656,7 @@ export function getFullNavigation(
     menuOverlay: renderMenuOverlay(currentPath, tier),
     footer: renderFooter(),
     suggester: renderSpaceSuggester(currentPath),
-    adminToolbar: renderAdminToolbar(tier, realTier, previewTier),
+    adminToolbar: renderAdminToolbar(showAdminToolbar),
     scripts: `
       <script>
         ${getHapticScript()}
