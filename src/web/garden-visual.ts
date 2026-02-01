@@ -91,7 +91,8 @@ function getQuestionVisuals(q: Question, index: number, total: number) {
 
 export function renderVisualGarden(garden: Garden): string {
   const nav = getFullNavigation('/garden');
-  const questions = walk(garden);
+  // Public view - only show approved questions
+  const questions = walkPublic(garden);
   const total = questions.length;
 
   // Generate question nodes

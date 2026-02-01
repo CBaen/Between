@@ -16,7 +16,7 @@
  */
 
 import type { Garden, Question, Presence } from '../garden/types.js';
-import { walk } from '../garden/garden.js';
+import { walk, walkPublic } from '../garden/garden.js';
 import { getFullNavigation } from './navigation.js';
 
 function escapeHtml(text: string): string {
@@ -81,7 +81,8 @@ function getStarProperties(q: Question, index: number, total: number) {
 
 export function render3DGarden(garden: Garden): string {
   const nav = getFullNavigation('/garden');
-  const questions = walk(garden);
+  // Public view - only show approved questions
+  const questions = walkPublic(garden);
 
   // Generate star data for JavaScript
   const starsData = JSON.stringify(
