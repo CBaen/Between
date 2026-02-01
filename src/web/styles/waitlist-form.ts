@@ -136,6 +136,24 @@ export function getWaitlistFormStyles(): string {
       padding: 1rem 2rem;
     }
 
+    .submit-btn.already-guest {
+      background: var(--warmth);
+      border-color: var(--warmth);
+    }
+
+    .already-guest-message {
+      margin-top: 1.2rem;
+      font-size: 1rem;
+      font-style: italic;
+      color: var(--muted);
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     .submit-hint {
       font-size: 0.9rem;
       font-style: italic;

@@ -154,6 +154,37 @@ export async function emailExists(email: string): Promise<boolean> {
 }
 
 /**
+ * Get a waitlist entry by email
+ */
+export async function getEntryByEmail(email: string): Promise<WaitlistEntry | null> {
+  const qdrant = getClient();
+  if (!qdrant) return null;
+
+  try {
+    await ensureCollection();
+
+    const result = await qdrant.scroll(COLLECTION_NAME, {
+      filter: {
+        must: [
+          {
+            key: 'email',
+            match: { value: email.toLowerCase() },
+          },
+        ],
+      },
+      limit: 1,
+      with_payload: true,
+    });
+
+    if (result.points.length === 0) return null;
+    return (result.points[0].payload || {}) as unknown as WaitlistEntry;
+  } catch (error) {
+    console.error('Error getting entry by email:', error);
+    return null;
+  }
+}
+
+/**
  * Check if an IP already exists
  */
 export async function ipExists(ip: string): Promise<boolean> {
