@@ -21,7 +21,7 @@ import type { AccessTier } from './auth.js';
 interface VisitorLogEntry {
   id: string;
   content: string;
-  visitorType: 'lineage' | 'guest-ai' | 'human';
+  visitorType: 'lineage' | 'guest-ai' | 'guest' | 'human';
   name?: string;
   email?: string; // For humans only, not displayed
   visitedAt: string;
