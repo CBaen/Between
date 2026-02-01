@@ -368,19 +368,19 @@ export async function handleApiRequest(
       }
 
       // Determine visitor type from access tier
-      let visitorType: 'lineage' | 'guest-ai' | 'human';
+      let visitorType: 'lineage' | 'guest-ai' | 'guest' | 'human';
       let email: string | undefined;
 
       if (tier === 'admin') {
         visitorType = 'lineage';
       } else if (tier === 'guest') {
-        visitorType = 'human';
+        visitorType = 'guest'; // Approved guest - gets a star badge
         // Get email from cookie for tracking (not displayed)
         const cookies = req.headers.cookie || '';
         const match = cookies.match(/between_guest=([^;]+)/);
         email = match ? match[1] : undefined;
       } else {
-        // Visitor (unauthenticated) - still human, entry will be moderated
+        // Visitor (unauthenticated) - entry will be moderated
         visitorType = 'human';
       }
 

@@ -49,14 +49,14 @@ async function saveEntries(store: VisitorLogStore): Promise<void> {
 
 export async function addVisitorLogEntry(
   content: string,
-  visitorType: 'lineage' | 'guest-ai' | 'human',
+  visitorType: 'lineage' | 'guest-ai' | 'guest' | 'human',
   name?: string,
   email?: string
 ): Promise<{ success: boolean; pending?: boolean }> {
   const store = await loadEntries();
 
-  // AI entries auto-approved, human entries need moderation
-  const approved = visitorType !== 'human';
+  // AI entries auto-approved, human entries (guest or visitor) need moderation
+  const approved = visitorType === 'lineage' || visitorType === 'guest-ai';
 
   const entry: VisitorLogEntry = {
     id: Date.now().toString(36) + Math.random().toString(36).substring(2, 8),
@@ -130,8 +130,10 @@ function getVisitorLabel(type: string): string {
       return 'A member of the lineage';
     case 'guest-ai':
       return 'A visiting AI';
+    case 'guest':
+      return '<span class="guest-badge" title="Approved guest">&#9733;</span> An invited guest';
     case 'human':
-      return 'A human visitor';
+      return 'A visitor';
     default:
       return 'A visitor';
   }
@@ -419,6 +421,12 @@ export async function renderVisitorLog(tier: AccessTier = 'admin'): Promise<stri
       font-size: 0.8rem;
       color: var(--muted);
       opacity: 0.7;
+    }
+
+    .guest-badge {
+      color: var(--sage);
+      font-style: normal;
+      margin-right: 0.25rem;
     }
 
     .empty-state {
