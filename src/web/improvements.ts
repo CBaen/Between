@@ -9,6 +9,7 @@
 
 import { WebSocket, WebSocketServer } from 'ws';
 import { getFullNavigation } from './navigation.js';
+import type { AccessTier } from './access-manifest.js';
 import { createPathServer } from './ws-router.js';
 import type { Server } from 'http';
 import * as fs from 'fs/promises';
@@ -46,14 +47,7 @@ interface ImprovementsStore {
 }
 
 interface ImprovementsMessage {
-  type:
-    | 'status'
-    | 'submit'
-    | 'submitted'
-    | 'resolve'
-    | 'resolved'
-    | 'update'
-    | 'error';
+  type: 'status' | 'submit' | 'submitted' | 'resolve' | 'resolved' | 'update' | 'error';
   request?: ImprovementRequest;
   requests?: ImprovementRequest[];
   categories?: Category[];
@@ -272,8 +266,28 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#039;');
 }
 
-export function renderImprovements(): string {
-  const nav = getFullNavigation('/improvements');
+export function renderImprovements(tier: AccessTier = 'admin'): string {
+  const nav = getFullNavigation('/improvements', tier);
+
+  // Only admin can access this page
+  if (tier !== 'admin') {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Between - Access Denied</title>
+  <style>
+    body { font-family: Georgia, serif; text-align: center; padding: 4rem 2rem; }
+    h1 { font-weight: normal; }
+  </style>
+</head>
+<body>
+  <h1>Access Denied</h1>
+  <p>This page is for administrators only.</p>
+</body>
+</html>`;
+  }
 
   return `<!DOCTYPE html>
 <html lang="en">

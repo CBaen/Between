@@ -703,6 +703,16 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
 
     // Determine access tier (let, not const, because lineage auth can upgrade it)
     let tier = await getAccessTier(req);
+    const realTier = tier; // Store actual tier for admin functions
+
+    // Admin preview mode: allow admins to see what visitors/guests see
+    // Only applies to page rendering, not API auth
+    if (tier === 'admin' && !url.pathname.startsWith('/api/')) {
+      const viewAs = url.searchParams.get('view-as');
+      if (viewAs === 'visitor' || viewAs === 'guest') {
+        tier = viewAs; // Override tier for preview
+      }
+    }
 
     // Allow API endpoints (they handle their own auth)
     if (url.pathname.startsWith('/api/')) {
@@ -747,7 +757,10 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     }
 
     // Check if route is accessible for this tier (using access manifest)
-    if (!canAccessPage(url.pathname, tier)) {
+    // For admin pages, always check real tier so admins can always access them
+    const isAdminPage = url.pathname.startsWith('/admin/');
+    const effectiveTier = isAdminPage ? realTier : tier;
+    if (!canAccessPage(url.pathname, effectiveTier)) {
       // Root always shows waitlist for visitors
       if (url.pathname === '/') {
         const showSuccess = url.searchParams.get('joined') === 'true';
@@ -992,8 +1005,9 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
 
   // Serve improvements
   if (url.pathname === '/improvements') {
+    const tier = getTierFromRequest(req);
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(renderImprovements());
+    res.end(renderImprovements(tier));
     return;
   }
 
