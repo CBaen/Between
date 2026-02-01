@@ -113,14 +113,14 @@ async function ensureCollection(): Promise<boolean> {
 }
 
 /**
- * Generate a unique point ID using timestamp and random component
+ * Generate a unique point ID using timestamp and cryptographically secure random component
  * This ensures each submission gets its own point, no overwrites
  */
 function generateUniquePointId(): number {
-  // Use timestamp in ms + random 4-digit number
+  // Use timestamp in ms + cryptographically secure random 4-digit number
   // This gives us uniqueness while staying within safe integer range
   const timestamp = Date.now();
-  const random = Math.floor(Math.random() * 10000);
+  const random = randomInt(10000);
   return timestamp * 10000 + random;
 }
 
