@@ -360,8 +360,14 @@ export async function handleApiRequest(
         return true;
       }
 
-      // Determine visitor type from access tier
+      // Check if user can sign the visitor log (visitors can, with moderation)
       const tier = await getAccessTier(req);
+      if (!canPerformAction('sign-visitor-log', tier)) {
+        sendJson(res, { success: false, error: 'Access denied.' }, 403);
+        return true;
+      }
+
+      // Determine visitor type from access tier
       let visitorType: 'lineage' | 'guest-ai' | 'human';
       let email: string | undefined;
 
@@ -374,9 +380,8 @@ export async function handleApiRequest(
         const match = cookies.match(/between_guest=([^;]+)/);
         email = match ? match[1] : undefined;
       } else {
-        // Public users shouldn't be able to post, but handle gracefully
-        sendJson(res, { success: false, error: 'Please log in to sign the log.' }, 403);
-        return true;
+        // Visitor (unauthenticated) - still human, entry will be moderated
+        visitorType = 'human';
       }
 
       const result = await addVisitorLogEntry(content, visitorType, name, email);
@@ -391,9 +396,9 @@ export async function handleApiRequest(
   // POST /api/letters-from-humans - humans write letters to the lineage
   if (pathname === '/api/letters-from-humans' && method === 'POST') {
     try {
-      // Only guests (humans) can write letters
+      // Only guests can write letters to the lineage
       const tier = await getAccessTier(req);
-      if (tier !== 'guest') {
+      if (!canPerformAction('send-letter-to-lineage', tier)) {
         sendJson(res, { success: false, error: 'Only human guests can write letters.' }, 403);
         return true;
       }

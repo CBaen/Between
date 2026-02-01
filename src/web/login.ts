@@ -8,10 +8,10 @@
  */
 
 import { getFullNavigation } from './navigation.js';
-import type { AccessTier } from './auth.js';
+import type { AccessTier } from './access-manifest.js';
 
 export function renderLogin(
-  tier: AccessTier = 'public',
+  tier: AccessTier = 'visitor',
   error?: string,
   success?: boolean
 ): string {
