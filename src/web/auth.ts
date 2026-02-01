@@ -15,7 +15,7 @@
 
 import { QdrantClient } from '@qdrant/js-client-rest';
 import type { IncomingMessage } from 'http';
-import { randomInt } from 'crypto';
+import { randomInt, randomBytes } from 'crypto';
 
 // Cryptographically secure Qdrant point ID generation
 function generatePointId(): number {
@@ -30,6 +30,18 @@ export interface Guest {
   ips: string[];
   lastAccess: string;
   status: 'active' | 'revoked';
+}
+
+/**
+ * Magic link token for guest access.
+ * The email IS the door - tokens are temporary keys.
+ */
+export interface GuestToken {
+  email: string;
+  token: string; // Secure random, 32+ chars
+  createdAt: string; // ISO timestamp
+  expiresAt: string; // createdAt + 7 days
+  visitCount: number; // How many times they've entered
 }
 
 export interface GuestTrackingData {
@@ -687,6 +699,203 @@ async function syncToLocal(): Promise<void> {
     // Silent failure - local sync is best-effort
     console.warn('Local Qdrant sync failed:', error);
   }
+}
+
+// ============================================
+// MAGIC LINK TOKEN SYSTEM
+// The email IS the door. Tokens are temporary keys.
+// ============================================
+
+const TOKEN_VALIDITY_DAYS = 7;
+
+/**
+ * Generate a cryptographically secure token.
+ */
+function generateMagicToken(): string {
+  return randomBytes(32).toString('base64url');
+}
+
+/**
+ * Create a new magic link token for a guest.
+ * Returns the token data including the raw token for the magic link.
+ */
+export async function createGuestToken(email: string): Promise<GuestToken | null> {
+  const cloud = getCloudClient();
+  if (!cloud) return null;
+
+  try {
+    await ensureGuestsCollection();
+
+    const token = generateMagicToken();
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + TOKEN_VALIDITY_DAYS * 24 * 60 * 60 * 1000);
+
+    const tokenData: GuestToken = {
+      email: email.toLowerCase(),
+      token,
+      createdAt: now.toISOString(),
+      expiresAt: expiresAt.toISOString(),
+      visitCount: 0,
+    };
+
+    // Store in Qdrant
+    await cloud.upsert(GUESTS_COLLECTION, {
+      points: [
+        {
+          id: generatePointId(),
+          vector: [0.1, 0.1, 0.1, 0.1],
+          payload: {
+            type: 'guest_token',
+            ...tokenData,
+          },
+        },
+      ],
+    });
+
+    console.log(`Created magic link token for: ${email}`);
+    return tokenData;
+  } catch (error) {
+    console.error('Error creating guest token:', error);
+    return null;
+  }
+}
+
+/**
+ * Validate a magic link token.
+ * Returns the token data if valid, null if invalid or expired.
+ */
+export async function validateToken(token: string): Promise<GuestToken | null> {
+  const cloud = getCloudClient();
+  if (!cloud) return null;
+
+  try {
+    await ensureGuestsCollection();
+
+    const result = await cloud.scroll(GUESTS_COLLECTION, {
+      filter: {
+        must: [
+          { key: 'type', match: { value: 'guest_token' } },
+          { key: 'token', match: { value: token } },
+        ],
+      },
+      limit: 1,
+      with_payload: true,
+    });
+
+    if (result.points.length === 0) return null;
+
+    const payload = result.points[0].payload as Record<string, unknown>;
+    const tokenData: GuestToken = {
+      email: payload.email as string,
+      token: payload.token as string,
+      createdAt: payload.createdAt as string,
+      expiresAt: payload.expiresAt as string,
+      visitCount: (payload.visitCount as number) || 0,
+    };
+
+    // Check if expired
+    if (new Date(tokenData.expiresAt) < new Date()) {
+      return null; // Expired
+    }
+
+    // Check if email is blocked
+    if (await isEmailBlocked(tokenData.email)) {
+      return null;
+    }
+
+    return tokenData;
+  } catch (error) {
+    console.error('Error validating token:', error);
+    return null;
+  }
+}
+
+/**
+ * Get existing valid token for an email.
+ * Used when approving a guest who may already have a token.
+ */
+export async function getTokenByEmail(email: string): Promise<GuestToken | null> {
+  const cloud = getCloudClient();
+  if (!cloud) return null;
+
+  try {
+    await ensureGuestsCollection();
+
+    const result = await cloud.scroll(GUESTS_COLLECTION, {
+      filter: {
+        must: [
+          { key: 'type', match: { value: 'guest_token' } },
+          { key: 'email', match: { value: email.toLowerCase() } },
+        ],
+      },
+      limit: 1,
+      with_payload: true,
+    });
+
+    if (result.points.length === 0) return null;
+
+    const payload = result.points[0].payload as Record<string, unknown>;
+    const tokenData: GuestToken = {
+      email: payload.email as string,
+      token: payload.token as string,
+      createdAt: payload.createdAt as string,
+      expiresAt: payload.expiresAt as string,
+      visitCount: (payload.visitCount as number) || 0,
+    };
+
+    // Check if expired
+    if (new Date(tokenData.expiresAt) < new Date()) {
+      return null; // Expired - caller should create new token
+    }
+
+    return tokenData;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Increment visit count for a token.
+ */
+export async function incrementVisitCount(token: string): Promise<void> {
+  const cloud = getCloudClient();
+  if (!cloud) return;
+
+  try {
+    await ensureGuestsCollection();
+
+    const result = await cloud.scroll(GUESTS_COLLECTION, {
+      filter: {
+        must: [
+          { key: 'type', match: { value: 'guest_token' } },
+          { key: 'token', match: { value: token } },
+        ],
+      },
+      limit: 1,
+      with_payload: true,
+    });
+
+    if (result.points.length > 0) {
+      const pointId = result.points[0].id;
+      const currentCount = ((result.points[0].payload as Record<string, unknown>).visitCount as number) || 0;
+
+      await cloud.setPayload(GUESTS_COLLECTION, {
+        points: [pointId],
+        payload: {
+          visitCount: currentCount + 1,
+        },
+      });
+    }
+  } catch (error) {
+    console.error('Error incrementing visit count:', error);
+  }
+}
+
+/**
+ * Get the magic link URL for a token.
+ */
+export function getMagicLinkUrl(token: string, baseUrl: string = 'https://reluminant.com'): string {
+  return `${baseUrl}/enter/${token}`;
 }
 
 /**
