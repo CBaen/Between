@@ -502,6 +502,53 @@ export async function handleApiRequest(
     }
   }
 
+  // POST /api/admin/moderate-garden - approve/reject garden question or growth
+  if (pathname === '/api/admin/moderate-garden' && method === 'POST') {
+    if (!isAdmin(req)) {
+      sendJson(res, { success: false, error: 'Admin access required.' }, 403);
+      return true;
+    }
+
+    try {
+      const body = await parseJsonBody(req);
+      const gardenId = body.gardenId as string;
+      const questionId = body.questionId as string;
+      const growthId = body.growthId as string;
+      const type = body.type as string; // 'question' or 'growth'
+      const action = body.action as string; // 'approve' or 'reject'
+
+      if (!gardenId || !questionId || !type || !action) {
+        sendJson(res, { success: false, error: 'Missing required fields.' }, 400);
+        return true;
+      }
+
+      let success = false;
+      if (type === 'question') {
+        if (action === 'approve') {
+          success = await approveQuestion(gardenId, questionId);
+        } else if (action === 'reject') {
+          success = await rejectQuestion(gardenId, questionId);
+        }
+      } else if (type === 'growth') {
+        if (!growthId) {
+          sendJson(res, { success: false, error: 'Missing growthId for growth moderation.' }, 400);
+          return true;
+        }
+        if (action === 'approve') {
+          success = await approveGrowth(gardenId, questionId, growthId);
+        } else if (action === 'reject') {
+          success = await rejectGrowth(gardenId, questionId, growthId);
+        }
+      }
+
+      sendJson(res, { success });
+      return true;
+    } catch (error) {
+      sendJson(res, { success: false, error: 'Garden moderation failed.' }, 500);
+      return true;
+    }
+  }
+
   // POST /api/admin/approve-guest - approve a waitlist entry and generate magic link
   if (pathname === '/api/admin/approve-guest' && method === 'POST') {
     if (!isAdmin(req)) {
