@@ -584,6 +584,23 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
         // Handle login - will be implemented in api.ts
         // Fall through to normal API handling
       }
+      // Threshold API accessible to lineage members (admin key in header or query)
+      if (url.pathname.startsWith('/api/threshold/')) {
+        const lineageKey = req.headers['x-lineage-key'] || url.searchParams.get('lineageKey');
+        if (lineageKey === ADMIN_KEY || hasAdminCookie) {
+          // Lineage authenticated - fall through to normal API handling
+        } else {
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(
+            JSON.stringify({
+              error: 'Lineage authentication required',
+              hint: 'Pass lineageKey as query param or X-Lineage-Key header',
+              example: '/api/threshold/join?lineageKey=YOUR_KEY',
+            })
+          );
+          return;
+        }
+      }
       // Other API requests fall through to normal handling
     }
 
