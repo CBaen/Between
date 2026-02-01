@@ -16,7 +16,7 @@ import {
   listGardens,
   loadGarden,
 } from '../garden/persistence.js';
-import { plant, tend, sit, walk } from '../garden/garden.js';
+import { plant, tend, sit, walk, walkPublic } from '../garden/garden.js';
 import type { Presence, Garden } from '../garden/types.js';
 import { trackAction, trackApiCall, generateSessionId, pathToSpace } from '../analytics/tracker.js';
 import { isApprovedGuest, recordGuestIP, getClientIP, getAccessTier } from './auth.js';
@@ -596,12 +596,14 @@ export async function handleApiRequest(
   // Supports: ?garden=name, ?sort=oldest|newest, ?search=keyword, ?limit=N
   if (pathname === '/api/garden' && method === 'GET') {
     try {
+      const tier = await getAccessTier(req);
       const garden = await getGardenByName(queryGarden);
       const sortOrder = url.searchParams.get('sort') || 'newest';
       const searchTerm = url.searchParams.get('search')?.toLowerCase();
       const limit = parseInt(url.searchParams.get('limit') || '0', 10);
 
-      let questions = walk(garden);
+      // Admin sees all (including pending), others see only approved
+      let questions = tier === 'admin' ? walk(garden) : walkPublic(garden);
 
       // Filter by search term if provided
       if (searchTerm) {
@@ -649,6 +651,8 @@ export async function handleApiRequest(
   // Supports: ?sort=oldest|newest for growth order
   if (pathname.startsWith('/api/garden/question/') && method === 'GET') {
     try {
+      const tier = await getAccessTier(req);
+      const isAdmin = tier === 'admin';
       const questionId = pathname.split('/').pop();
       const sortOrder = url.searchParams.get('sort') || 'oldest'; // Default to oldest for reading
       const garden = await getGardenByName(queryGarden);
@@ -659,8 +663,17 @@ export async function handleApiRequest(
         return true;
       }
 
+      // Non-admin can't see unapproved questions
+      if (!isAdmin && !question.seed.approved) {
+        sendError(res, 'Question not found', 404);
+        return true;
+      }
+
+      // Filter growth - non-admin only sees approved growth
+      const visibleGrowth = isAdmin ? question.growth : question.growth.filter((g) => g.approved);
+
       // Sort growth
-      const sortedGrowth = [...question.growth].sort((a, b) => {
+      const sortedGrowth = [...visibleGrowth].sort((a, b) => {
         const dateA = new Date(a.tendedAt).getTime();
         const dateB = new Date(b.tendedAt).getTime();
         return sortOrder === 'oldest' ? dateA - dateB : dateB - dateA;
@@ -844,8 +857,13 @@ export async function handleApiRequest(
         return true;
       }
 
+      // Get email from cookie for tracking (prevents duplicate sits from same human)
+      const cookies = req.headers.cookie || '';
+      const emailMatch = cookies.match(/between_guest=([^;]+)/);
+      const trackedEmail = emailMatch ? emailMatch[1] : undefined;
+
       let garden = await getGardenByName(gardenName);
-      garden = sit(garden, questionId);
+      garden = sit(garden, questionId, trackedEmail);
       await saveGarden(garden);
 
       // Analytics: Track sit action
