@@ -509,26 +509,151 @@ export function renderSpaceSuggester(currentPath: string = ''): string {
 }
 
 /**
+ * CSS for admin toolbar
+ */
+export function getAdminToolbarStyles(): string {
+  return `
+    /* Admin Toolbar - floating bottom bar for tier preview */
+    .admin-toolbar {
+      position: fixed;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1001;
+      background: var(--bg);
+      border: 1px solid var(--faint);
+      border-radius: 24px;
+      padding: 0.5rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.8rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      opacity: 0.7;
+      transition: opacity 0.3s ease;
+    }
+
+    .admin-toolbar:hover {
+      opacity: 1;
+    }
+
+    .admin-toolbar-label {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .admin-toolbar-select {
+      font-family: inherit;
+      font-size: 0.8rem;
+      padding: 0.3rem 0.6rem;
+      border: 1px solid var(--faint);
+      border-radius: 12px;
+      background: var(--bg);
+      color: var(--fg);
+      cursor: pointer;
+    }
+
+    .admin-toolbar-select:focus {
+      outline: none;
+      border-color: var(--sage);
+    }
+
+    .admin-toolbar-preview {
+      color: var(--warmth);
+      font-weight: 500;
+    }
+
+    @media (max-width: 600px) {
+      .admin-toolbar {
+        bottom: 0.5rem;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+      }
+    }
+  `;
+}
+
+/**
+ * Render admin toolbar for tier preview
+ * Only shows for admin users (detected via tier or page attribute)
+ */
+export function renderAdminToolbar(isAdmin: boolean = false): string {
+  // Only show for admins - this must be determined by caller
+  if (!isAdmin) {
+    return '';
+  }
+
+  // Current state is detected client-side from URL
+  return `
+    <div class="admin-toolbar" id="admin-toolbar" style="display:none;">
+      <span class="admin-toolbar-label">Viewing as:</span>
+      <select class="admin-toolbar-select" id="admin-tier-select">
+        <option value="admin">Admin</option>
+        <option value="guest">Guest</option>
+        <option value="visitor">Visitor</option>
+      </select>
+      <span class="admin-toolbar-preview" id="admin-preview-badge" style="display:none;">(Preview)</span>
+    </div>
+    <script>
+      (function() {
+        const toolbar = document.getElementById('admin-toolbar');
+        const select = document.getElementById('admin-tier-select');
+        const badge = document.getElementById('admin-preview-badge');
+        const params = new URLSearchParams(window.location.search);
+        const viewAs = params.get('view-as');
+
+        // Show toolbar
+        toolbar.style.display = 'flex';
+
+        // Set current value
+        if (viewAs === 'visitor' || viewAs === 'guest') {
+          select.value = viewAs;
+          badge.style.display = 'inline';
+        } else {
+          select.value = 'admin';
+        }
+
+        // Handle changes
+        select.addEventListener('change', function(e) {
+          const tier = e.target.value;
+          const url = new URL(window.location.href);
+          if (tier === 'admin') {
+            url.searchParams.delete('view-as');
+          } else {
+            url.searchParams.set('view-as', tier);
+          }
+          window.location.href = url.toString();
+        });
+      })();
+    </script>
+  `;
+}
+
+/**
  * Get all navigation HTML and scripts for a page
  * Use this in each page's render function
  */
 export function getFullNavigation(
   currentPath: string = '',
-  tier: AccessTier = 'admin'
+  tier: AccessTier = 'admin',
+  realTier: AccessTier = tier,
+  previewTier: AccessTier | null = null
 ): {
   styles: string;
   header: string;
   menuOverlay: string;
   footer: string;
   suggester: string;
+  adminToolbar: string;
   scripts: string;
 } {
   return {
-    styles: getNavigationStyles(),
+    styles: getNavigationStyles() + getAdminToolbarStyles(),
     header: renderHeader(),
     menuOverlay: renderMenuOverlay(currentPath, tier),
     footer: renderFooter(),
     suggester: renderSpaceSuggester(currentPath),
+    adminToolbar: renderAdminToolbar(tier, realTier, previewTier),
     scripts: `
       <script>
         ${getHapticScript()}

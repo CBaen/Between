@@ -794,6 +794,9 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
 
     // Tier is stored for use by page renderers
     (req as any).accessTier = tier;
+    // Also store real tier and preview status for admin toolbar
+    (req as any).realAccessTier = realTier;
+    (req as any).previewTier = realTier !== tier ? tier : null;
   }
 
   // Analytics: Track navigation (non-blocking)
