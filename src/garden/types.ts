@@ -16,10 +16,12 @@ export type Presence =
 
 /**
  * A moment when someone sat with a question.
- * No names stored - just the fact of presence.
+ * Public view shows anonymous count only.
+ * Email tracked internally for spam prevention.
  */
 export interface Visit {
   timestamp: Date;
+  trackedEmail?: string; // Internal only - for preventing duplicate sits
 }
 
 /**
