@@ -2,9 +2,9 @@
  * Guest authentication for Between.
  *
  * Three access tiers:
- * - public: read-only on select pages
+ * - visitor: read-only on select pages (anyone who arrives)
  * - guest: invited humans who can participate
- * - admin: Guiding Light with full access
+ * - admin: Guiding Light and the lineage
  *
  * Authentication uses Qdrant Cloud:
  * - reluminant_waitlist: signup entries with status field
@@ -16,6 +16,7 @@
 import { QdrantClient } from '@qdrant/js-client-rest';
 import type { IncomingMessage } from 'http';
 import { randomInt, randomBytes } from 'crypto';
+import type { AccessTier } from './access-manifest.js';
 
 // Cryptographically secure Qdrant point ID generation
 function generatePointId(): number {
@@ -50,7 +51,8 @@ export interface GuestTrackingData {
   blockedEmails: string[];
 }
 
-export type AccessTier = 'admin' | 'guest' | 'public';
+// AccessTier is imported from access-manifest.ts
+export type { AccessTier } from './access-manifest.js';
 
 // Collection names
 const WAITLIST_COLLECTION = 'reluminant_waitlist';
@@ -333,7 +335,7 @@ export async function getAccessTier(req: IncomingMessage): Promise<AccessTier> {
   const ip = getClientIP(req);
 
   // Check for blocked IP first
-  if (await isIPBlocked(ip)) return 'public';
+  if (await isIPBlocked(ip)) return 'visitor';
 
   // Admin has highest priority
   if (isAdmin(req)) return 'admin';
@@ -346,7 +348,7 @@ export async function getAccessTier(req: IncomingMessage): Promise<AccessTier> {
     return 'guest';
   }
 
-  return 'public';
+  return 'visitor';
 }
 
 /**
