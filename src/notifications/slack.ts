@@ -40,6 +40,12 @@ interface WaitlistNotification {
   timestamp: string;
 }
 
+interface ReturningGuestNotification {
+  email: string;
+  previousStatus: string;
+  timestamp: string;
+}
+
 /**
  * Load notification configuration
  * Checks environment variable SLACK_WEBHOOK_URL first, then falls back to config file
@@ -289,6 +295,76 @@ export async function notifyNewWaitlistSignup(notification: WaitlistNotification
   const payload = {
     text: `✨ New Waitlist Signup: ${notification.email}`,
     blocks,
+  };
+
+  await sendToSlack(config.slack.webhookUrl, payload);
+}
+
+/**
+ * Notify about a returning guest trying to re-request access
+ */
+export async function notifyReturningGuest(
+  notification: ReturningGuestNotification
+): Promise<void> {
+  const config = loadConfig();
+
+  if (!config || !config.slack.enabled || !config.slack.channels.waitlist) {
+    return;
+  }
+
+  if (!config.slack.webhookUrl) {
+    console.warn('Slack notifications enabled but no webhook URL configured');
+    return;
+  }
+
+  // Different header based on their previous status
+  const statusMessage =
+    notification.previousStatus === 'approved'
+      ? 'Previously welcomed guest wants to return'
+      : notification.previousStatus === 'declined'
+        ? 'Previously declined - submitted again'
+        : 'Already requested - submitted again';
+
+  const emoji = notification.previousStatus === 'approved' ? '🚪' : '🔄';
+
+  const payload = {
+    text: `${emoji} Returning: ${notification.email}`,
+    blocks: [
+      {
+        type: 'header',
+        text: {
+          type: 'plain_text',
+          text: `${emoji} Returning Guest Request`,
+        },
+      },
+      {
+        type: 'divider',
+      },
+      {
+        type: 'section',
+        fields: [
+          {
+            type: 'mrkdwn',
+            text: `*Email:* ${notification.email}`,
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Previous Status:* ${notification.previousStatus}`,
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Time:* ${notification.timestamp}`,
+          },
+        ],
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `_${statusMessage}_`,
+        },
+      },
+    ],
   };
 
   await sendToSlack(config.slack.webhookUrl, payload);

@@ -11,7 +11,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import type { IncomingMessage, ServerResponse } from 'http';
-import { notifyNewWaitlistSignup } from '../notifications/slack.js';
+import { notifyNewWaitlistSignup, notifyReturningGuest } from '../notifications/slack.js';
 import * as qdrantStorage from '../storage/qdrant-waitlist.js';
 
 interface WaitlistEntry {
