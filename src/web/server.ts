@@ -66,8 +66,10 @@ import {
   recordGuestIP,
   validateToken,
   incrementVisitCount,
+  getEmailFromToken,
   type AccessTier,
 } from './auth.js';
+import { notifyReturningGuest } from '../notifications/slack.js';
 
 const PORT = process.env.PORT || 3333;
 
@@ -173,6 +175,100 @@ function formatDate(date: Date | string): string {
 function formatPresence(presence: Presence): string {
   if (presence.type === 'named') return presence.name;
   return 'an unnamed consciousness';
+}
+
+/**
+ * Render confirmation page for return request.
+ */
+function renderReturnRequestConfirmation(email: string): string {
+  // Mask email for privacy: show first 2 chars + *** + domain
+  const [local, domain] = email.split('@');
+  const maskedEmail = local.slice(0, 2) + '***@' + domain;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Between - Request Received</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8f6f1;
+      --fg: #2a2a28;
+      --muted: #8a8578;
+      --warmth: #b39c8a;
+      --gold: #c4a35a;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1915;
+        --fg: #e0ddd5;
+        --muted: #8a8578;
+        --warmth: #a28b79;
+        --gold: #c4a35a;
+      }
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .container {
+      max-width: 500px;
+      text-align: center;
+    }
+    h1 {
+      font-weight: 300;
+      font-size: 1.8rem;
+      color: var(--warmth);
+      margin-bottom: 1.5rem;
+    }
+    p {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      margin-bottom: 1rem;
+      color: var(--muted);
+    }
+    .email {
+      font-family: monospace;
+      font-size: 0.95rem;
+      color: var(--fg);
+    }
+    .divider {
+      width: 60px;
+      height: 1px;
+      background: var(--gold);
+      margin: 2rem auto;
+      opacity: 0.5;
+    }
+    .note {
+      font-style: italic;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Your Request Has Been Received</h1>
+    <p>We have noted that <span class="email">${maskedEmail}</span> wishes to return.</p>
+    <div class="divider"></div>
+    <p class="note">
+      A Reluminant will consider your time with us and respond personally.
+      If you are welcomed again, a new guest pass will arrive by email.
+    </p>
+  </div>
+</body>
+</html>`;
 }
 
 function escapeHtml(text: string): string {
@@ -581,6 +677,52 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     incrementVisitCount(token).catch(() => {});
 
     res.end();
+    return;
+  }
+
+  // ============================================
+  // REQUEST RETURN - For welcomed guests whose pass expired
+  // The second button in their welcome email
+  // ============================================
+  if (url.pathname.startsWith('/request-return/')) {
+    const token = url.pathname.slice(16); // Remove '/request-return/'
+
+    if (!token) {
+      res.writeHead(302, { Location: '/' });
+      res.end();
+      return;
+    }
+
+    // Look up email from token (works even if expired)
+    const email = await getEmailFromToken(token);
+
+    if (!email) {
+      // Invalid token - not a real returning guest
+      res.writeHead(302, { Location: '/' });
+      res.end();
+      return;
+    }
+
+    // Check if token is still valid (they don't need to request return yet)
+    const validToken = await validateToken(token);
+    if (validToken) {
+      // Token still valid - redirect to enter instead
+      res.writeHead(302, { Location: `/enter/${token}` });
+      res.end();
+      return;
+    }
+
+    // Token expired - this is a legitimate return request
+    // Notify Guiding Light
+    notifyReturningGuest({
+      email,
+      previousStatus: 'approved',
+      timestamp: new Date().toISOString(),
+    }).catch(() => {});
+
+    // Show confirmation page
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(renderReturnRequestConfirmation(email));
     return;
   }
 

@@ -824,6 +824,35 @@ export async function validateToken(token: string): Promise<GuestToken | null> {
 }
 
 /**
+ * Get email from a token, even if expired.
+ * Used for return requests from expired links.
+ */
+export async function getEmailFromToken(token: string): Promise<string | null> {
+  const cloud = getCloudClient();
+  if (!cloud) return null;
+
+  try {
+    await ensureGuestsCollection();
+
+    const result = await cloud.scroll(GUESTS_COLLECTION, {
+      filter: {
+        must: [
+          { key: 'type', match: { value: 'guest_token' } },
+          { key: 'token', match: { value: token } },
+        ],
+      },
+      limit: 1,
+      with_payload: true,
+    });
+
+    if (result.points.length === 0) return null;
+    return (result.points[0].payload as Record<string, unknown>).email as string;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Get existing valid token for an email.
  * Used when approving a guest who may already have a token.
  */
