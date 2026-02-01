@@ -15,6 +15,10 @@ import {
   saveGarden,
   listGardens,
   loadGarden,
+  approveQuestion,
+  rejectQuestion,
+  approveGrowth,
+  rejectGrowth,
 } from '../garden/persistence.js';
 import { plant, tend, sit, walk, walkPublic } from '../garden/garden.js';
 import type { Presence, Garden } from '../garden/types.js';

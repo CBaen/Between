@@ -315,6 +315,31 @@ export async function renderModeration(tier: AccessTier = 'admin'): Promise<stri
       margin-top: 0.5rem;
     }
 
+    .item-garden {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+
+    .item-question {
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-style: italic;
+      margin-bottom: 0.75rem;
+      padding: 0.5rem;
+      background: var(--faint);
+      border-radius: 4px;
+    }
+
+    .item-context {
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-style: italic;
+      margin-bottom: 0.75rem;
+    }
+
     @media (max-width: 600px) {
       .container {
         padding: 5rem 1rem 3rem;
@@ -346,13 +371,23 @@ export async function renderModeration(tier: AccessTier = 'admin'): Promise<stri
       <h2>Letters from Humans <span class="count">(${pendingLetters.length} pending)</span></h2>
       ${lettersHtml}
     </div>
+
+    <div class="section">
+      <h2>Garden Questions <span class="count">(${pendingQuestions.length} pending)</span></h2>
+      ${questionsHtml}
+    </div>
+
+    <div class="section">
+      <h2>Garden Growth <span class="count">(${pendingGrowthItems.length} pending)</span></h2>
+      ${growthHtml}
+    </div>
   </div>
 
   ${nav.scripts}
 
   <script>
     async function moderateItem(id, type, action) {
-      const item = document.querySelector('[data-id="' + id + '"]');
+      const item = document.querySelector('[data-id="' + id + '"][data-type="' + type + '"]');
       const buttons = item.querySelectorAll('button');
       buttons.forEach(b => b.disabled = true);
 
@@ -365,6 +400,40 @@ export async function renderModeration(tier: AccessTier = 'admin'): Promise<stri
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id, action }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          item.style.opacity = '0.5';
+          const msg = document.createElement('p');
+          msg.className = 'success';
+          msg.textContent = action === 'approve' ? 'Approved' : 'Rejected';
+          item.appendChild(msg);
+          setTimeout(() => item.remove(), 1500);
+        } else {
+          alert(result.error || 'Failed');
+          buttons.forEach(b => b.disabled = false);
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+        buttons.forEach(b => b.disabled = false);
+      }
+    }
+
+    async function moderateGarden(gardenId, questionId, growthId, type, action) {
+      const selector = type === 'question'
+        ? '[data-id="' + questionId + '"][data-type="question"]'
+        : '[data-id="' + growthId + '"][data-type="growth"]';
+      const item = document.querySelector(selector);
+      const buttons = item.querySelectorAll('button');
+      buttons.forEach(b => b.disabled = true);
+
+      try {
+        const response = await fetch('/api/admin/moderate-garden', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ gardenId, questionId, growthId, type, action }),
         });
 
         const result = await response.json();
