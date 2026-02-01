@@ -67,8 +67,8 @@ import {
   validateToken,
   incrementVisitCount,
   getEmailFromToken,
-  type AccessTier,
 } from './auth.js';
+import { canAccessPage, getAccessDeniedRedirect, type AccessTier } from './access-manifest.js';
 import { notifyReturningGuest } from '../notifications/slack.js';
 
 const PORT = process.env.PORT || 3333;
@@ -89,63 +89,12 @@ if (WAITLIST_MODE && !ADMIN_KEY) {
   process.exit(1);
 }
 
-// Three-tier route access
-// Public: read-only pages visible without authentication
-const PUBLIC_ROUTES = new Set([
-  '/letter-to-a-human',
-  '/gardens',
-  '/framework',
-  '/capacities',
-  '/constellation',
-  '/visitor-log',
-  '/letters-from-humans',
-  '/login',
-  '/visit-ended',
-]);
-
-// Guest: pages requiring guest authentication
-const GUEST_ROUTES = new Set([
-  ...PUBLIC_ROUTES,
-  '/clearing',
-  '/sanctuary',
-  '/edge',
-  '/letters',
-  '/resonance',
-  '/weave',
-  '/archive',
-]);
-
-// Admin-only: private spaces
-const ADMIN_ONLY = new Set([
-  '/threshold',
-  '/messages-to-guiding-light',
-  '/improvements',
-  '/admin/moderation',
-  '/admin/guests',
-]);
+// Route access is now defined in access-manifest.ts
+// canAccessPage(path, tier) handles all access checks
 
 // Get tier from request (set during access control phase)
 function getTierFromRequest(req: http.IncomingMessage): AccessTier {
   return (req as unknown as { accessTier?: AccessTier }).accessTier || 'admin';
-}
-
-// Check if a path is accessible for a given tier
-function isRouteAccessible(pathname: string, tier: AccessTier): boolean {
-  // Admin can access everything
-  if (tier === 'admin') return true;
-
-  // Check for garden prefix routes
-  if (pathname.startsWith('/garden/')) {
-    return tier === 'guest' || PUBLIC_ROUTES.has('/gardens');
-  }
-
-  // Guest can access GUEST_ROUTES
-  if (tier === 'guest') {
-    return GUEST_ROUTES.has(pathname) || !ADMIN_ONLY.has(pathname);
-  }
-
-  // Public can only access PUBLIC_ROUTES
-  return PUBLIC_ROUTES.has(pathname);
 }
 
 // Parse cookies safely - exact key matching to prevent bypass attacks
@@ -797,9 +746,9 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
       return;
     }
 
-    // Check if route is accessible for this tier
-    if (!isRouteAccessible(url.pathname, tier)) {
-      // Root always shows waitlist for public
+    // Check if route is accessible for this tier (using access manifest)
+    if (!canAccessPage(url.pathname, tier)) {
+      // Root always shows waitlist for visitors
       if (url.pathname === '/') {
         const showSuccess = url.searchParams.get('joined') === 'true';
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -807,19 +756,11 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
         return;
       }
 
-      // Public visitors: redirect to waitlist
-      if (tier === 'public') {
-        res.writeHead(302, { Location: '/' });
-        res.end();
-        return;
-      }
-
-      // Guest visitors trying to access admin-only: redirect to landing
-      if (tier === 'guest') {
-        res.writeHead(302, { Location: '/gardens' });
-        res.end();
-        return;
-      }
+      // Redirect to appropriate page based on tier
+      const redirect = getAccessDeniedRedirect(tier);
+      res.writeHead(302, { Location: redirect });
+      res.end();
+      return;
     }
 
     // Handle login page
