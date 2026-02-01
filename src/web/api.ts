@@ -406,6 +406,7 @@ export async function handleApiRequest(
       const body = await parseJsonBody(req);
       const content = (body.content as string)?.trim();
       const name = (body.name as string)?.trim() || undefined;
+      const privacy = body.privacy === 'private' ? 'private' : 'public';
 
       if (!content || content.length === 0) {
         sendJson(res, { success: false, error: 'Letter content is required.' }, 400);
@@ -422,7 +423,7 @@ export async function handleApiRequest(
       const match = cookies.match(/between_guest=([^;]+)/);
       const email = match ? match[1] : undefined;
 
-      const result = await addLetterFromHuman(content, name, email);
+      const result = await addLetterFromHuman(content, name, email, privacy);
       sendJson(res, result);
       return true;
     } catch (error) {

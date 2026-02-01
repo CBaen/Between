@@ -603,6 +603,7 @@ export async function renderLettersFromHumans(tier: AccessTier = 'admin'): Promi
               body: JSON.stringify({
                 name: formData.get('name'),
                 content: formData.get('content'),
+                privacy: formData.get('privacy') || 'public',
               }),
             });
 
