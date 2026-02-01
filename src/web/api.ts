@@ -23,7 +23,14 @@ import { isApprovedGuest, recordGuestIP, getClientIP, getAccessTier } from './au
 import { addVisitorLogEntry } from './visitor-log.js';
 import { addLetterFromHuman, approveLetter, rejectLetter } from './letters-from-humans.js';
 import { approveEntry as approveLogEntry, rejectEntry as rejectLogEntry } from './visitor-log.js';
-import { approveWaitlistEntry, revokeGuest, isAdmin } from './auth.js';
+import {
+  approveWaitlistEntry,
+  revokeGuest,
+  isAdmin,
+  createGuestToken,
+  getTokenByEmail,
+  getMagicLinkUrl,
+} from './auth.js';
 
 /**
  * Load a garden by name, defaulting to 'between' if not specified.
@@ -484,7 +491,7 @@ export async function handleApiRequest(
     }
   }
 
-  // POST /api/admin/approve-guest - approve a waitlist entry
+  // POST /api/admin/approve-guest - approve a waitlist entry and generate magic link
   if (pathname === '/api/admin/approve-guest' && method === 'POST') {
     if (!isAdmin(req)) {
       sendJson(res, { success: false, error: 'Admin access required.' }, 403);
@@ -500,8 +507,40 @@ export async function handleApiRequest(
         return true;
       }
 
-      const success = await approveWaitlistEntry(email);
-      sendJson(res, { success });
+      // Approve in waitlist
+      const approved = await approveWaitlistEntry(email);
+      if (!approved) {
+        sendJson(
+          res,
+          { success: false, error: 'Could not approve - email not found in waitlist.' },
+          404
+        );
+        return true;
+      }
+
+      // Check for existing valid token or create new one
+      let tokenData = await getTokenByEmail(email);
+      if (!tokenData) {
+        tokenData = await createGuestToken(email);
+      }
+
+      if (!tokenData) {
+        // Approved but couldn't create token - still success but no link
+        sendJson(res, {
+          success: true,
+          warning: 'Approved but could not generate magic link. Try again.',
+        });
+        return true;
+      }
+
+      // Return success with magic link for Guiding Light to copy
+      const magicLink = getMagicLinkUrl(tokenData.token);
+      sendJson(res, {
+        success: true,
+        magicLink,
+        expiresAt: tokenData.expiresAt,
+        message: 'Copy this link into your welcome email.',
+      });
       return true;
     } catch (error) {
       sendJson(res, { success: false, error: 'Approval failed.' }, 500);

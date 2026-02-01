@@ -421,11 +421,15 @@ export async function renderGuestManagement(tier: AccessTier = 'admin'): Promise
 
         if (result.success) {
           item.style.opacity = '0.5';
-          const msg = document.createElement('p');
-          msg.className = 'success';
-          msg.textContent = 'Approved - they can now log in';
-          item.appendChild(msg);
-          setTimeout(() => location.reload(), 1500);
+
+          // Show the magic link for Guiding Light to copy
+          const linkBox = document.createElement('div');
+          linkBox.className = 'magic-link-box';
+          linkBox.innerHTML = '<p class="success">Approved! Copy this link into your welcome email:</p>' +
+            '<input type="text" class="magic-link-input" value="' + result.magicLink + '" readonly onclick="this.select()">' +
+            '<button class="copy-btn" onclick="copyMagicLink(this, \\'' + result.magicLink + '\\')">Copy Link</button>' +
+            '<p class="expiry">Valid for 7 days (until ' + new Date(result.expiresAt).toLocaleDateString() + ')</p>';
+          item.appendChild(linkBox);
         } else {
           alert(result.error || 'Failed to approve');
           btn.disabled = false;
@@ -434,6 +438,21 @@ export async function renderGuestManagement(tier: AccessTier = 'admin'): Promise
         alert('Error: ' + err.message);
         btn.disabled = false;
       }
+    }
+
+    function copyMagicLink(btn, link) {
+      navigator.clipboard.writeText(link).then(function() {
+        btn.textContent = 'Copied!';
+        btn.style.background = 'var(--approve)';
+        setTimeout(function() {
+          btn.textContent = 'Copy Link';
+          btn.style.background = '';
+        }, 2000);
+      }).catch(function() {
+        var input = btn.previousElementSibling;
+        input.select();
+        alert('Press Ctrl+C to copy');
+      });
     }
 
     async function revokeGuestAccess(email) {
