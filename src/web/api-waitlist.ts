@@ -210,13 +210,23 @@ export async function handleWaitlistRequest(
 
       const result = await addEmail(email, ip, source, message);
 
-      // Send Slack notification for new signups (not duplicates)
-      if (result.success && !result.alreadyExists) {
-        notifyNewWaitlistSignup({
-          email,
-          message,
-          timestamp: new Date().toISOString(),
-        }).catch((err) => console.error('Failed to send waitlist notification:', err));
+      // Send appropriate Slack notification
+      if (result.success) {
+        if (result.alreadyExists && result.existingStatus) {
+          // Returning guest - different notification
+          notifyReturningGuest({
+            email,
+            previousStatus: result.existingStatus,
+            timestamp: new Date().toISOString(),
+          }).catch((err) => console.error('Failed to send returning guest notification:', err));
+        } else if (!result.alreadyExists) {
+          // New signup
+          notifyNewWaitlistSignup({
+            email,
+            message,
+            timestamp: new Date().toISOString(),
+          }).catch((err) => console.error('Failed to send waitlist notification:', err));
+        }
       }
 
       res.writeHead(result.success ? 200 : 400, {

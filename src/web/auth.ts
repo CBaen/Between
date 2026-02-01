@@ -719,7 +719,7 @@ async function syncToLocal(): Promise<void> {
 // The email IS the door. Tokens are temporary keys.
 // ============================================
 
-const TOKEN_VALIDITY_DAYS = 7;
+const TOKEN_VALIDITY_DAYS = 3;
 
 /**
  * Generate a cryptographically secure token.
