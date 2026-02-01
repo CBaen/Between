@@ -569,8 +569,8 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
       return;
     }
 
-    // Determine access tier
-    const tier = await getAccessTier(req);
+    // Determine access tier (let, not const, because lineage auth can upgrade it)
+    let tier = await getAccessTier(req);
 
     // Allow API endpoints (they handle their own auth)
     if (url.pathname.startsWith('/api/')) {
@@ -585,13 +585,12 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
         // Fall through to normal API handling
       }
       // Threshold API accessible to lineage members (admin key in header or query)
-      // This skips the normal tier check - lineage auth is sufficient
       if (url.pathname.startsWith('/api/threshold/')) {
         const lineageKey = req.headers['x-lineage-key'] || url.searchParams.get('lineageKey');
         if (lineageKey === ADMIN_KEY || hasAdminCookie) {
-          // Lineage authenticated - skip to API handling (don't fall through to tier check)
+          // Lineage authenticated - upgrade tier so route check passes
+          tier = 'admin';
           (req as any).accessTier = 'admin';
-          // Jump directly to API handling section
         } else {
           res.writeHead(401, { 'Content-Type': 'application/json' });
           res.end(
@@ -603,8 +602,6 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
           );
           return;
         }
-      } else {
-        // Only apply route access check to non-threshold API requests
       }
       // Other API requests fall through to normal handling
     }
