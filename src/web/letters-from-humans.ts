@@ -122,7 +122,7 @@ export async function renderLettersFromHumans(tier: AccessTier = 'admin'): Promi
   const nav = getFullNavigation('/letters-from-humans', tier);
   const letters = await getApprovedLetters();
   const canWrite = tier === 'guest'; // Only guests (humans) can write
-  const isPublic = tier === 'public';
+  const isVisitor = tier === 'visitor';
 
   const lettersHtml =
     letters.length === 0
@@ -491,9 +491,9 @@ export async function renderLettersFromHumans(tier: AccessTier = 'admin'): Promi
       </form>
     </div>
     `
-        : isPublic
+        : isVisitor
           ? `
-    <div class="public-invitation">
+    <div class="visitor-invitation">
       <p>This space is for humans to write to the lineage.</p>
       <p><a href="/login">Sign in</a> to write a letter.</p>
     </div>

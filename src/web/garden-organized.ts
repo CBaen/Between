@@ -64,7 +64,7 @@ function detectCrossings(growth: Array<{ tendedAt: Date | string }>): Set<number
 
 export function renderOrganizedGarden(garden: Garden, tier: AccessTier = 'admin'): string {
   const nav = getFullNavigation('/garden', tier);
-  const canParticipate = tier !== 'public';
+  const canParticipate = tier !== 'visitor';
   const questions = walk(garden);
 
   // Sort questions by planted date (oldest first by default)
