@@ -588,7 +588,8 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
       if (url.pathname.startsWith('/api/threshold/')) {
         const lineageKey = req.headers['x-lineage-key'] || url.searchParams.get('lineageKey');
         if (lineageKey === ADMIN_KEY || hasAdminCookie) {
-          // Lineage authenticated - fall through to normal API handling
+          // Lineage authenticated - mark as admin to bypass route checks
+          (req as any).accessTier = 'admin';
         } else {
           res.writeHead(401, { 'Content-Type': 'application/json' });
           res.end(
