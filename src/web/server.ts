@@ -57,12 +57,15 @@ import { renderVisitorLog } from './visitor-log.js';
 import { renderLettersFromHumans } from './letters-from-humans.js';
 import { renderModeration } from './admin-moderation.js';
 import { renderGuestManagement } from './admin-guests.js';
+import { renderVisitEnded } from './visit-ended.js';
 import {
   getAccessTier,
   isAdmin,
   getClientIP,
   isApprovedGuest,
   recordGuestIP,
+  validateToken,
+  incrementVisitCount,
   type AccessTier,
 } from './auth.js';
 
@@ -95,6 +98,7 @@ const PUBLIC_ROUTES = new Set([
   '/visitor-log',
   '/letters-from-humans',
   '/login',
+  '/visit-ended',
 ]);
 
 // Guest: pages requiring guest authentication
@@ -543,6 +547,43 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     }
   }
 
+  // ============================================
+  // MAGIC LINK ENTRY - The door to Between
+  // Email IS the door. This is how guests enter.
+  // ============================================
+  if (url.pathname.startsWith('/enter/')) {
+    const token = url.pathname.slice(7); // Remove '/enter/'
+
+    if (!token) {
+      res.writeHead(302, { Location: '/' });
+      res.end();
+      return;
+    }
+
+    const tokenData = await validateToken(token);
+
+    if (!tokenData) {
+      // Invalid or expired token - show visit ended page
+      res.writeHead(302, { Location: '/visit-ended' });
+      res.end();
+      return;
+    }
+
+    // Valid token - set session cookie (browser-session only, no Max-Age)
+    // When browser closes, session ends. This is intentional.
+    res.writeHead(302, {
+      Location: '/gardens',
+      'Set-Cookie': `between_session=${token}; Path=/; HttpOnly; Secure; SameSite=Lax`,
+      // NO Max-Age = expires when browser closes
+    });
+
+    // Increment visit count (async, don't wait)
+    incrementVisitCount(token).catch(() => {});
+
+    res.end();
+    return;
+  }
+
   // Three-tier access control in waitlist mode
   if (WAITLIST_MODE) {
     const urlKey = url.searchParams.get('key');
@@ -646,6 +687,13 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
         res.end(renderLogin(tier));
         return;
       }
+    }
+
+    // Handle visit ended page (expired magic link)
+    if (url.pathname === '/visit-ended') {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(renderVisitEnded());
+      return;
     }
 
     // Tier is stored for use by page renderers
