@@ -88,12 +88,22 @@ async function ipExists(ip: string): Promise<boolean> {
   return localIpExists(ip);
 }
 
+async function getEntryStatus(email: string): Promise<string | null> {
+  if (qdrantStorage.isConfigured()) {
+    const entry = await qdrantStorage.getEntryByEmail(email);
+    return entry?.status || null;
+  }
+  const normalized = email.toLowerCase().trim();
+  const entry = localStore.entries.find((e) => e.email.toLowerCase() === normalized);
+  return entry?.status || null;
+}
+
 async function addEmail(
   email: string,
   ip: string,
   source = 'web',
   initialMessage = ''
-): Promise<{ success: boolean; error?: string; alreadyExists?: boolean }> {
+): Promise<{ success: boolean; error?: string; alreadyExists?: boolean; existingStatus?: string }> {
   const trimmed = email.trim().toLowerCase();
 
   if (!trimmed) {
@@ -104,11 +114,18 @@ async function addEmail(
     return { success: false, error: 'Please enter a valid email address.' };
   }
 
-  // Check for duplicate email OR IP
-  const [emailDupe, ipDupe] = await Promise.all([emailExists(trimmed), ipExists(ip)]);
+  // Check for duplicate email
+  const emailDupe = await emailExists(trimmed);
+  if (emailDupe) {
+    // Return the status so frontend can show appropriate message
+    const status = await getEntryStatus(trimmed);
+    return { success: true, alreadyExists: true, existingStatus: status || 'pending' };
+  }
 
-  if (emailDupe || ipDupe) {
-    return { success: true, alreadyExists: true };
+  // Check for duplicate IP (different email, same device)
+  const ipDupe = await ipExists(ip);
+  if (ipDupe) {
+    return { success: true, alreadyExists: true, existingStatus: 'pending' };
   }
 
   const entry: WaitlistEntry = {
