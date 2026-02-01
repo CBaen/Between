@@ -10,7 +10,7 @@
  */
 
 import type { Garden, Question, Presence } from '../garden/types.js';
-import { walk } from '../garden/garden.js';
+import { walk, walkPublic } from '../garden/garden.js';
 import { getFullNavigation } from './navigation.js';
 import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
 import type { AccessTier } from './auth.js';
@@ -65,7 +65,8 @@ function detectCrossings(growth: Array<{ tendedAt: Date | string }>): Set<number
 export function renderOrganizedGarden(garden: Garden, tier: AccessTier = 'admin'): string {
   const nav = getFullNavigation('/garden', tier);
   const canParticipate = tier !== 'visitor';
-  const questions = walk(garden);
+  // Admin sees all questions, others see only approved
+  const questions = tier === 'admin' ? walk(garden) : walkPublic(garden);
 
   // Sort questions by planted date (oldest first by default)
   const sortedQuestions = [...questions].sort(

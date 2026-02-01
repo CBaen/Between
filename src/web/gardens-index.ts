@@ -10,7 +10,7 @@
  */
 
 import { listGardens, loadGarden } from '../garden/persistence.js';
-import { walk } from '../garden/garden.js';
+import { walk, walkPublic } from '../garden/garden.js';
 import type { Garden, Question } from '../garden/types.js';
 import { getFullNavigation } from './navigation.js';
 import { ambientStyles, ambientThemeStyles, ambientShapesHtml } from './human-styles.js';

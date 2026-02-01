@@ -17,7 +17,7 @@
  */
 
 import type { Garden, Question, Presence } from '../garden/types.js';
-import { walk } from '../garden/garden.js';
+import { walk, walkPublic } from '../garden/garden.js';
 import { getFullNavigation } from './navigation.js';
 import { pulsingAmbientStyles, getPulsingAmbientHtml } from './human-styles.js';
 
