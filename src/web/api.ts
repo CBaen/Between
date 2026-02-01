@@ -20,6 +20,7 @@ import { plant, tend, sit, walk } from '../garden/garden.js';
 import type { Presence, Garden } from '../garden/types.js';
 import { trackAction, trackApiCall, generateSessionId, pathToSpace } from '../analytics/tracker.js';
 import { isApprovedGuest, recordGuestIP, getClientIP, getAccessTier } from './auth.js';
+import { canPerformAction } from './access-manifest.js';
 import { addVisitorLogEntry } from './visitor-log.js';
 import { addLetterFromHuman, approveLetter, rejectLetter } from './letters-from-humans.js';
 import { approveEntry as approveLogEntry, rejectEntry as rejectLogEntry } from './visitor-log.js';
