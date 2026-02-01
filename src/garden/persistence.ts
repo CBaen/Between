@@ -56,6 +56,11 @@ export async function saveGarden(garden: Garden): Promise<void> {
 export async function loadGarden(nameOrId: string): Promise<Garden | null> {
   await ensureGardensDir();
 
+  // Path traversal protection - reject any attempt to escape gardens directory
+  if (nameOrId.includes('..') || nameOrId.includes('/') || nameOrId.includes('\\')) {
+    return null;
+  }
+
   const files = await fs.readdir(GARDENS_DIR);
 
   // Try exact filename match first
