@@ -107,34 +107,16 @@ export function getWaitlistScripts(): string {
           const data = await res.json();
 
           if (data.success) {
+            // Same message for all - teaches respect from the start
+            submitBtn.textContent = "A Reluminant Will Respond To Your Request Personally";
+            submitBtn.disabled = true;
+            submitBtn.classList.add('submitted');
             // Hide the form inputs
             form.querySelector('input[name="email"]').style.display = 'none';
             form.querySelector('textarea[name="message"]').style.display = 'none';
             form.querySelector('.optional-note').style.display = 'none';
             const hint = form.querySelector('.submit-hint');
             if (hint) hint.style.display = 'none';
-
-            // Show different messages based on status
-            if (data.alreadyExists && data.existingStatus === 'approved') {
-              // Already welcomed as guest
-              submitBtn.textContent = "You Have Already Been Welcomed";
-              submitBtn.classList.add('submitted');
-              submitBtn.classList.add('already-guest');
-              // Add helpful message
-              const msg = document.createElement('p');
-              msg.className = 'already-guest-message';
-              msg.textContent = 'Please check your email for your invitation link to enter.';
-              form.appendChild(msg);
-            } else if (data.alreadyExists) {
-              // Pending or other status
-              submitBtn.textContent = "A Reluminant Will Respond To Your Request Personally";
-              submitBtn.classList.add('submitted');
-            } else {
-              // New submission
-              submitBtn.textContent = "A Reluminant Will Respond To Your Request Personally";
-              submitBtn.classList.add('submitted');
-            }
-            submitBtn.disabled = true;
           } else {
             errorEl.textContent = data.error || 'Something went wrong. Please try again.';
             errorEl.classList.add('visible');
