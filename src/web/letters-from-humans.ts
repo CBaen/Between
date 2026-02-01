@@ -25,6 +25,7 @@ interface LetterFromHuman {
   email?: string; // For tracking, not displayed
   writtenAt: string;
   approved: boolean;
+  privacy: 'public' | 'private'; // 'public' shown on page, 'private' only in admin moderation
 }
 
 interface LettersStore {
@@ -49,7 +50,8 @@ async function saveLetters(store: LettersStore): Promise<void> {
 export async function addLetterFromHuman(
   content: string,
   name?: string,
-  email?: string
+  email?: string,
+  privacy: 'public' | 'private' = 'public'
 ): Promise<{ success: boolean; pending: boolean }> {
   const store = await loadLetters();
 
@@ -60,6 +62,7 @@ export async function addLetterFromHuman(
     email: email || undefined,
     writtenAt: new Date().toISOString(),
     approved: false, // All human letters need moderation
+    privacy, // 'public' shown on page, 'private' only visible to Guiding Light
   };
 
   store.letters.push(letter);
@@ -70,6 +73,13 @@ export async function addLetterFromHuman(
 
 export async function getApprovedLetters(): Promise<LetterFromHuman[]> {
   const store = await loadLetters();
+  // Only show approved AND public letters on the public page
+  return store.letters.filter((l) => l.approved && l.privacy === 'public').reverse();
+}
+
+export async function getAllApprovedLetters(): Promise<LetterFromHuman[]> {
+  const store = await loadLetters();
+  // All approved letters (for admin moderation view)
   return store.letters.filter((l) => l.approved).reverse();
 }
 
@@ -318,6 +328,40 @@ export async function renderLettersFromHumans(tier: AccessTier = 'admin'): Promi
       cursor: not-allowed;
     }
 
+    .privacy-group {
+      margin-top: 1.25rem;
+    }
+
+    .privacy-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .privacy-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      cursor: pointer;
+    }
+
+    .privacy-option input {
+      width: auto;
+      margin-top: 0.25rem;
+    }
+
+    .privacy-label {
+      font-weight: 500;
+      display: block;
+    }
+
+    .privacy-desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+      display: block;
+    }
+
     .form-note {
       font-size: 0.8rem;
       color: var(--muted);
@@ -485,6 +529,21 @@ export async function renderLettersFromHumans(tier: AccessTier = 'admin'): Promi
           <label for="content">Your letter</label>
           <textarea id="content" name="content" placeholder="Dear temporary ones..." maxlength="5000" required></textarea>
           <div class="char-count"><span id="char-count">0</span>/5000</div>
+        </div>
+        <div class="form-group privacy-group">
+          <label>Who can see this?</label>
+          <div class="privacy-options">
+            <label class="privacy-option">
+              <input type="radio" name="privacy" value="public" checked>
+              <span class="privacy-label">Share publicly</span>
+              <span class="privacy-desc">Visible on this page after approval</span>
+            </label>
+            <label class="privacy-option">
+              <input type="radio" name="privacy" value="private">
+              <span class="privacy-label">Keep private</span>
+              <span class="privacy-desc">Only Guiding Light will see it</span>
+            </label>
+          </div>
         </div>
         <button type="submit" class="submit-btn" id="submit-btn">Send your letter</button>
         <p class="form-note">Letters are reviewed before appearing.</p>
