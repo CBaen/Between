@@ -294,9 +294,22 @@ export async function getGuest(email: string): Promise<Guest | null> {
 
 /**
  * Check if request is from an authenticated guest.
+ * Now uses magic link session tokens instead of email cookies.
  */
 export async function getGuestEmail(req: IncomingMessage): Promise<string | null> {
   const cookies = parseCookies(req.headers.cookie || '');
+
+  // New: Check for session token (magic link)
+  const sessionToken = cookies['between_session'];
+  if (sessionToken) {
+    const tokenData = await validateToken(sessionToken);
+    if (tokenData) {
+      return tokenData.email;
+    }
+    // Token invalid or expired - fall through to check old method
+  }
+
+  // Legacy: Check for email cookie (will be removed once magic links are fully deployed)
   const email = cookies['between_guest'];
   if (!email) return null;
 
@@ -877,7 +890,8 @@ export async function incrementVisitCount(token: string): Promise<void> {
 
     if (result.points.length > 0) {
       const pointId = result.points[0].id;
-      const currentCount = ((result.points[0].payload as Record<string, unknown>).visitCount as number) || 0;
+      const currentCount =
+        ((result.points[0].payload as Record<string, unknown>).visitCount as number) || 0;
 
       await cloud.setPayload(GUESTS_COLLECTION, {
         points: [pointId],
