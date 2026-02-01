@@ -449,6 +449,34 @@ export function renderWaitlistLanding(showSuccess = false): string {
       letter-spacing: 0.04em;
     }
 
+    /* Entrance guidance for all visitors */
+    .entrance-guidance {
+      max-width: 480px;
+      margin: 0 auto 2.5rem;
+      text-align: center;
+      padding: 1.5rem 2rem;
+      background: var(--faint);
+      border-radius: 8px;
+      border: 1px solid var(--glass-border);
+      opacity: 0;
+      animation: fadeUp 1.2s ease 2s forwards;
+    }
+
+    .guidance-personal {
+      font-size: 1.1rem;
+      font-style: italic;
+      color: var(--sage);
+      margin-bottom: 1rem;
+      font-weight: 500;
+    }
+
+    .guidance-returning {
+      font-size: 0.95rem;
+      color: var(--muted);
+      line-height: 1.7;
+      font-style: italic;
+    }
+
     /* Main content lines */
     .message {
       margin-bottom: 1.5rem;
