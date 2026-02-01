@@ -696,6 +696,13 @@ export async function handleApiRequest(
 
   // POST /api/garden/plant - plant a question
   if (pathname === '/api/garden/plant' && method === 'POST') {
+    // Check access tier - guests and above can plant questions
+    const tier = await getAccessTier(req);
+    if (!canPerformAction('plant-question', tier)) {
+      sendJson(res, { error: 'Access denied. Guest access required to plant questions.' }, 403);
+      return true;
+    }
+
     try {
       const body = await parseJsonBody(req);
       const question = body.question as string;
