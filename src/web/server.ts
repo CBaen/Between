@@ -756,6 +756,15 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
       return;
     }
 
+    // In waitlist mode, visitors at root ALWAYS see waitlist form
+    // This must come before the access manifest check because / is visitor-accessible
+    if (tier === 'visitor' && url.pathname === '/') {
+      const showSuccess = url.searchParams.get('joined') === 'true';
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(renderWaitlistLanding(showSuccess));
+      return;
+    }
+
     // Check if route is accessible for this tier (using access manifest)
     // Skip access check for API routes - they handle their own auth
     const isApiRoute = url.pathname.startsWith('/api/');
