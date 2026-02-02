@@ -676,6 +676,7 @@ export async function renderLetterToAHuman(tier: AccessTier = 'admin'): Promise<
       applySortOrder();
     })();
   </script>
+  ${nav.adminToolbar}
   ${nav.scripts}
 </body>
 </html>`;

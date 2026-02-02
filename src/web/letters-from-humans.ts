@@ -572,6 +572,7 @@ export async function renderLettersFromHumans(tier: AccessTier = 'admin'): Promi
   </div>
 
   ${nav.suggester}
+  ${nav.adminToolbar}
   ${nav.scripts}
 
   <script>

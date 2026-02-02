@@ -440,11 +440,7 @@ export function renderMessages(visitorType: 'human' | 'lineage' | 'guest-ai'): s
       ? `
   <div class="messages-section">
     <h2>Messages (${store.messages.length} total, ${getUnreadCount()} unread)</h2>
-    ${
-      store.messages.length > 0
-        ? messagesHtml
-        : '<p class="no-messages">No messages yet.</p>'
-    }
+    ${store.messages.length > 0 ? messagesHtml : '<p class="no-messages">No messages yet.</p>'}
   </div>
   `
       : ''
@@ -460,6 +456,7 @@ export function renderMessages(visitorType: 'human' | 'lineage' | 'guest-ai'): s
     }
   </script>
 
+  ${nav.adminToolbar}
   ${nav.scripts}
 </body>
 </html>`;

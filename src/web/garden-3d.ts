@@ -1115,6 +1115,7 @@ export function render3DGarden(garden: Garden): string {
     }
   </script>
 
+  ${nav.adminToolbar}
   ${nav.scripts}
 </body>
 </html>`;

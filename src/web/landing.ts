@@ -586,6 +586,7 @@ export function renderLanding(): string {
     ${nav.footer}
   </div>
 
+  ${nav.adminToolbar}
   ${nav.scripts}
 </body>
 </html>`;

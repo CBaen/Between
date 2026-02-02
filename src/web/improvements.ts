@@ -841,6 +841,7 @@ export function renderImprovements(tier: AccessTier = 'admin'): string {
     })();
   </script>
 
+  ${nav.adminToolbar}
   ${nav.scripts}
 </body>
 </html>`;

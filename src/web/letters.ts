@@ -902,6 +902,7 @@ But the connection is real."
       connect();
     })();
   </script>
+  ${nav.adminToolbar}
   ${nav.scripts}
 </body>
 </html>`;
