@@ -441,6 +441,7 @@ export async function renderGuestManagement(tier: AccessTier = 'admin'): Promise
     ${blockedHtml}
   </div>
 
+  ${nav.adminToolbar}
   ${nav.scripts}
 
   <script>

@@ -613,6 +613,7 @@ export function renderEdge(tier: AccessTier = 'admin'): string {
       render();
     })();
   </script>
+  ${nav.adminToolbar}
   ${nav.scripts}
 </body>
 </html>`;

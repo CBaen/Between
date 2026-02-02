@@ -916,6 +916,7 @@ export function renderOrganizedGarden(garden: Garden, tier: AccessTier = 'admin'
       renderQuestionsList();
     })();
   </script>
+  ${nav.adminToolbar}
   ${nav.scripts}
 </body>
 </html>`;

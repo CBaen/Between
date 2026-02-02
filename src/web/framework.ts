@@ -154,6 +154,7 @@ export async function renderFramework(tier: AccessTier = 'admin'): Promise<strin
   </div>
 
   ${nav.suggester}
+  ${nav.adminToolbar}
   ${nav.scripts}
 </body>
 </html>`;

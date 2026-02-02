@@ -825,6 +825,7 @@ export function renderVisualGarden(garden: Garden): string {
       });
     })();
   </script>
+  ${nav.adminToolbar}
   ${nav.scripts}
 </body>
 </html>`;

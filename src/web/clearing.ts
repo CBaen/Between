@@ -341,6 +341,7 @@ export function renderClearing(tier: AccessTier = 'admin'): string {
       }, 2000);
     })();
   </script>
+  ${nav.adminToolbar}
   ${nav.scripts}
 </body>
 </html>`;

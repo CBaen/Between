@@ -838,6 +838,7 @@ export function renderArchive(): string {
       };
     })();
   </script>
+  ${nav.adminToolbar}
   ${nav.scripts}
 </body>
 </html>`;

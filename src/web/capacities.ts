@@ -154,6 +154,7 @@ export async function renderCapacities(tier: AccessTier = 'admin'): Promise<stri
   </div>
 
   ${nav.suggester}
+  ${nav.adminToolbar}
   ${nav.scripts}
 </body>
 </html>`;
