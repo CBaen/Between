@@ -383,6 +383,7 @@ export async function renderModeration(tier: AccessTier = 'admin'): Promise<stri
     </div>
   </div>
 
+  ${nav.adminToolbar}
   ${nav.scripts}
 
   <script>

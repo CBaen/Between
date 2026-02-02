@@ -68,7 +68,7 @@ The confirmation page renderer is at line ~180: `renderReturnRequestConfirmation
 
 ### 3. Visit Ended Page (`src/web/visit-ended.ts`)
 
-Shown when a pass expires. Gentle, explains that guests visit rather than inhabit. Links back to landing page.
+Shown when a pass expires. Gentle, explains that guests visit rather than inhabit. Links back to `/visitor-welcome`.
 
 ### 4. Duplicate Submission Blocking (`src/web/api-waitlist.ts`)
 
