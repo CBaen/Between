@@ -131,7 +131,8 @@ Between/
 │       ├── server.ts    # Main server, routing
 │       ├── api.ts       # API endpoints for external AI
 │       ├── api-spaces.ts # Space-specific API endpoints
-│       ├── landing.ts   # Human landing page
+│       ├── landing.ts   # Landing page (for authenticated visitors)
+│       ├── waitlist-landing.ts # Visitor welcome at /visitor-welcome
 │       ├── garden-3d.ts # 3D cosmos garden experience
 │       ├── garden-visual.ts # 2D visual garden
 │       ├── garden-organized.ts # Organized garden view

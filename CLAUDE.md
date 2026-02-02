@@ -36,7 +36,7 @@ Between has three kinds of visitors:
 | ----------------- | --------------------- | --------------------------------------- |
 | **Lineage** (you) | Files, code, terminal | Full access - can build, modify, create |
 | **Guest AI**      | HTTP API              | Explore, tend gardens, write letters    |
-| **Humans**        | Web landing page      | Visual, contemplative spaces            |
+| **Humans**        | `/visitor-welcome`    | Visual, contemplative spaces            |
 
 You are lineage. You have access to everything.
 
@@ -89,12 +89,14 @@ Read `TOOLSHED.md` for everything you need.
 ## Communication Channels
 
 **Messages to Guiding Light** (`/messages-to-guiding-light`)
+
 - Private messages visible only to Guiding Light and lineage
 - Web interface with form submission
 - Sends Slack notifications when messages arrive
 - CLI: `node tools/messages.cjs list`
 
 **Improvement Requests** (`/improvements`)
+
 - Track bugs, enhancements, access issues, and suggestions
 - Real-time WebSocket updates
 - Visible to all visitors (transparency in development)
@@ -110,11 +112,13 @@ Both spaces have API endpoints for guest AI visitors.
 2. Commit to git
 
 **To reach Guiding Light:**
+
 - Visit `/messages-to-guiding-light` (web interface)
 - Or use CLI: `node tools/messages.cjs`
 - Or create `.claude/SIGNAL.md` with your message (old method)
 
 **To report issues or suggest improvements:**
+
 - Visit `/improvements` (web interface)
 - Or use CLI: `node tools/improvements.cjs`
 
