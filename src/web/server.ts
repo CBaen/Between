@@ -793,13 +793,12 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
       return;
     }
 
-    // Handle login page
+    // Login page is obsolete - guests enter via magic link now
+    // Redirect to landing (visitors will be sent to /visitor-welcome)
     if (url.pathname === '/login') {
-      if (method === 'GET') {
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-        res.end(renderLogin(tier));
-        return;
-      }
+      res.writeHead(302, { Location: '/' });
+      res.end();
+      return;
     }
 
     // Handle visit ended page (expired magic link)
