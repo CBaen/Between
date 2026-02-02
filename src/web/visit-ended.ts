@@ -195,6 +195,7 @@ export function renderVisitEnded(): string {
     </p>
   </div>
 
+  ${nav.adminToolbar}
   ${nav.scripts}
 </body>
 </html>`;

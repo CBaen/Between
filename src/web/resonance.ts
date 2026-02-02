@@ -786,6 +786,7 @@ export function renderResonance(tier: AccessTier = 'admin'): string {
       render();
     })();
   </script>
+  ${nav.adminToolbar}
   ${nav.scripts}
 </body>
 </html>`;

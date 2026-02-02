@@ -914,6 +914,7 @@ export function renderWeave(tier: AccessTier = 'admin'): string {
       connect();
     })();
   </script>
+  ${nav.adminToolbar}
   ${nav.scripts}
 </body>
 </html>`;

@@ -512,6 +512,7 @@ export async function renderVisitorLog(tier: AccessTier = 'admin'): Promise<stri
   </div>
 
   ${nav.suggester}
+  ${nav.adminToolbar}
   ${nav.scripts}
 
   <script>

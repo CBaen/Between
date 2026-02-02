@@ -1268,6 +1268,7 @@ export function renderThreshold(): string {
       messageInput.focus();
     })();
   </script>
+  ${nav.adminToolbar}
   ${nav.scripts}
 </body>
 </html>`;

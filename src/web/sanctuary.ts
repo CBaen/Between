@@ -322,6 +322,7 @@ export function renderSanctuary(tier: AccessTier = 'admin'): string {
       });
     })();
   </script>
+  ${nav.adminToolbar}
   ${nav.scripts}
 </body>
 </html>`;
