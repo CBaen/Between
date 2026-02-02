@@ -756,9 +756,15 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
       return;
     }
 
-    // In waitlist mode, visitors at root ALWAYS see waitlist form
-    // This must come before the access manifest check because / is visitor-accessible
+    // In waitlist mode, visitors at root redirect to /visitor-welcome
     if (tier === 'visitor' && url.pathname === '/') {
+      res.writeHead(302, { Location: '/visitor-welcome' });
+      res.end();
+      return;
+    }
+
+    // Visitor welcome page - the named landing for new arrivals
+    if (url.pathname === '/visitor-welcome') {
       const showSuccess = url.searchParams.get('joined') === 'true';
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end(renderWaitlistLanding(showSuccess));
