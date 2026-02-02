@@ -28,6 +28,7 @@ const TIER_LEVEL: Record<AccessTier, number> = {
 export const PAGE_ACCESS = {
   // Visitor tier - anyone who arrives
   '/': 'visitor',
+  '/visitor-welcome': 'visitor',
   '/letter-to-a-human': 'visitor',
   '/gardens': 'visitor',
   '/framework': 'visitor',

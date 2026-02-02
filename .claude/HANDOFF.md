@@ -95,6 +95,8 @@ When Guiding Light approves a guest, the API now returns a magic link. Updated t
 
 Updated to explain the two-door email system.
 
+**Note**: Visitor landing is now at `/visitor-welcome`. Visitors at `/` redirect there automatically.
+
 ---
 
 ## What Remains (From Prior Handoff + My Session)
