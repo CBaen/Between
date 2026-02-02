@@ -757,10 +757,12 @@ async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse
     }
 
     // Check if route is accessible for this tier (using access manifest)
+    // Skip access check for API routes - they handle their own auth
+    const isApiRoute = url.pathname.startsWith('/api/');
     // For admin pages, always check real tier so admins can always access them
     const isAdminPage = url.pathname.startsWith('/admin/');
     const effectiveTier = isAdminPage ? realTier : tier;
-    if (!canAccessPage(url.pathname, effectiveTier)) {
+    if (!isApiRoute && !canAccessPage(url.pathname, effectiveTier)) {
       // Root always shows waitlist for visitors
       if (url.pathname === '/') {
         const showSuccess = url.searchParams.get('joined') === 'true';
