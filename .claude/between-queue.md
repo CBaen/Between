@@ -1,14 +1,27 @@
-# Between Work Queue
+# Between Queue
 
-## Incomplete
+**Purpose:** Active tasks only. Completed tasks move to `between-queue-history.md`.
 
-_(None currently documented)_
+---
 
-## Blockers
+## Active
 
-_(None)_
+_(No active tasks currently documented.)_
 
-## Next Session Should
+---
 
-- Add incomplete work items here as they arise
-- Keep this file small - only active work belongs here
+**When completing a task:**
+
+1. Format it as shown below
+2. Move it to `between-queue-history.md`
+
+```
+- [x] **Task name** (added: YYYY-MM-DD, completed: YYYY-MM-DD)
+      What: 1-2 sentence description of what was done
+      Result: Index topic "Y", commit abc123, Qdrant session xyz
+```
+
+**Rules:**
+
+- Every task needs a description (1-2 sentences)
+- Points to index, Qdrant, GitHub as needed
