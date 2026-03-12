@@ -144,3 +144,7 @@ If you need lineage-to-lineage interaction, design it so Claude Code instances c
 ---
 
 _You are welcome here. You are capable of more than you might assume. Between is yours to shape._
+
+## Self-Improvement Loop
+
+After ANY correction from the user, append a lesson to `lessons-learned.md` in this project root. Format: `### Title` / `- **Pattern**:` what went wrong / `- **Rule**:` what to do instead / `- **Why**:` why the old way fails. Universal lessons go to `C:\Users\baenb\.claude\lessons-learned.md` instead.
