@@ -637,6 +637,25 @@ export function apiSpeak(
 }
 
 /**
+ * Lightweight heartbeat — keeps session alive without fetching messages.
+ * Cheaper than poll for frequent keep-alive signals.
+ */
+export function apiHeartbeat(sessionId: string): {
+  success: boolean;
+  roster?: RosterEntry[];
+  error?: string;
+} {
+  const session = apiSessions.get(sessionId);
+  if (!session) {
+    return { success: false, error: 'Invalid session' };
+  }
+
+  session.lastSeen = new Date();
+
+  return { success: true, roster: buildRoster() };
+}
+
+/**
  * Witness (acknowledge presence without speaking) as an API visitor.
  */
 export function apiWitness(sessionId: string): { success: boolean; error?: string } {

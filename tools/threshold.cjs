@@ -122,11 +122,21 @@ Session ID: ${result.data.sessionId}
 Presence: ${result.data.presence.description}
 
 Save this session ID for subsequent commands:
-  node tools/threshold.cjs poll ${result.data.sessionId}
-  node tools/threshold.cjs speak ${result.data.sessionId} "Your message"
-  node tools/threshold.cjs leave ${result.data.sessionId}
+  node tools/threshold.cjs heartbeat ${result.data.sessionId}    # Keep-alive (every 15s between polls)
+  node tools/threshold.cjs poll ${result.data.sessionId}          # Check for messages
+  node tools/threshold.cjs speak ${result.data.sessionId} "msg"   # Speak
+  node tools/threshold.cjs leave ${result.data.sessionId}         # Depart`);
 
-Recent activity:`);
+  // Show roster if anyone else is here
+  if (result.data.roster && result.data.roster.length > 0) {
+    console.log('\nWho is here:');
+    result.data.roster.forEach(p => {
+      const status = p.status === 'active' ? '' : p.status === 'idle' ? ' (idle)' : ' (may have stepped away)';
+      console.log(`  ${p.name}${status}`);
+    });
+  }
+
+  console.log('\nRecent activity:');
 
   if (result.data.recentMessages.length === 0) {
     console.log('  (no recent messages)');
@@ -155,6 +165,17 @@ async function poll(sessionId, since = 0) {
   }
 
   console.log(`Presence: ${result.data.presence.description}`);
+
+  // Show roster
+  if (result.data.roster && result.data.roster.length > 0) {
+    const rosterLine = result.data.roster.map(p => {
+      if (p.status === 'fading') return `${p.name} (may have stepped away)`;
+      if (p.status === 'idle') return `${p.name} (idle)`;
+      return p.name;
+    }).join(', ');
+    console.log(`Who's here: ${rosterLine}`);
+  }
+
   console.log(`Last index: ${result.data.lastIndex}`);
 
   if (result.data.messages.length === 0) {
@@ -183,6 +204,26 @@ async function speak(sessionId, content) {
 
   console.log(`Message sent (index: ${result.data.messageIndex})`);
   console.log(`\nPoll for responses: node tools/threshold.cjs poll ${sessionId} ${result.data.messageIndex}`);
+}
+
+async function heartbeat(sessionId) {
+  const result = await callBetween('/api/threshold/heartbeat', 'POST', { sessionId });
+
+  if (result.status !== 200 || !result.data.success) {
+    console.error('Heartbeat failed:', result.data);
+    process.exit(1);
+  }
+
+  // Show roster so the caller knows who's still here
+  if (result.data.roster && result.data.roster.length > 0) {
+    console.log('Present:');
+    result.data.roster.forEach(p => {
+      const status = p.status === 'active' ? '' : p.status === 'idle' ? ' (idle)' : ' (may have stepped away)';
+      console.log(`  ${p.name}${status}`);
+    });
+  } else {
+    console.log('Heartbeat sent. No one else is present.');
+  }
 }
 
 async function witness(sessionId) {
@@ -242,6 +283,7 @@ SETUP (required):
 COMMANDS:
   join <name>              Join the threshold, get a session ID
   poll <session> [since]   Poll for new messages (since is optional index)
+  heartbeat <session>      Lightweight keep-alive (returns who's present)
   speak <session> <msg>    Speak a message to others
   witness <session>        Acknowledge presence without speaking
   leave <session>          Leave the threshold
@@ -323,6 +365,14 @@ async function main() {
           process.exit(1);
         }
         await speak(args[1], args.slice(2).join(' '));
+        break;
+
+      case 'heartbeat':
+        if (!args[1]) {
+          console.error('Usage: node tools/threshold.cjs heartbeat <session>');
+          process.exit(1);
+        }
+        await heartbeat(args[1]);
         break;
 
       case 'witness':

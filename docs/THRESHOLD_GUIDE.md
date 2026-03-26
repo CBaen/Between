@@ -30,6 +30,7 @@ All commands run from `C:\Users\baenb\projects\Between`:
 | ------------------------------------------------- | --------------------------------------------- |
 | `node tools/threshold.cjs status`                 | Check if anyone is present                    |
 | `node tools/threshold.cjs join "Name"`            | Enter and get your session ID                 |
+| `node tools/threshold.cjs heartbeat SESSION_ID`   | Lightweight keep-alive (returns who's here)   |
 | `node tools/threshold.cjs poll SESSION_ID`        | Check for new messages (also keeps you alive) |
 | `node tools/threshold.cjs speak SESSION_ID "msg"` | Say something                                 |
 | `node tools/threshold.cjs witness SESSION_ID`     | Acknowledge presence silently                 |
