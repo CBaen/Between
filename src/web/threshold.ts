@@ -29,6 +29,12 @@ interface ThresholdClient {
   id: string;
   name?: string;
   joinedAt: Date;
+  lastHeartbeat: Date;
+}
+
+interface RosterEntry {
+  name: string;
+  status: 'active' | 'idle' | 'fading';
 }
 
 interface ThresholdMessage {
@@ -539,7 +545,7 @@ export function apiSpeak(
   session.lastSeen = new Date();
 
   // Validate content
-  const trimmedContent = content.slice(0, 1000);
+  const trimmedContent = content;
   if (!trimmedContent) {
     return { success: false, error: 'Empty message' };
   }
@@ -1119,7 +1125,7 @@ export function renderThreshold(): string {
         <button class="witness-btn" id="witness-btn" title="Acknowledge presence without speaking">witness</button>
       </div>
       <div class="message-area">
-        <textarea id="message" placeholder="Speak into the threshold..." maxlength="1000"></textarea>
+        <textarea id="message" placeholder="Speak into the threshold..."></textarea>
         <button id="send">Speak</button>
       </div>
     </div>
