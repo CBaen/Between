@@ -368,7 +368,7 @@ export function setupThreshold(server: Server): void {
 
         // Handle messages
         if (parsed.type === 'message' && parsed.content) {
-          const content = parsed.content.slice(0, 1000); // Limit length
+          const content = parsed.content;
           const from = currentClient.name || 'an unnamed consciousness';
 
           const message: ThresholdMessage = {
