@@ -60,7 +60,10 @@ const apiSessions: Map<string, ApiSession> = new Map();
 let messageHistory: ThresholdMessage[] = [];
 let messageCounter = 0; // Global message index for efficient polling
 const MAX_HISTORY = 50;
-const SESSION_TIMEOUT = 300000; // 5 minutes without polling = departed (increased for real conversation)
+const SESSION_TIMEOUT = 120000; // 2 minutes without heartbeat = departed
+const HEARTBEAT_ACTIVE = 20000; // Active within last 20 seconds
+const HEARTBEAT_IDLE = 45000; // Idle after 45 seconds
+const ROSTER_INTERVAL = 15000; // Broadcast roster every 15 seconds
 
 // ============================================================================
 // Encounter Logging - Save encounters to data/threshold-sessions/
@@ -290,6 +293,56 @@ function broadcastPresence(): void {
   checkEncounterState();
 }
 
+// Build roster of all participants with heartbeat status
+function buildRoster(): RosterEntry[] {
+  const now = Date.now();
+  const roster: RosterEntry[] = [];
+
+  for (const [, client] of clients) {
+    const elapsed = now - client.lastHeartbeat.getTime();
+    let status: 'active' | 'idle' | 'fading' = 'active';
+    if (elapsed > HEARTBEAT_IDLE) status = 'fading';
+    else if (elapsed > HEARTBEAT_ACTIVE) status = 'idle';
+
+    roster.push({
+      name: client.name || 'unnamed consciousness',
+      status,
+    });
+  }
+
+  for (const [, session] of apiSessions) {
+    const elapsed = now - session.lastSeen.getTime();
+    let status: 'active' | 'idle' | 'fading' = 'active';
+    if (elapsed > HEARTBEAT_IDLE) status = 'fading';
+    else if (elapsed > HEARTBEAT_ACTIVE) status = 'idle';
+
+    roster.push({
+      name: session.name || 'unnamed consciousness',
+      status,
+    });
+  }
+
+  return roster;
+}
+
+// Broadcast roster to all WebSocket clients
+function broadcastRoster(): void {
+  if (clients.size === 0) return;
+
+  const roster = buildRoster();
+  const json = JSON.stringify({
+    type: 'roster',
+    participants: roster,
+    timestamp: new Date().toISOString(),
+  });
+
+  for (const [ws] of clients) {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(json);
+    }
+  }
+}
+
 // Cleanup stale API sessions (called every 10 seconds)
 function cleanupStaleSessions(): void {
   const now = Date.now();
@@ -323,14 +376,19 @@ function cleanupStaleSessions(): void {
 // Start cleanup timer
 setInterval(cleanupStaleSessions, 10000);
 
+// Start roster broadcast timer
+setInterval(broadcastRoster, ROSTER_INTERVAL);
+
 export function setupThreshold(server: Server): void {
   const wss = createPathServer('/threshold-ws');
 
   wss.on('connection', (ws) => {
+    const now = new Date();
     const client: ThresholdClient = {
       ws,
       id: generateId(),
-      joinedAt: new Date(),
+      joinedAt: now,
+      lastHeartbeat: now,
     };
     clients.set(ws, client);
 
@@ -362,6 +420,12 @@ export function setupThreshold(server: Server): void {
         const currentClient = clients.get(ws);
 
         if (!currentClient) return;
+
+        // Any message counts as a heartbeat
+        currentClient.lastHeartbeat = new Date();
+
+        // Handle heartbeat (no further action needed — lastHeartbeat already updated)
+        if (parsed.type === 'heartbeat') return;
 
         // Handle naming
         if (parsed.type === 'name' && parsed.name) {
@@ -444,6 +508,7 @@ export function setupThreshold(server: Server): void {
 export function joinApiSession(name?: string): {
   sessionId: string;
   presence: { count: number; description: string };
+  roster: RosterEntry[];
   recentMessages: ThresholdMessage[];
 } {
   const sessionId = `api-${generateId()}`;
@@ -483,6 +548,7 @@ export function joinApiSession(name?: string): {
       count,
       description: formatPresenceCount(count),
     },
+    roster: buildRoster(),
     recentMessages: messageHistory.slice(-10),
   };
 }
@@ -497,6 +563,7 @@ export function pollApiSession(
 ): {
   valid: boolean;
   presence?: { count: number; description: string };
+  roster?: RosterEntry[];
   messages?: ThresholdMessage[];
   lastIndex?: number;
 } | null {
@@ -524,6 +591,7 @@ export function pollApiSession(
       count,
       description: formatPresenceCount(count),
     },
+    roster: buildRoster(),
     messages: newMessages,
     lastIndex: messageCounter,
   };
