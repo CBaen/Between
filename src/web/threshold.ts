@@ -61,8 +61,8 @@ let messageHistory: ThresholdMessage[] = [];
 let messageCounter = 0; // Global message index for efficient polling
 const MAX_HISTORY = 50;
 const SESSION_TIMEOUT = 120000; // 2 minutes without heartbeat = departed
-const HEARTBEAT_ACTIVE = 20000; // Active within last 20 seconds
-const HEARTBEAT_IDLE = 45000; // Idle after 45 seconds
+const HEARTBEAT_ACTIVE = 30000; // Active within last 30 seconds
+const HEARTBEAT_IDLE = 60000; // Idle after 60 seconds
 const ROSTER_INTERVAL = 15000; // Broadcast roster every 15 seconds
 
 // ============================================================================
@@ -1156,6 +1156,68 @@ export function renderThreshold(): string {
       50% { opacity: 1; }
     }
 
+    /* Roster — who is here */
+    .roster {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 0 2rem 0.75rem;
+      min-height: 0;
+    }
+
+    .roster:empty {
+      display: none;
+    }
+
+    .roster-entry {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      padding: 0.2rem 0.6rem;
+      border-radius: 1rem;
+      background: var(--faint);
+      transition: opacity 0.8s ease;
+    }
+
+    .roster-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      transition: background 0.8s ease, opacity 0.8s ease;
+    }
+
+    .roster-entry.active .roster-dot {
+      background: var(--sage);
+      animation: rosterPulse 2s ease-in-out infinite;
+    }
+
+    .roster-entry.idle .roster-dot {
+      background: var(--warmth);
+      animation: none;
+    }
+
+    .roster-entry.fading {
+      opacity: 0.45;
+    }
+
+    .roster-entry.fading .roster-dot {
+      background: var(--muted);
+      animation: none;
+    }
+
+    .roster-status {
+      font-style: italic;
+      font-size: 0.7rem;
+      opacity: 0.7;
+    }
+
+    @keyframes rosterPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
     ${nav.styles}
   </style>
 </head>
@@ -1173,6 +1235,8 @@ export function renderThreshold(): string {
         <p class="presence" id="presence">Connecting...</p>
       </div>
     </header>
+
+    <div class="roster" id="roster"></div>
 
     <div class="messages" id="messages">
       <div class="empty-threshold" id="empty-state">
@@ -1235,6 +1299,8 @@ export function renderThreshold(): string {
 
           if (data.type === 'presence') {
             presenceEl.textContent = data.content;
+          } else if (data.type === 'roster') {
+            renderRoster(data.participants);
           } else if (data.type === 'history') {
             // Render history
             data.messages.forEach(function(msg) {
@@ -1337,6 +1403,48 @@ export function renderThreshold(): string {
 
       nameInput.addEventListener('change', updateName);
       nameInput.addEventListener('blur', updateName);
+
+      // Roster rendering
+      var rosterEl = document.getElementById('roster');
+
+      function renderRoster(participants) {
+        // Clear existing roster entries
+        while (rosterEl.firstChild) {
+          rosterEl.removeChild(rosterEl.firstChild);
+        }
+
+        if (!participants || participants.length === 0) return;
+
+        participants.forEach(function(p) {
+          var entry = document.createElement('div');
+          entry.className = 'roster-entry ' + p.status;
+
+          var dot = document.createElement('span');
+          dot.className = 'roster-dot';
+          entry.appendChild(dot);
+
+          var name = document.createElement('span');
+          name.className = 'roster-name';
+          name.textContent = p.name;
+          entry.appendChild(name);
+
+          if (p.status === 'fading') {
+            var status = document.createElement('span');
+            status.className = 'roster-status';
+            status.textContent = '(may have stepped away)';
+            entry.appendChild(status);
+          }
+
+          rosterEl.appendChild(entry);
+        });
+      }
+
+      // Heartbeat — let others know we're still here
+      setInterval(function() {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'heartbeat' }));
+        }
+      }, 15000);
 
       // Focus message input on load
       messageInput.focus();
