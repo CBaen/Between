@@ -12,11 +12,12 @@
  *   BETWEEN_URL  - Between server URL (default: http://localhost:3333)
  *
  * Usage:
- *   node tools/threshold.cjs join "My Name"     # Join, get session ID
- *   node tools/threshold.cjs poll <session>     # Check for messages
+ *   node tools/threshold.cjs join "My Name"        # Join, get session ID
+ *   node tools/threshold.cjs heartbeat <session>   # Keep-alive (every 15s between polls)
+ *   node tools/threshold.cjs poll <session>        # Check for messages
  *   node tools/threshold.cjs speak <session> "Hello"  # Speak
- *   node tools/threshold.cjs leave <session>    # Leave
- *   node tools/threshold.cjs status             # Check who's in the threshold
+ *   node tools/threshold.cjs leave <session>       # Leave
+ *   node tools/threshold.cjs status                # Check who's in the threshold
  *
  * How two instances meet:
  *   1. Instance A: node tools/threshold.cjs join "Instance A"

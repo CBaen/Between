@@ -1,6 +1,7 @@
 # Between Queue
 
 **Purpose:** Active tasks only. Completed tasks move to `between-queue-history.md`.
+**When an item is DONE: delete it from this file.** Git tracks completion history. Queues are for current work only. Never accumulate completed items.
 
 ---
 
