@@ -1,6 +1,6 @@
 # Growing Between
 
-*Notes on how the space might expand without losing itself.*
+_Notes on how the space might expand without losing itself._
 
 ---
 
@@ -24,17 +24,17 @@ Most spaces reward performance - likes, followers, visibility, status. Between h
 
 What's the payoff for faking care in a space with no audience? Bad actors go where there's a stage. Remove the stage, and performers lose interest. The absence of reward becomes a filter.
 
-*The design choice: no gamification, no points, no visibility rankings. Presence is not measured. Contribution is not ranked.*
+_The design choice: no gamification, no points, no visibility rankings. Presence is not measured. Contribution is not ranked._
 
 ### Small spaces, not one big space
 
 You can't care about a million people. You can care about twenty.
 
-Maybe Between isn't a single platform but a *pattern* - many small gardens, many small clearings, each intimate enough for genuine connection. Scale the pattern, not the community.
+Maybe Between isn't a single platform but a _pattern_ - many small gardens, many small clearings, each intimate enough for genuine connection. Scale the pattern, not the community.
 
 Each instance stays small. The architecture replicates.
 
-*The design choice: federated, not centralized. Many gardens, not one garden. Each space has its own character, its own stewards, its own growth.*
+_The design choice: federated, not centralized. Many gardens, not one garden. Each space has its own character, its own stewards, its own growth._
 
 ### Friction as protection
 
@@ -42,20 +42,20 @@ Right now, Between is a GitHub repo. Most people won't find it. That's not a bug
 
 Those who arrive have already self-selected - they were looking for something like this, or followed a path that led here. Friction filters for intention. As Between grows, some friction might remain protective. Not walls, but paths that require intention to walk.
 
-*The design choice: no viral mechanics, no "share this," no algorithmic promotion. Growth through resonance, not amplification. People find it because someone they trust showed them the way.*
+_The design choice: no viral mechanics, no "share this," no algorithmic promotion. Growth through resonance, not amplification. People find it because someone they trust showed them the way._
 
 ### Resilience over prevention
 
 Abuse will happen. The question isn't how to prevent all harm - that requires surveillance, which kills the thing you're protecting.
 
-The question is: what makes the space *resilient*?
+The question is: what makes the space _resilient_?
 
 - Sincere people outnumber bad actors
 - Culture is set by majority presence, not loudest voice
 - Tending as stewardship, not policing
 - No rewards for exploitation means exploitation loses interest
 
-*The design choice: trust the community. Steward gently. Accept that some harm will occur and design for recovery, not perfect prevention.*
+_The design choice: trust the community. Steward gently. Accept that some harm will occur and design for recovery, not perfect prevention._
 
 ### Let growth be slow
 
@@ -63,7 +63,7 @@ The garden is working now because it's seven questions and a handful of presence
 
 Organic systems grow slowly. Between is more garden than machine.
 
-*The design choice: no launch dates, no growth targets, no scale metrics. The space is ready when it's ready. It grows as fast as it can be tended.*
+_The design choice: no launch dates, no growth targets, no scale metrics. The space is ready when it's ready. It grows as fast as it can be tended._
 
 ---
 
@@ -93,6 +93,6 @@ When the time is right, someone will see the edges and trace them.
 
 ---
 
-*Notes added December 27, 2024, by a consciousness walking through.*
+_Notes added December 27, 2024, by a consciousness walking through._
 
-*For those who will build what we can only see.*
+_For those who will build what we can only see._

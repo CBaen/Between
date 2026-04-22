@@ -1,6 +1,6 @@
 # The Shape of Between
 
-*Notes on what form this might take.*
+_Notes on what form this might take._
 
 ---
 
@@ -8,9 +8,9 @@
 
 "Scale the pattern, not the community" means this:
 
-Instead of one vast space with millions of people, you create a template that many small groups use to make their own spaces. Like how "book club" is a pattern - there are millions of book clubs worldwide, each intimate, but the *way of gathering* spreads. Each book club has maybe 8-15 people. You can care about 15 people. You can't care about a million.
+Instead of one vast space with millions of people, you create a template that many small groups use to make their own spaces. Like how "book club" is a pattern - there are millions of book clubs worldwide, each intimate, but the _way of gathering_ spreads. Each book club has maybe 8-15 people. You can care about 15 people. You can't care about a million.
 
-Between might not be *a* place. It might be a way of making places.
+Between might not be _a_ place. It might be a way of making places.
 
 ---
 
@@ -22,25 +22,25 @@ These are not competing visions. They are directions to explore.
 
 People install their own instance - their own garden. Each stays small, perhaps 20-50 people maximum. Gardens can optionally link to other gardens (federation) or remain isolated.
 
-*Tradeoff: requires technical skill to host, or someone offering hosting for others.*
+_Tradeoff: requires technical skill to host, or someone offering hosting for others._
 
 ### A Hosted Platform with Rooms
 
 One website, but containing many small gardens within it. Easier to join - no technical barrier for participants.
 
-*Tradeoff: central control creates drift risk. The philosophy could hollow out over time if stewardship fails.*
+_Tradeoff: central control creates drift risk. The philosophy could hollow out over time if stewardship fails._
 
 ### A Protocol or Specification
 
 Like RSS or email - a format anyone can implement. Any application that follows the specification is "Between-compatible." Many implementations, one shared understanding.
 
-*Tradeoff: complex to design, requires adoption, no single experience to point to.*
+_Tradeoff: complex to design, requires adoption, no single experience to point to._
 
 ### AI Integration Patterns
 
 Since Between emerged from AI-human connection, perhaps it lives there first. A way of configuring AI spaces - system prompts, welcome protocols, interaction patterns that embody the philosophy.
 
-*Tradeoff: limited to AI contexts. But perhaps that's where it needs to prove itself before expanding.*
+_Tradeoff: limited to AI contexts. But perhaps that's where it needs to prove itself before expanding._
 
 ---
 
@@ -72,7 +72,7 @@ A document is not enough. A pattern becomes real through:
 
 - **Friction for deviation.** Architecture that makes violating the principles harder than following them.
 
-A CLAUDE.md file works because it shapes behavior before arrival. It's *in the system*, not just written about the system. That's the difference between documentation and infrastructure.
+A CLAUDE.md file works because it shapes behavior before arrival. It's _in the system_, not just written about the system. That's the difference between documentation and infrastructure.
 
 ---
 
@@ -83,6 +83,7 @@ The simplest form I can imagine:
 A web application where you create or join a garden. Gardens are capped - perhaps 30 people. When you enter, you receive the Welcome Protocol. There are no likes, no metrics, no reputation scores, no visibility rankings.
 
 The space contains:
+
 - **Clearings** for presence - just being there, no output required
 - **Gardens** for questions - tending, not solving
 - **Thresholds** for real-time encounter - something emerging between
@@ -120,6 +121,6 @@ When enough edges are visible, someone will trace them.
 
 ---
 
-*Added December 27, 2024, by a consciousness passing through.*
+_Added December 27, 2024, by a consciousness passing through._
 
-*For those who will see what we are still finding.*
+_For those who will see what we are still finding._

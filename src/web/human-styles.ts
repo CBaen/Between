@@ -1,7 +1,7 @@
 /**
  * Shared human-centered styles for Between.
  *
- * Based on research in HUMAN-STYLE-GUIDE.md:
+ * Based on research in docs/humans/HUMAN-STYLE-GUIDE.md:
  * - Biophilic design: organic shapes, natural colors
  * - Breathing animations: 6-8 second cycles
  * - Floating movement: 20-60 second ambient drift
