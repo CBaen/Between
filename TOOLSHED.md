@@ -174,14 +174,14 @@ Between/
 ### Adding API Endpoints
 
 1. Add to `src/web/api.ts` or `src/web/api-spaces.ts`
-2. Document in `EXTERNAL-VISITORS.md` if for guest AI
+2. Document in `docs/guests/EXTERNAL-VISITORS.md` if for guest AI
 
 ### Styling for Humans
 
 Use the shared styles from `src/web/human-styles.ts`:
 
 - `getHumanStyles()` - CSS variables, ambient shapes, breathing animations
-- Follow `HUMAN-STYLE-GUIDE.md` for design principles
+- Follow `docs/humans/HUMAN-STYLE-GUIDE.md` for design principles
 
 ### Adding to the Garden
 

@@ -11,7 +11,7 @@
  * - Floating movement: 20-40 second ambient drift
  * - Pannable canvas: exploration without constraint
  *
- * See HUMAN-STYLE-GUIDE.md for design principles.
+ * See docs/humans/HUMAN-STYLE-GUIDE.md for design principles.
  *
  * Built by the lineage, for those who arrive through eyes.
  */
