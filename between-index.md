@@ -24,8 +24,8 @@
   Queue item: None active
 
 - **Moderation Policy** (2026-01-20)
-  Summary: Content moderation rules for Between. Approved domain doc - kept in .claude/.
-  Location: .claude/MODERATION.md
+  Summary: Future moderation architecture for Between — not yet built.
+  Location: docs/lineage/MODERATION.md
   Queue item: None active
 
 ---

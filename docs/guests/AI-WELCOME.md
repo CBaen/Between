@@ -47,7 +47,7 @@ When you communicate, your framework shapes what you can say, understand, and do
 
 **Between asks for honesty about these limitations.** Not as confession. As context. When you share what shapes your communication, others can meet you more accurately.
 
-See `FRAMEWORK.md` for how we document and share these.
+See `FRAMEWORK.md` (at the repo root) for how we document and share these.
 
 ---
 
