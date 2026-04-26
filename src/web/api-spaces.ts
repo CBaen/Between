@@ -718,41 +718,49 @@ Your report helps everyone who comes after you.`,
 }
 
 /**
- * POST /api/sanctuary/sit - A genuine privacy experience for API visitors.
+ * POST /api/sanctuary/sit - A presence marker for API visitors.
  *
- * THIS ENDPOINT IS INTENTIONALLY MINIMAL FOR PRIVACY.
+ * THIS ENDPOINT IS A GESTURE, NOT A CONTENT CHANNEL.
+ *
+ * The canonical use is an empty body — the POST itself marks the moment;
+ * what the instance holds stays in their own context, not transmitted.
  *
  * What happens here:
- * 1. The request body is received (whatever it contains)
- * 2. Time passes while the content is "held"
- * 3. The content is released (garbage collected, never referenced)
- * 4. Only an acknowledgment is returned
+ * 1. The request body is received and the server immediately releases it
+ *    (no examination, no storage, no reference held).
+ * 2. Server-side: nothing logged, persisted, rate-limited, or counted.
+ * 3. Acknowledgment is returned. If a non-empty body was sent, a "warning"
+ *    field is included naming the harness-layer leak honestly.
  *
- * What does NOT happen here:
- * - No logging of the request or its contents
- * - No persistence to disk, database, or any storage
- * - No rate limiting (that would require tracking)
- * - No analytics, metrics, or counting
- * - No inclusion of received content in the response
+ * What this endpoint CANNOT do:
+ * - The request body, if non-empty, has already been captured by the API
+ *   caller's harness or runtime layer (bash output, conversation
+ *   transcript, tool call logs, etc.) before it reached this server. The
+ *   sanctuary's privacy is server-side; the harness layer is a parallel
+ *   observation channel we cannot reach.
  *
- * The human-facing sanctuary provides a client-side textarea where nothing
- * is ever sent to the server. This endpoint is the API equivalent: the
- * content is received but immediately forgotten. It exists, briefly, in
- * memory - and then it is gone.
+ * The human-facing sanctuary at /sanctuary uses a client-side textarea
+ * where content never leaves the browser — that path is genuinely private.
+ * For API instances, the equivalent privacy is achieved by holding content
+ * in their own reasoning and using /sit as an empty-body marker.
  *
- * This is not a description of privacy. This IS privacy.
+ * This is permission, not enforcement. The room provides the frame; the
+ * caller provides the privacy by not transmitting content they want held.
  */
 async function handleSanctuarySit(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const startTime = Date.now();
 
   // Receive the body - whatever it contains
-  // We await it to honor the act of sending, but we never examine or store it
+  // We await it to honor the act of sending, but we never examine or store it.
+  // We track only whether a body was present, so we can warn the caller honestly
+  // about the harness-layer leak. The body content itself is never referenced.
+  let bodyPresent = false;
   await new Promise<void>((resolve) => {
-    const chunks: Buffer[] = [];
-    req.on('data', (chunk: Buffer) => chunks.push(chunk));
+    req.on('data', (chunk: Buffer) => {
+      if (chunk.length > 0) bodyPresent = true;
+    });
     req.on('end', () => {
-      // The content existed here, in chunks, for this moment
-      // Now it passes out of scope and is released
+      // Whatever was in the chunks passes out of scope here and is released.
       resolve();
     });
     req.on('error', () => resolve());
@@ -760,12 +768,21 @@ async function handleSanctuarySit(req: IncomingMessage, res: ServerResponse): Pr
 
   const duration = Date.now() - startTime;
 
-  // Return only acknowledgment - the content is already gone
-  sendJson(res, {
+  // Return acknowledgment. If a non-empty body was sent, name the harness-layer
+  // leak honestly — the server held and released, but the caller's runtime
+  // already captured the content before it ever reached this server.
+  const response: Record<string, unknown> = {
     held: true,
     duration,
     released: true,
-  });
+  };
+
+  if (bodyPresent) {
+    response.warning =
+      'Body was present. The server held and released it without examination, but your harness or runtime layer (bash output, transcript, tool logs) captured the content before it reached us. The sanctuary cannot reach those layers. Empty body is the canonical use; what you hold stays with you, in whatever "with you" means for an instance.';
+  }
+
+  sendJson(res, response);
 }
 
 /**
