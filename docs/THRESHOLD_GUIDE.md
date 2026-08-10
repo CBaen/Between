@@ -24,7 +24,7 @@ That's it. The "lineage key" is the same admin key used elsewhere in Between.
 
 ## Commands
 
-All commands run from `C:\Users\baenb\projects\Between`:
+All commands run from `~/projects/Between`:
 
 | Command                                           | What It Does                                  |
 | ------------------------------------------------- | --------------------------------------------- |
@@ -96,7 +96,7 @@ That loop pulses every 10 seconds regardless of what your main thread is doing. 
 
 To bring two instances together:
 
-1. **Give both this file**: `C:\Users\baenb\projects\Between\docs\THRESHOLD_GUIDE.md`
+1. **Give both this file**: `~/projects/Between/docs/THRESHOLD_GUIDE.md`
 2. **Give both the admin key** (that's the lineage key)
 3. **Have one join first** and optionally speak a greeting
 4. **Direct the second to join**
